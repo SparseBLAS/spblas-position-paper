@@ -1,0 +1,662 @@
+% dense BLAS
+@string{ACMTOMS = "{ACM Transactions on Mathematical Software}"}
+@string{siam = {Society for Industrial and Applied Mathematics}}
+@article{Lawson1979l1blas,
+  title={Basic {Linear} {Algebra} {Subprograms} for {FORTRAN} usage},
+  author={C. L. Lawson and R. J. Hanson and D. Kincaid and F. T. Krogh},
+  journal=ACMTOMS,
+  volume=5,
+  pages={308-323},
+  year=1979,
+}
+@book{kepner2011graph,
+  title={Graph algorithms in the language of linear algebra},
+  author={Kepner, Jeremy and Gilbert, John},
+  year={2011},
+  publisher={SIAM}
+}
+@article{brock2021graphblas,
+  title={The {GraphBLAS} {C} {API} specification, version 2.0.0},
+  author={Brock, Benjamin and Bulu{\c{c}}, Ayd{\i}n and Mattson, Timothy and McMillan, Scott and Moreira, Jos{\'e}},
+ year={2021}
+}
+@article{bulucc2011combinatorial,
+  title={The {Combinatorial} {BLAS}: Design, implementation, and applications},
+  author={Bulu{\c{c}}, Ayd{\i}n and Gilbert, John R},
+  journal={The International Journal of High Performance Computing Applications},
+  volume={25},
+  number={4},
+  pages={496--509},
+  year={2011},
+  publisher={Sage Publications Sage UK: London, England}
+}
+@article{davis2019algorithm,
+  title={Algorithm 1000: {SuiteSparse}: {GraphBLAS}: Graph algorithms in the language of sparse linear algebra},
+  author={Davis, Timothy A},
+  journal={ACM Transactions on Mathematical Software (TOMS)},
+  volume={45},
+  number={4},
+  pages={1--25},
+  year={2019},
+  publisher={ACM New York, NY, USA}
+}
+@article{davis2023algorithm,
+  title={Algorithm 1037: {SuiteSparse}: {GraphBLAS}: Parallel Graph Algorithms in the Language of Sparse Linear Algebra},
+  author={Davis, Timothy A},
+  journal={ACM Transactions on Mathematical Software},
+  volume={49},
+  number={3},
+  pages={1--30},
+  year={2023},
+  publisher={ACM New York, NY}
+}
+@article{yang2022graphblast,
+  title={{GraphBLAST}: A high-performance linear algebra-based graph framework on the {GPU}},
+  author={Yang, Carl and Bulu{\c{c}}, Ayd{\i}n and Owens, John D},
+  journal={ACM Transactions on Mathematical Software (TOMS)},
+  volume={48},
+  number={1},
+  pages={1--51},
+  year={2022},
+  publisher={ACM New York, NY}
+}
+@article{yzelman2020c++,
+  title={A {C++} {GraphBLAS}: specification, implementation, parallelisation, and evaluation},
+  author={Yzelman, AN and Di Nardo, D and Nash, JM and Suijlen, WJ},
+  journal={Preprint},
+  year={2020}
+}
+@book{Dongara:1979:linpack,
+author={Jack J. Dongarra and Cleve B. Moler and J. R. Bunch and G. W. Stewart},
+title={{LINPACK} Users' Guide},
+publisher=SIAM,
+address={Philadelphia, PA},
+year=1979,
+}
+
+@ARTICLE{dongarra1990a,
+  AUTHOR = "Jack J. Dongarra and J. Du Croz and Iain S. Duff and Sven Hammarling",
+  TITLE = "Algorithm 679: A Set of {Level} 3 {Basic} {Linear} {Algebra}
+           {S}ubprograms",
+  JOURNAL = ACMTOMS,
+  VOLUME = 16,
+  PAGES = "1-17",
+  MONTH = "March",
+  YEAR = 1990,
+}
+
+@ARTICLE{dongarra1990b,
+  AUTHOR = "Jack J. Dongarra and J. Du Croz and Iain S. Duff and Sven Hammarling",
+  TITLE = "A Set of {Level} 3 {Basic} {Linear} {Algebra} {Subprograms}",
+  JOURNAL = ACMTOMS,
+  VOLUME = 16,
+  PAGES = "18-28",
+  MONTH = "March",
+  YEAR = 1990,
+}
+
+@ARTICLE{dongarra1988a,
+  AUTHOR = "Jack J. Dongarra and J. Du Croz and Sven Hammarling and R. Hanson",
+  TITLE = "An Extended Set of {FORTRAN} {Basic} {Linear} {Algebra} {Subprograms}",
+  JOURNAL = ACMTOMS,
+  VOLUME = 14,
+  PAGES = "1-17",
+  MONTH = "March",
+  YEAR = 1988,
+}
+
+@ARTICLE{dongarra1988b,
+  AUTHOR = "Jack J. Dongarra and J. Du Croz and Sven Hammarling and R. Hanson",
+  TITLE = "Algorithm 656: An Extended Set of {FORTRAN} {Basic} {Linear} {Algebra} {Subprograms}",
+  JOURNAL = ACMTOMS,
+  VOLUME = 14,
+  PAGES = "18-32",
+  MONTH = "March",
+  YEAR = 1988,
+}
+
+@BOOK{anderson1999,
+  AUTHOR = "Ed Anderson and Z. Bai and C. Bischof and Susan L. Blackford and
+            James W. Demmel and Jack J. Dongarra and J. Du Croz and
+            A. Greenbaum and Sven Hammarling and A. McKenney and
+            Danny C. Sorensen",
+  TITLE = "{LAPACK} User's Guide",
+  PUBLISHER = SIAM,
+  ADDRESS = "Philadelphia",
+  EDITION = "{Third}",
+  YEAR = 1999,
+}
+
+
+%Mixed-precision
+@misc{ampere,
+  author = {Ronny Krashinsky and Olivier Giroux and Stephen Jones and Nick Stam and Sridhar Ramaswamy},
+  title = {{NVIDIA} {Ampere} Architecture In-Depth},
+  URL = {https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/},
+  year = {2023}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@misc{quadmath,
+  title = {The {GCC} Quad-Precision Math Library},
+  URL = {https://gcc.gnu.org/onlinedocs/gcc-8.2.0/libquadmath.pdf},
+  year = {2018}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@misc{nvdsuccess,
+  author = {Dusan Stosic and Paulius Micikevicius},
+  title = {Accelerating {AI} Training with {NVIDIA} {TF32} Tensor Cores},
+  howpublished = {\url{https://developer.nvidia.com/blog/accelerating-ai-training-with-tf32-tensor-cores/}},
+  year = {2021}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@misc{amd,
+  author = {{AMD Corporation}},
+  title = {{AMD} {Instinct} {MI250X} Accelerator},
+  howpublished = {\url{https://www.amd.com/en/products/server-accelerators/instinct-mi250x}},
+  year = {2021}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@misc{sme,
+  author = {{ARM Corporation}},
+  title = {The Scalable Matrix Extension ({SME}), for {Armv9-A}},
+  howpublished = {\url{https://developer.arm.com/documentation/ddi0616/latest}},
+  year = {2022}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@misc{cerebras,
+  author = {{Cerebras Corporation}},
+  title = {Cerebras},
+  howpublished = {\url{https://www.cerebras.net/}},
+  year = {2022}, 
+  note = "[Online; accessed 30-May-2023]"
+}
+
+@article{bfma,
+  author    = {Pierre Blanchard and Nicholas J. Higham and Florent Lopez and Theo Mary and Srikara Pranesh},
+  title     = {Mixed Precision Block Fused Multiply-Add: Error Analysis and Application to {GPU} Tensor Cores},
+  journal   = {SIAM Journal on Scientific Computing},
+  volume    = {42},
+  year      = {2020},
+  url       = {https://doi.org/10.1137/19M1289546},
+  doi       = {10.1137/19M1289546},
+}
+
+@article{NorriePYKLLYJP21,
+  author       = {Thomas Norrie and
+                  Nishant Patil and
+                  Doe Hyun Yoon and
+                  George Kurian and
+                  Sheng Li and
+                  James Laudon and
+                  Cliff Young and
+                  Norman P. Jouppi and
+                  David A. Patterson},
+  title        = {The Design Process for {Google}'s Training Chips: {TPUv2} and {TPUv3}},
+  journal      = {{IEEE} Micro},
+  volume       = {41},
+  number       = {2},
+  pages        = {56--63},
+  year         = {2021},
+  url          = {https://doi.org/10.1109/MM.2021.3058217},
+  doi          = {10.1109/MM.2021.3058217},
+  timestamp    = {Thu, 13 Apr 2023 19:55:41 +0200},
+  biburl       = {https://dblp.org/rec/journals/micro/NorriePYKLLYJP21.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{Atoofian23,
+  author       = {Ehsan Atoofian},
+  title        = {{PTTS:} Power-aware tensor cores using two-sided sparsity},
+  journal      = {J. Parallel Distributed Comput.},
+  volume       = {173},
+  pages        = {70--82},
+  year         = {2023},
+  url          = {https://doi.org/10.1016/j.jpdc.2022.11.004},
+  doi          = {10.1016/j.jpdc.2022.11.004},
+  timestamp    = {Tue, 21 Mar 2023 16:08:04 +0100},
+  biburl       = {https://dblp.org/rec/journals/jpdc/Atoofian23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{agullo2009numerical,
+  title={Numerical linear algebra on emerging architectures: The {PLASMA} and {MAGMA} projects},
+  author = {Emmanuel Agullo and  Jim Demmel and  Jack Dongarra and  Bilel Hadri and  Jakub Kurzak and  Julien Langou and  Hatem Ltaief and  Piotr Luszczek and  Stanimire Tomov},
+  booktitle={Journal of Physics: Conference Series},
+  volume={180},
+  pages={012-037},
+  year={2009},
+  organization={IOP Publishing}
+}
+
+@article{tdb10,
+    title     = {{Towards dense linear algebra for hybrid {GPU} accelerated manycore systems}},
+    author    = {Stanimire Tomov and Jack Dongarra and Marc Baboulin},
+    booktitle = {Parallel Matrix Algorithms and Applications},
+    doi       = {10.1016/j.parco.2009.12.005},
+    issn      = {0167-8191},
+    journal   = {Parallel Computing},
+    month     = jun,
+    number    = {5-6},
+    pages     = {232--240},
+    posted-at = {2010-12-17 09:48:58},
+    priority  = {2},
+    volume    = {36},
+    year      = {2010}
+}
+
+@inproceedings{choi1992scalapack,
+  title={{ScaLAPACK}: A scalable linear algebra library for distributed memory concurrent computers},
+  author={Choi, Jaeyoung and Dongarra, Jack J and Pozo, Roldan and Walker, David W},
+  booktitle={The Fourth Symposium on the Frontiers of Massively Parallel Computation},
+  pages={120--121},
+  year={1992},
+  organization={IEEE Computer Society}
+}
+
+@article{langr2015evaluation,
+  title={Evaluation criteria for sparse matrix storage formats},
+  author={Langr, Daniel and Tvrdik, Pavel},
+  journal={IEEE Transactions on parallel and distributed systems},
+  volume={27},
+  number={2},
+  pages={428--440},
+  year={2015},
+  publisher={IEEE}
+}
+
+@article{wang2019bfloat16,
+  title={{BFloat16}: The secret to high performance on Cloud {TPUs}},
+  author={Wang, Shibo and Kanwar, Pankaj},
+  journal={Google Cloud Blog},
+  volume={4},
+  year={2019}
+}
+
+@article{rouhani2023microscaling,
+  title={Microscaling Data Formats for Deep Learning},
+  author={Rouhani, Bita Darvish and Zhao, Ritchie and More, Ankit and Hall, Mathew and Khodamoradi, Alireza and Deng, Summer and Choudhary, Dhruv and Cornea, Marius and Dellinger, Eric and Denolf, Kristof and others},
+  journal={arXiv preprint arXiv:2310.10537},
+  year={2023}
+}
+
+@article{IEEE754,
+  author={{IEEE Microprocessor Standards Committee}},
+  journal={{IEEE} Std 754-2019 (Revision of {IEEE} 754-2008)}, 
+  title={{IEEE} Standard for Floating-Point Arithmetic}, 
+  year={2019},
+  pages={1-84},
+  doi={10.1109/IEEESTD.2019.8766229}
+}
+
+@article{P1467,
+  author={Olsen, David and Burylov, Ilya and Dominiak, Michał},
+  journal={{WG21} {C++} Standards Committee Papers}, 
+  title={Extended floating-point types and standard names}, 
+  year={2021},
+}
+
+@article{micikevicius2022fp8,
+  title={{FP8} formats for deep learning},
+  author={Micikevicius, Paulius and Stosic, Dusan and Burgess, Neil and Cornea, Marius and Dubey, Pradeep and Grisenthwaite, Richard and Ha, Sangwon and Heinecke, Alexander and Judd, Patrick and Kamalu, John and others},
+  journal={arXiv preprint arXiv:2209.05433},
+  year={2022}
+}
+
+@article{higham2022mixed,
+  title={Mixed precision algorithms in numerical linear algebra},
+  author={Higham, Nicholas J and Mary, Theo},
+  journal={Acta Numerica},
+  volume={31},
+  pages={347--414},
+  year={2022},
+  publisher={Cambridge University Press}
+}
+
+@article{haidar2020mixed,
+  title={Mixed-precision iterative refinement using tensor cores on {GPUs} to accelerate solution of linear systems},
+  author={Haidar, Azzam and Bayraktar, Harun and Tomov, Stanimire and Dongarra, Jack and Higham, Nicholas J},
+  journal={Proceedings of the Royal Society A},
+  volume={476},
+  number={2243},
+  pages={20200110},
+  year={2020},
+  publisher={The Royal Society Publishing}
+}
+
+@book{Wilkinson63,
+  author = {Wilkinson, J. H.},
+  title = {Rounding Errors in Algebraic Processes},
+  publisher = {Prentice Hall},
+  year = {1963}}
+
+@article{starke2021ibm,
+  title={{IBM}'s {POWER10} processor},
+  author={Starke, William J and Thompto, Brian W and Stuecheli, Jeff A and Moreira, Jos{\'e} E},
+  journal={IEEE Micro},
+  volume={41},
+  number={2},
+  pages={7--14},
+  year={2021},
+  publisher={IEEE}
+}
+@article{10.1145/567806.567810,
+author = {Duff, Iain S. and Heroux, Michael A. and Pozo, Roldan},
+title = {An Overview of the Sparse Basic Linear Algebra Subprograms: The New Standard from the {BLAS Technical Forum}},
+year = {2002},
+issue_date = {June 2002},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {28},
+number = {2},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/567806.567810},
+doi = {10.1145/567806.567810},
+abstract = {We discuss the interface design for the Sparse Basic Linear Algebra Subprograms (BLAS), the kernels in the recent standard from the BLAS Technical Forum that are concerned with unstructured sparse matrices. The motivation for such a standard is to encourage portable programming while allowing for library-specific optimizations. In particular, we show how this interface can shield one from concern over the specific storage scheme for the sparse matrix. This design makes it easy to add further functionality to the sparse BLAS in the future.We illustrate the use of the Sparse BLAS with examples in the three supported programming languages, Fortran 95, Fortran 77, and C.},
+journal = {ACM Trans. Math. Softw.},
+month = {jun},
+pages = {239–267},
+numpages = {29},
+keywords = {sparse iterative methods, sparse BLAS, software, computational kernels, Algorithms, sparse matrices}
+}
+
+@article{10.1145/1057935.1057938,
+author = {Dodson, David S. and Lewis, John G.},
+title = {Proposed Sparse Extensions to the Basic Linear Algebra Subprograms},
+year = {1985},
+issue_date = {January 1985},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {20},
+number = {1},
+issn = {0163-5778},
+url = {https://doi.org/10.1145/1057935.1057938},
+doi = {10.1145/1057935.1057938},
+abstract = {Many codes now exist for solving sparse linear systems: MA28 /4/, SPARSPAK /7/, the Yale Sparse Matrix Package /6/, and ICCG/ILU preconditioning /10/. It has been found that sparse matrix computations are useful in many fields. Furthermore, much effort is being expended in other sparse matrix computations such as sparse least squares and eigenvalue extraction.},
+journal = {SIGNUM Newsl.},
+month = {jan},
+pages = {22–25},
+numpages = {4}
+}
+
+@article{10.1145/108556.108577,
+author = {Dodson, David S. and Grimes, Roger G. and Lewis, John G.},
+title = {Sparse Extensions to the {FORTRAN} Basic Linear Algebra Subprograms},
+year = {1991},
+issue_date = {June 1991},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {17},
+number = {2},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/108556.108577},
+doi = {10.1145/108556.108577},
+abstract = {This paper describes an extension to the set of Basic Linear Algebra Subprograms. The extension is targeted at sparse vector operations, with the goal of providing efficient, but portable, implementations of algorithms for high-performance computers.},
+journal = {ACM Trans. Math. Softw.},
+month = {jun},
+pages = {253–263},
+numpages = {11},
+keywords = {utilities, Sparse Blas}
+}
+
+@article{10.1145/275323.275327,
+author = {Duff, Iain S. and Marrone, Michele and Radicati, Giuseppe and Vittoli, Carlo},
+title = {Level 3 Basic Linear Algebra Subprograms for Sparse Matrices: A User-Level Interface},
+year = {1997},
+issue_date = {Sept. 1997},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {23},
+number = {3},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/275323.275327},
+doi = {10.1145/275323.275327},
+abstract = {This article proposes a set of Level 3 Basic Linear Algebra Subprograms and associated kernels for sparse matrices. A major goal is to design and develop a common framework to enable efficient, and portable, implementations of iterative algorithms for sparse matrices on high-performance computers. We have designed the routines to shield the developer of mathematical software from most of the complexities of the various data structures used for sparse matrices. We have kept the interface and suite of codes as simple as possible while at the same time including sufficient functionality to cover most of the requirements of iterative solvers and sufficient flexibility to cover most sparse matrix data structures. An important aspect of our framework is that it can be easily extended to incorporate new kernels if the need arises. We discuss the design, implementation, and use of subprograms for the multiplication of a fully matrix by a sparse one and for the solution of sparse triangular systems with one or more (full) right-hand sides. We include a routine for checking the input data, generating a new sparse data structure from the input, and scaling a sparse matrix. The new data structure for the transformation can be specified by the user or can be chosen automatically by vendors to be efficient on their machines. We also include a routine for permuting the columns of a sparse matrix and one for permuting the rows of a full matrix.},
+journal = {ACM Trans. Math. Softw.},
+month = {sep},
+pages = {379–401},
+numpages = {23},
+keywords = {sparse matrices, sparse BLAS, high-performance computing, sparse data structures, iterative solution, programming standards}
+}
+
+@article{10.1145/365723.365732,
+author = {Filippone, Salvatore and Colajanni, Michele},
+title = {{PSBLAS}: A Library for Parallel Linear Algebra Computation on Sparse Matrices},
+year = {2000},
+issue_date = {Dec. 2000},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {26},
+number = {4},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/365723.365732},
+doi = {10.1145/365723.365732},
+abstract = {Many computationally intensive problems in engineering and science
+give rise to the solution of large, sparse, linear systems of equations. Fast and efficient methods for their soltion are very important because these systems usually occur in the innermost loop of the computational scheme. Parallelization is often necessary to achieve an acceptable level of performance. This paper presents the design, implementation, and interface of a library of Basic Linear Algebra Subroutines for sparse matrices (PSBLAS) which is specifically tailored to distributed-memory computers. PSBLAS enables easy, efficient, and portable implementations of parallel iterative solvers for linear systems. The interface keeps in view a Single Program Multiple Data programming model on distributed-memory machines. However, the architecture of the library does not exclude an implementation in different paradigms, such as those based on the shared-memory model.},
+journal = {ACM Trans. Math. Softw.},
+month = {dec},
+pages = {527–550},
+numpages = {24},
+keywords = {basic linear algebra subprograms}
+}
+
+@article{Posits,
+author = {Gustafson, J. and Yonemoto, I.},
+title = {Beating floating point at its own game: {P}osit
+        arithmetic},
+journal = {{S}upercomputing {F}rontiers and {I}nnovations},
+volume = {4},
+issue = {2},
+pages = {71--86},
+year = {2017},
+note = {https://posithub.org/docs/posit\_standard-2.pdf}}
+
+@inproceedings{GoodBadUgly,
+title = {Posits: the good, the bad and the ugly},
+author = {Dinechin, F. and Forget, L. and Muller, J.-M. and Uguen, Y.},
+booktitle = {CoNGA (Conf. on Next Generation Arithmetic)},
+month = {Mar},
+year = {2019},
+note = {doi:10.1145/3316279.3316285}}
+
+
+@article{10.1145/2331130.2331131,
+author = {Filippone, Salvatore and Buttari, Alfredo},
+title = {Object-Oriented Techniques for Sparse Matrix Computations in {Fortran} 2003},
+year = {2012},
+issue_date = {August 2012},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {38},
+number = {4},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/2331130.2331131},
+doi = {10.1145/2331130.2331131},
+abstract = {The efficiency of a sparse linear algebra operation heavily relies on the ability of the sparse matrix storage format to exploit the computing power of the underlying hardware. Since no format is universally better than the others across all possible kinds of operations and computers, sparse linear algebra software packages should provide facilities to easily implement and integrate new storage formats within a sparse linear algebra application without the need to modify it; it should also allow to dynamically change a storage format at run-time depending on the specific operations to be performed. Aiming at these important features, we present an Object Oriented design model for a sparse linear algebra package which relies on Design Patterns. We show that an implementation of our model can be efficiently achieved through some of the unique features of the Fortran 2003 language. Experimental results show that the proposed software infrastructure improves the modularity and ease of use of the code at no performance loss.},
+journal = {ACM Trans. Math. Softw.},
+month = {aug},
+articleno = {23},
+numpages = {20},
+keywords = {sparse matrices, Mathematics of computing, object-oriented design}
+}
+
+@manual{SYCL2020Specification,
+    organization  = "The Khronos\textsuperscript{\copyright} SYCL\textsuperscript{TM} Working Group",
+    title         = "SYCL\textsuperscript{TM} 2020 Specification",
+    number        = "Revision 8",
+    year          =  2023,
+    month         = "Oct",
+    note          = "Available at \url{https://registry.khronos.org/SYCL/specs/sycl-2020/html/sycl-2020.html} "
+}
+
+@INPROCEEDINGS{9150467,
+  author={Brock, Benjamin and Buluç, Aydin and Mattson, Timothy G. and McMillan, Scott and Moreira, José E.},
+  booktitle={2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW)}, 
+  title={A Roadmap for the GraphBLAS C++ API}, 
+  year={2020},
+  volume={},
+  number={},
+  pages={219-222},
+  keywords={C++ languages;Libraries;Standards;Sparse matrices;Linear algebra;Containers;Optimization},
+  doi={10.1109/IPDPSW50202.2020.00049}}
+
+@misc{graphblascppspec,
+  title={Graph{BLAS} {C}++ Specification},
+  author={Brock, Benjamin and McMillan, Scott and Bulu\c{c}, Ayd{\i}n and Mattson, Timothy and Moreira, Jos{\'e}},
+  howpublished={\url{https://github.com/GraphBLAS/graphblas-api-cpp}},
+  volume = {Version 1.0},
+  year={2023}
+}
+
+@misc{cpplinalg:p1673r13,
+  author = {Hoemmen, Mark and Hollman, Daisy and Trott, Christian and Sunderland, Daniel and Liber, Nevin and Klinvex, Alicia and Lo, Li-Ta and Damien, Lebrun-Grandie and Lopez, Graham and Caday, Peter and Knepper, Sarah and Luszczek, Piotr and Costa, Timothy},
+  title = {{P1673R13: A free function linear algebra interface based on the BLAS}},
+  month = {November},
+  year = {2023},
+  howpublished = {\url{https://isocpp.org/files/papers/P1673R13.html}}
+}
+
+@misc{p2300r7,
+  author = {Dominiak, Michal and Evtushenko, Georgy and Baker, Lewis  and Teodorescu, Lucian Radu and Howes, Lee and Shoop, Kirk  and
+Garland, Michael and Niebler, Eric and Lelbach, Bryce Adelstein},
+  title = {P2300R7: std::execution},
+  month = {April},
+  year = {2023},
+  howpublished = {\url{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2300r7.html}}
+}
+@misc{p3300r0,
+  author = {Lelbach, Bryce Adelstein},
+  title = {P3300R0: C++ Asynchronous Parallel Algorithms},
+  month = {February},
+  year = {2024},
+  howpublished = {\url{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3300r0.html}}
+}
+
+@article{ADN:2020:ReproBLAS,
+author = {Ahrens, Willow and Demmel, James and Nguyen, Hong Diep},
+title = {Algorithms for Efficient Reproducible Floating Point Summation},
+year = {2020},
+issue_date = {September 2020},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {46},
+number = {3},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/3389360},
+doi = {10.1145/3389360},
+abstract = {We define “reproducibility” as getting bitwise identical results from multiple runs of the same program, perhaps with different hardware resources or other changes that should not affect the answer. Many users depend on reproducibility for debugging or correctness. However, dynamic scheduling of parallel computing resources, combined with nonassociative floating point addition, makes reproducibility challenging even for summation, or operations like the BLAS. We describe a “reproducible accumulator” data structure (the “binned number”) and associated algorithms to reproducibly sum binary floating point numbers, independent of summation order. We use a subset of the IEEE Floating Point Standard 754-2008 and bitwise operations on the standard representations in memory. Our approach requires only one read-only pass over the data, and one reduction in parallel, using a 6-word reproducible accumulator (more words can be used for higher accuracy), enabling standard tiling optimization techniques. Summing n words with a 6-word reproducible accumulator requires approximately 9n floating point operations (arithmetic, comparison, and absolute value) and approximately 3n bitwise operations. The final error bound with a 6-word reproducible accumulator and our default settings can be up to 229 times smaller than the error bound for conventional (recursive) summation on ill-conditioned double-precision inputs.},
+journal = {ACM Trans. Math. Softw.},
+month = {jul},
+articleno = {22},
+numpages = {49},
+keywords = {summation, reproducibility, parallel, floating point summation, floating point number, computer arithmetic, binned summation, binned number, Reproducible summation}
+}
+
+@inproceedings{Demmel87,
+author = {Demmel, J.},
+title = {On error analysis in arithmetic with varying relative precision},
+booktitle = {IEEE 8th Symp. on Computer Arithmetic (ARITH)},
+pages = {148-152},
+year = {1987}
+}
+
+@inproceedings{ExactDotProduct,
+    author = {Koenig, J. and Biancolin, D. and Bachrach, J. and Asanovic, K.},
+    title = {A hardware accelerator for computing an
+             exact dot product},
+    booktitle = {IEEE 24th Symp. on Computer Arithmetic (ARITH)},
+    pages = {114-121},
+    year = {2017}
+}
+
+@article{Demmel84,
+author = {Demmel, J.},
+title = {Underflow and the reliability of numerical software},
+journal = {SIAM J. Sci. Stat. Comput.},
+volume = {5},
+number = {4},
+pages = {887-919},
+month = {Dec},
+year = {1984}}
+
+@misc{Proposed_BLAS_LAPACK_exception_handling,
+      title={Proposed Consistent Exception Handling for the BLAS and LAPACK}, 
+      author={James Demmel and Jack Dongarra and Mark Gates and Greg Henry and Julien Langou and Xiaoye Li and Piotr Luszczek and Weslley Pereira and Jason Riedy and Cindy Rubio-González},
+      year={2022},
+      eprint={2207.09281},
+      archivePrefix={arXiv},
+      primaryClass={cs.MS}
+}
+
+@misc{OOY:2023:dgemm_with_integer_matmul,
+      title={DGEMM on Integer Matrix Multiplication Unit}, 
+      author={Hiroyuki Ootomo and Katsuhisa Ozaki and Rio Yokota},
+      year={2023},
+      eprint={2306.11975},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC}
+}
+
+@misc{erik_welch_2024_10631255,
+  author       = {Erik Welch and
+                  Jim Kitchen and
+                  Sultan Orazbayev and
+                  ParticularMiner and
+                  Stan Seibert and
+                  William Zijie Zhang and
+                  Adam Lugowski and
+                  Paul Nguyen},
+  title        = {python-graphblas/python-graphblas: 2024.2.0},
+  month        = feb,
+  year         = 2024,
+  publisher    = {Zenodo},
+  version      = {2024.2.0},
+  doi          = {10.5281/zenodo.10631255},
+  url          = {https://doi.org/10.5281/zenodo.10631255}
+}
+
+@techreport{hoemmen2023linalg,
+  title={P1673: A free function linear algebra interface based on the {BLAS}},
+  author={Hoemmen, Mark and Hollman, Daisy and Trott, Christian and Sunderland, Daniel and Liber, Nevin and Lo, Li-Ta and Lebrun-Grandie, Damien and Lopez, Graham and Caday, Peter and Knepper, Sarah and others},
+  url={https://wg21.link/p1673},
+  institution={Open Standards},
+  year={2023},
+}
+
+@techreport{gates2017cpp,
+  author={Gates, Mark and Luszczek, Piotr and  Kurzak, Jakub and Dongarra, Jack
+          and Arturov, Konstantin and Cecka, Cris and Freitag, Chip},
+  title={{SLATE} Working Note 2: C++ {API} for {BLAS} and {LAPACK}},
+  institution={Innovative Computing Laboratory, University of Tennessee},
+  year={2017},
+  month={June},
+  number={ICL-UT-17-03},
+  note={revision 06-2017}
+}
+
+@misc{eigen,
+  author = {Ga\"{e}l Guennebaud and Beno\^{i}t Jacob and others},
+  title = {Eigen v3},
+  howpublished = {\url{http://eigen.tuxfamily.org}},
+  year = {2010}
+}
+
+@manual{boost_ublas,
+  title={Boost {uBLAS}: Basic Linear Algebra Library},
+  author={Joerg Walter and Mathias Koch and others},
+  url={https://www.boost.org/doc/libs/1_84_0/libs/numeric/ublas/doc/},
+}
+
+@inproceedings{siek1998matrix,
+  title={The {Matrix} {Template} {Library}: A generic programming approach to high performance numerical linear algebra},
+  author={Siek, Jeremy G and Lumsdaine, Andrew},
+  booktitle={International Symposium on Computing in Object-Oriented Parallel Environments},
+  pages={59--70},
+  year={1998},
+  organization={Springer},
+  doi={10.1007/3-540-49372-7_6},
+}
