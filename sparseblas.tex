@@ -861,7 +861,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 
 // scale() overwrites the values of A 
-scale_state_t state(allocator);
+operation_state_t state(allocator);
 scale(policy, state, 2.3, A);
 \end{minted}
 \caption{Scaling, $A := \alpha A$}
@@ -881,7 +881,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 auto A_handle = matrix_handle(A, allocator);
 
 // A is const; function returns Inf norm
-matrix_inf_norm_state_t state(allocator);
+operation_state_t state(allocator);
 auto inf_nrm = matrix_inf_norm(policy, state, A);
 \end{minted}
 \caption{Inf Matrix Norm, $\alpha = \|A\|_\text{inf}$.}
@@ -896,7 +896,7 @@ using namespace sparseblas;
 csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 
-matrix_frob_norm_state_t state(allocator);
+operation_state_t state(allocator);
 // A is const; function returns Frobenius norm
 auto frob_nrm = matrix_frob_norm(policy, state, A);
 // or - without passing a policy, resulting in a default:
@@ -921,7 +921,7 @@ auto y = std::mdspan(raw_y.data(), 100);
 auto A_handle = matrix_handle(A, allocator);
 
 // create a state for the optimization of the routine
-multiply_state_t state(allocator);
+operation_state_t state(allocator);
 
 // optional inspect phase can add information 
 // to the matrix handle
@@ -952,7 +952,7 @@ auto Y = std::mdspan(raw_y.data(), 100, 100);
 auto A_handle = matrix_handle(A, allocator);
 
 // create a state for the optimization of the routine
-multiply_state_t state(allocator);
+operation_state_t state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
@@ -986,7 +986,7 @@ auto b = std::mdspan(raw_y.data(), 100);
 auto T_handle = matrix_handle(T, allocator);
 
 // create a state for the optimization of the routine
-triangular_solve_state_t state(allocator);
+operation_state_t state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
@@ -1006,13 +1006,13 @@ triangular_solve(policy, state, T, b, x);
 %\linesep
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 auto X = std::mdspan(raw_x.data(), m, k);
 auto Y = std::mdspan(raw_b.data(), k, n);
 // sample mask is the pattern of CSR matrix output
 csr_view<float> C(values, rowptr, colind, shape, nnz);
 
-sampled_multiply_state_t state(allocator);
+operation_state_t state(allocator);
 sampled_multiply_inspect(policy, state, X, Y, C);
 
 // C = C.*( X * Y ): vendor optimizations in state for reuse
@@ -1028,14 +1028,14 @@ sampled_multiply(policy, state, X, Y, C);
 \iffalse
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 // ... likewise for B
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-multiply_elementwise_state_t state(allocator);
+operation_state_t state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
 multiply_elementwise_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1085,22 +1085,21 @@ using namespace spblas;
 // auto B_obj = matrix_handle(B, allocator);
 // auto D_obj = matrix_handle(D, allocator);
 
-sparse_multiply_state_t state(allocator);
-sparse_multiply_inspect(policy, state, 
+operation_state_t state(allocator);
+multiply_inspect(policy, state, 
     A_obj, B_obj, C, D_obj); // optional
-sparse_multiply_compute_symbolic(policy, state, 
+multiply_compute_symbolic(policy, state, 
     A_obj, B_obj, C, D_obj);
 index_t nnz = state.get_result_nnz();
 //T the user allocates the arrays for C
-sparse_multiply_fill_symbolic(policy, state, 
+multiply_fill_symbolic(policy, state, 
     A_obj, B_obj, C, D_obj);
-sparse_multiply_compute_numeric(policy, state, 
+multiply_compute_numeric(policy, state, 
     A_obj, B_obj, B, C, D_obj);
 // C CSR structure and values are now ready to be used
 \end{minted}
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
-We note that we change from the function name \texttt{multiply} (which we used for the multiplication of sparse with dense matrices or vectors) to \texttt{sparse\_multiply} to indicate that this operation generates sparse output and that a fundamentally different multi-stage API is needed. In consequence, it is not possible to just call \texttt{multiply(A,B,C)} on sparse objects \texttt{A,B,C}.\todo[inline]{did we still want to do sparse multiply?}
 
 A standard way to is to place the structural analysis in the \texttt{multiply\_compute} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
 
@@ -1117,7 +1116,7 @@ using namespace spblas;
 // csr_view<float> A,B,D filled elsewhwere
 // csr_view<float> C(c_nrows, c_ncols);
 
-sparse_multiply_state_t state(allocator);
+operation_state_t state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 multiply_symbolic_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
@@ -1139,28 +1138,28 @@ We want to provide some examples for the use of this API.
     \item Single use:
 \begin{minted}{c++}
 
-sparse_multiply_state_t state(allocator);
-sparse_multiply_inspect(policy, state, A, B, C, D); // optional
-sparse_multiply_compute(policy, state, A, B, C, D);
+operation_state_t state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+multiply_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
 // allocate C arrays 
-sparse_multiply_fill(policy, state, A, B, C, D);
+multiply_fill(policy, state, A, B, C, D);
 // C structure is now able to be used
 \end{minted}
 \item 
 Repeated invocation of the functionality with numerically differing matrices:
 \begin{minted}{c++}
-sparse_multiply_state_t state(allocator);
-sparse_multiply_inspect(policy, state, A, B, C, D); // optional
+operation_state_t state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
 for (i=0 i<n; i++) {
   // may do nothing if nnz is already computed
   // and information is stored in the state
-  sparse_multiply_compute(policy, state, A, B, C, D);
+  multiply_compute(policy, state, A, B, C, D);
   index_t nnz = state.get_result_nnz();
   if (i == 0 }{
     // allocate C arrays 
   }
-  sparse_multiply_fill(policy, state, A, B, C, D);
+  multiply_fill(policy, state, A, B, C, D);
   // C structure is now able to be used
 }
 \end{minted}
@@ -1168,12 +1167,12 @@ for (i=0 i<n; i++) {
 Using the split into numeric and symbolic phase for repeated invocation of the functionality with numerically differing matrices:
 \begin{minted}{c++}
 
-sparse_multiply_state_t state(allocator);
-sparse_multiply_inspect(policy, state, A, B, C, D); // optional
-sparse_multiply_symbolic_compute(policy, state, A, B, C, D);
+operation_state_t state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+multiply_symbolic_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
 // allocate C arrays 
-sparse_multiply_symbolic_fill(policy, state, A, B, C, D);
+multiply_symbolic_fill(policy, state, A, B, C, D);
 for (i=0 i<n; i++) {
   // only numeric computations inside the loop
   multiply_numeric_compute(policy, state, A, B, C, D);
@@ -1191,11 +1190,11 @@ Up to now, we provided motivation and details for the design of the API for the 
 %\linesep
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 auto A = std::mdspan(raw_x.data(), m, k);
 csr_view<float> B(m, n);
 
-convert_state_t state(allocator);
+operation_state_t state(allocator);
 convert_inspect(policy, state, A, B);
 convert_compute(policy, state, A, B);
 index_t nnz = state.get_result_nnz();
@@ -1210,14 +1209,14 @@ convert_fill(policy, state, A, B);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 // ... likewise for B
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-multiply_elementwise_state_t state(allocator);
+operation_state_t state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
 multiply_elementwise_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1232,14 +1231,14 @@ multiply_elementwise_fill(policy, state, A, B, C);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 // ... likewise for B
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-add_state_t state(allocator);
+operation_state_t state(allocator);
 add_inspect(policy, state, A, B, C); // optional
 add_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1253,7 +1252,7 @@ add_fill(policy, state, A, B, C);
 %\linesep
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 csr_view<float> A_view(values, rowptr, colind, shape, nnz);
 csr_view<float> B(values, rowptr, colind, shape, nnz);
 
@@ -1265,7 +1264,7 @@ auto pred = [](auto i, auto j, auto v) {
               return (i < 10 ) && (j < 10);
             };
 
-filter_state_t state(allocator);
+operation_state_t state(allocator);
            
 // matrix_handle is opaque and may contain vendor optimization details
 matrix_handle A(A_view, allocator);
@@ -1408,11 +1407,11 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \midrule    
         \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
     \midrule        
-        \texttt{<op>\_state\_t} & Internal library state specific to a particular operation (e.g.~\texttt{scale\_state\_t}). Contains one mandatory function: \texttt{get\_result\_nnz()} to return NNZ in the result of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
+        \texttt{operation\_state\_t} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
         \texttt{matrix\_handle} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations take either views (e.g.~\texttt{csr\_view<T>}) or matrix handles. \\ 
     \midrule        
-        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{<op>\_state\_t} and \texttt{matrix\_handle} objects. & \texttt{<op>\_state\_t} and \texttt{matrix\_handle} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
+        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_handle} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_handle} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
     \bottomrule
     \end{tabular}
     \caption{Summary of types introduced by the standard.} 
@@ -1420,7 +1419,6 @@ A number of new types have been introduced in the preceding sections. Table \ref
 \end{table}
 \todo[inline]{Chris: Are these all of the introduced types?}
 \todo[inline]{Are descriptions accurate and sufficient for a summary?}
-\todo[inline]{List using namespace here? (namespace spblas and sparseblas are both used in the paper...)}
 \todo[inline]{Can we be consistent about suffix \_t?}
 
 %\subsection{Functionality Generating Sparse Output Data}
@@ -1759,7 +1757,7 @@ of the numbers (numbers closer to 1 are more accurate than much
 larger or smaller numbers), we refer to \cite{GoodBadUgly} and \cite{Demmel87}, the latter of which discusses an older proposed
 format with similar properties.
 We also note that the designers of posits propose including a
-``quire, a long accumulator capable of computing long dot products exactly. 
+``quire'', a long accumulator capable of computing long dot products exactly. 
 
 Long accumulators for
 exact dot products with standard floating point
@@ -1776,10 +1774,10 @@ $\epsilon$ and $UN$ are for the output format.
 \iffalse
 \subsection{Consistent exception handling and reproducibility}
 
-In this subsection, we describe a sequence of three design points for exception handling and reproducibility in Sparse BLAS, ranging from “permissive”, i.e. no rules (so most performance optimizations are permitted) to bitwise reproducibility (which is the most restrictive and expensive). We note that the second and third design points
+In this subsection, we describe a sequence of three design points for exception handling and reproducibility in Sparse BLAS, ranging from "permissive", i.e. no rules (so most performance optimizations are permitted) to bitwise reproducibility (which is the most restrictive and expensive). We note that the second and third design points
 below are independent of one another.
 
-%“Permissive” will be the default version, but we request feedback from readers as to which other design points should be recommended or required as options.
+%"Permissive" will be the default version, but we request feedback from readers as to which other design points should be recommended or required as options.
 %We note that these design points are ordered in the sense that each one includes the requirements of the previous ones in the list, and is likely to be slower.
 \begin{enumerate}
     \item Permissive. We only require that error bounds described earlier in subsection~\ref{Error_Bounds} be satisfied in the absence of floating point exceptions, or exceptional inputs like Inf and NaN. For SpMV, $y = \alpha \cdot A \cdot x + \beta \cdot y$, this applies independently to every output component $y(i)$.
@@ -1796,7 +1794,7 @@ below are independent of one another.
     \item Run-to-run bitwise-reproducibility properties in Sparse BLAS routines are discussed in Section~\ref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
     \todo[inline]{ [Spencer] should reproducibility still be lumped in with permissive/consistency ?  it seems orthogonal now, so doesn't quite fit here. Maybe it should just be it's own subsection ?}
 \end{enumerate}
-We anticipate that the ``permissive'' policy will be the most common use case and developers might limit their scope to support this mode. The other modes come with sometimes significant performance overhead, but are important for various critical applications.
+We anticipate that the "permissive" policy will be the most common use case and developers might limit their scope to support this mode. The other modes come with sometimes significant performance overhead, but are important for various critical applications.
 
 \fi
 
@@ -1804,7 +1802,7 @@ We anticipate that the ``permissive'' policy will be the most common use case an
 input to output}
 
 This refers to propagating Infs and NaNs that appear in the input data of a SparseBLAS
-operation in a “consistent” way to the output. Sparsity makes the definition of “consistent”
+operation in a "consistent" way to the output. Sparsity makes the definition of "consistent"
 more subtle than the one proposed for the dense BLAS in \cite{Proposed_BLAS_LAPACK_exception_handling}, which says that an Inf or NaN
 that is input or created during execution should propagate to the output, unless there
 is a good mathematical reason it should not. Sparsity makes this more subtle because
@@ -1812,20 +1810,20 @@ a sparse matrix contains implicit zeros, which are not stored and not expected t
 arithmetic operations, and so not create NaNs (from 0*NaN=NaN or 0*Inf=NaN) to
 propagate. For example in SpMV, computing y = A*x, if x(i) = NaN and the i-th column
 of A is all implicit zeros, then x(i)=NaN will not cause any entry of y to be a NaN, which
-is the user’s expectation. 
+is the user's expectation. 
 
 But in fact a sparse matrix may contain 3 kinds of zeroes, that we may treat differently:
 \begin{enumerate}
 \item An implicit zero. As described above, this is an entry A(i,j) that is not stored in the 
-user’s input data structure, and the user does not expect it to participate in any
-arithmetic operations. We emphasize ``user’s input data structure’’ to distinguish
+user's input data structure, and the user does not expect it to participate in any
+arithmetic operations. We emphasize ``user's input data structure'' to distinguish
 from case (3) below.
 \item An explicit zero. This is a zero stored in a data structure, and it is
 expected to participate in the same arithmetic operations that a nonzero value would.
-The data structure could be the user’s input data structure, or one that is created by
+The data structure could be the user's input data structure, or one that is created by
 the system to optimize performance (examples below).
 \item An explicit masked zero. This refers to a zero that is explicitly stored in a data structure,
-but another part of that data structure (a ``mask’’) indicates that it is not supposed to
+but another part of that data structure (a ``mask'') indicates that it is not supposed to
 participate in any arithmetic operations, like an implicit zero. 
 \end{enumerate}
 
@@ -1836,7 +1834,7 @@ use SIMD instructions on some architectures. Second, it may only be necessary
 to store one column index for such a segment instead of multiple indices
 (e.g. blocked CSR, or BCSR), saving memory and reducing memory access time.
 
-One example of a user’s input data structure that can contain explicit masked zeros is ELLPACK, 
+One example of a user's input data structure that can contain explicit masked zeros is ELLPACK, 
 in which the nonzeros of an m x n sparse matrix are stored in an m x k matrix A , and row i of A
 contains the nonzeros in row i of the sparse matrix, where k is the maximum number of 
 nonzeros in any row. This means row i of A is padded with additional explicit zeros if it contains
@@ -1847,7 +1845,7 @@ matrix entries stored in A, with an index of -1 to mask out any padded zeros.
 Another example of explicit masked zeros is the BCSR format described above, augmented
 with a bit-mask for each segment to indicate which zeros are implicit zeros, and so should 
 not participate in any arithmetic operation (or if they do, that no NaNs are propagated).
-Such a data structure could either be the user’s input data structure, or created as a
+Such a data structure could either be the user's input data structure, or created as a
 performance optimization by the system.
 \todo[inline]{[Spencer] Are we sure we want to use BCSR format augmented with a bitmask as an example here.  It is non standard and we discussed BSR or BCSR format being one where explicit zeros are actually added (modeling case 2).}
 
@@ -1855,10 +1853,10 @@ performance optimization by the system.
 suggestions of other examples.}
 \fi
 
-To be ``consistent’’ given these different kinds of zeros, we require both that
+To be ``consistent'' given these different kinds of zeros, we require both that
 implicit zeros and explicit masked zeros do not create NaNs which would then
 propagate to the output. 
-% Explicit masked zeros can either be in the user’s input
+% Explicit masked zeros can either be in the user's input
 % data structure, or created by the system as an optimization.
 
 So far we have discussed the SpMV operation defined as $y=A \cdot x$. 
