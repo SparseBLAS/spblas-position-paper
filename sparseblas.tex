@@ -413,8 +413,6 @@ for storage and exchange. We will consider these as input formats for
 the standard, and each of these formats will be supported through a lightweight, non-owning view class defined by the Sparse BLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given below. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
 
 
-Several additional storage formats have been proposed in the literature throughout the years~\cite{langr2015evaluation}, outlining trade-offs between performance, memory footprint, and creating overhead. These formats can be considered as optimization targets, rather than input/exchange formats. 
-Possible future extension formats include CSR(4), CSC(4), BSR / BSC, variable BSR / BSC, Ellpack (including variants ESB/SELL-P/SELL-C-$\sigma$), and diagonal/tridiagonal/pentadiagonal formats. We will not go into specific details about these here; for now, these are considered to be optional extension formats.
 
 Some applications require the structure of sparse matrices only (i.e.,~the pattern of non-zero elements) and not the values themselves. Other applications may use the same value in all nonzero locations, we may call these iso-valued matrices. We do not provide a specific type for structure-only matrices but instead define iso-valued matrices.  We anticipate iso-valued matrix views being created via CSR, CSC, or COO matrix views whose value arrays are replaced by a symbolic ``iso array'' whose values are all the same.
 
@@ -506,6 +504,12 @@ Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:
      \caption{COO input parameters}
     \label{tab:coo_param}
 \end{table}
+
+
+
+Several additional storage formats have been proposed in the literature throughout the years~\cite{langr2015evaluation}, outlining trade-offs between performance, memory footprint, and creating overhead. These formats can be considered as optimization targets, rather than input/exchange formats. 
+Possible future extension formats include CSR(4), CSC(4), BSR / BSC, variable BSR / BSC, Ellpack (including variants ESB/SELL-P/SELL-C-$\sigma$), and diagonal/tridiagonal/pentadiagonal formats. 
+
 
 % BSR
 Many sparse formats can be generalized to a block version, leading to more suitable data structures when dealing with dense block structures typical of matrices found in many simulation codes and obtained with the finite element method (FEM) or the discontinuous Galerkin method (DG). These data structures reduce the memory footprint and propose suitable storage for using dense linear algebra.  
@@ -616,13 +620,11 @@ There exist different strategies for handling the ownership of data in sparse li
 
 There are multiple reasons for having these two types of API. 1) transparent, non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), but on the other hand, owning matrix objects come with an initial usage cost and require copies; 2) non-owning types require multiple phases for their instantiation and allocation which must be explicitly exposed to the user, which can be especially complex and require several steps for more complex operations (e.g., Sparse-Matrix times Sparse-Matrix product -- SpGEMM); 3) with transparent, non-owning objects, the internal data can always be inspected and accessed at little cost, whereas accessors are required for opaque objects and can come with an extra cost.
 
-Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed, and complementary, and providing these two types of API will satisfy most needs.
-
-In this first version of an interface design, 
+Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed, and complementary, and providing these two types of API will satisfy most needs. Generally, designing a non-owning API for functionality is significantly harder. For this reason, in this first version of an interface design, 
 we focus on the second option, the non-owning API for functionality. However, as we will detail next, we extend this approach to allow for a moderate level of optimization. 
 In this non-owning API, the user owns the data and light-weight views are used to expose the functionality to the library operations. In particular, the light-weight views expose the raw pointers and size information of, for example, a CSR matrix, dense matrix, or a COO matrix.
 
-As discussed, this approach limits the optimization potential for developers. 
+As discussed, this approach limits the optimization potential for the libraries. 
 In particular, the light-weight views do not allow to 
 store additional information that can be exploited
 by algorithms operating on the sparse matrices, like symmetry, upper or lower triangular structure, matrix transpose, etc. 
@@ -647,6 +649,7 @@ auto A_handle = matrix_handle(A, allocator);
 \caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_handle} with user-specified \texttt{allocator}.}
 \end{listing}
 
+\textbf{HA: to discuss remove the next statement, or?}
 We note that the API is expected to accept both plain views or \texttt{matrix\_handle}'s. If plain views are passed in, the library has no optimization structure at hand and can not store any additional matrix information that persists beyond the operation.
 
 
@@ -1046,6 +1049,8 @@ multiply_elementwise_fill(policy, state, A, B, C);
 \caption{Element-wise Multiplication, $C = A~.*B$}
 \end{listing}
 \fi
+
+\subsection{Multi-Stage API for Operations with unknown Output}
 
 
 As mentioned above, a fundamental difference to dense BLAS functionality is that for basic operations on sparse objects, the sparsity pattern (and therewith the sparse data structure) is not always known beforehand. An example is the multiplication of two sparse matrices $A, B$, resulting in another sparse matrix $C = A\cdot B$ with a pattern that is typically unknown prior to the computation. In consequence, functionality producing sparse output with the sparsity pattern unknown prior to the computation is typically split into multiple phases. From a high-level standpoint, one can decompose such functionality into the following phases with strictly defined pre-conditions and post-conditions:
