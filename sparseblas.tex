@@ -1409,14 +1409,14 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \textbf{Type} & \textbf{Definition} & \textbf{Notes}\\ 
     \midrule
         \texttt{csr\_view<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{https://en.cppreference.com/w/cpp/ranges/view}. Operations take either views or matrix handles. \\
-    \midrule    
-        \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
-    \midrule        
-        \texttt{operation\_state\_t} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
         \texttt{matrix\_handle} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations take either views (e.g.~\texttt{csr\_view<T>}) or matrix handles. \\ 
     \midrule        
+        \texttt{operation\_state\_t} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
+    \midrule        
         \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_handle} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_handle} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
+    \midrule    
+        \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
     \bottomrule
     \end{tabular}
     \caption{Summary of types introduced by the standard.} 
@@ -1568,8 +1568,7 @@ The design space is defined by the following, often intertwined considerations:
     block floating point, as well as
     mixed precision (e.g. using a higher or lower precision internally) suggests a design that allows for high flexibility. We describe this design space in more
     detail below, but our initial design just proposes
-    standard IEEE 754 32-bit and 64-bit formats, pending user feedback requesting more
-    options. \todo[inline]{Chris: Did we get f/b from the BoF on this? What will we *require* from implementors?}
+    standard IEEE 754 32-bit and 64-bit formats. %\todo[inline]{Chris: Did we get f/b from the BoF on this? What will we *require* from implementors?}
     \item What error bounds should be satisfied in the
     absence of arithmetic exceptions? This is again 
     motivated by the growing variety of available precisions.
