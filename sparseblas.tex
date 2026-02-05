@@ -864,7 +864,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 
 // scale() overwrites the values of A 
-operation_state_t state(allocator);
+operation_state state(allocator);
 scale(policy, state, 2.3, A);
 \end{minted}
 \caption{Scaling, $A := \alpha A$}
@@ -884,7 +884,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 auto A_handle = matrix_handle(A, allocator);
 
 // A is const; function returns Inf norm
-operation_state_t state(allocator);
+operation_state state(allocator);
 auto inf_nrm = matrix_inf_norm(policy, state, A);
 \end{minted}
 \caption{Inf Matrix Norm, $\alpha = \|A\|_\text{inf}$.}
@@ -899,7 +899,7 @@ using namespace sparseblas;
 csr_view<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_handle(csr_view<float>(...), allocator);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 // A is const; function returns Frobenius norm
 auto frob_nrm = matrix_frob_norm(policy, state, A);
 // or - without passing a policy, resulting in a default:
@@ -924,7 +924,7 @@ auto y = std::mdspan(raw_y.data(), 100);
 auto A_handle = matrix_handle(A, allocator);
 
 // create a state for the optimization of the routine
-operation_state_t state(allocator);
+operation_state state(allocator);
 
 // optional inspect phase can add information 
 // to the matrix handle
@@ -955,7 +955,7 @@ auto Y = std::mdspan(raw_y.data(), 100, 100);
 auto A_handle = matrix_handle(A, allocator);
 
 // create a state for the optimization of the routine
-operation_state_t state(allocator);
+operation_state state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
@@ -989,7 +989,7 @@ auto b = std::mdspan(raw_y.data(), 100);
 auto T_handle = matrix_handle(T, allocator);
 
 // create a state for the optimization of the routine
-operation_state_t state(allocator);
+operation_state state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
@@ -1015,7 +1015,7 @@ auto Y = std::mdspan(raw_b.data(), k, n);
 // sample mask is the pattern of CSR matrix output
 csr_view<float> C(values, rowptr, colind, shape, nnz);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 sampled_multiply_inspect(policy, state, X, Y, C);
 
 // C = C.*( X * Y ): vendor optimizations in state for reuse
@@ -1038,7 +1038,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
 multiply_elementwise_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1090,7 +1090,7 @@ using namespace spblas;
 // auto B_obj = matrix_handle(B, allocator);
 // auto D_obj = matrix_handle(D, allocator);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_inspect(policy, state, 
     A_obj, B_obj, C, D_obj); // optional
 multiply_compute_symbolic(policy, state, 
@@ -1121,7 +1121,7 @@ using namespace spblas;
 // csr_view<float> A,B,D filled elsewhwere
 // csr_view<float> C(c_nrows, c_ncols);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 multiply_symbolic_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
@@ -1143,7 +1143,7 @@ We want to provide some examples for the use of this API.
     \item Single use:
 \begin{minted}{c++}
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 multiply_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
@@ -1154,7 +1154,7 @@ multiply_fill(policy, state, A, B, C, D);
 \item 
 Repeated invocation of the functionality with numerically differing matrices:
 \begin{minted}{c++}
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 for (i=0 i<n; i++) {
   // may do nothing if nnz is already computed
@@ -1172,7 +1172,7 @@ for (i=0 i<n; i++) {
 Using the split into numeric and symbolic phase for repeated invocation of the functionality with numerically differing matrices:
 \begin{minted}{c++}
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 multiply_symbolic_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
@@ -1199,7 +1199,7 @@ using namespace spblas;
 auto A = std::mdspan(raw_x.data(), m, k);
 csr_view<float> B(m, n);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 convert_inspect(policy, state, A, B);
 convert_compute(policy, state, A, B);
 index_t nnz = state.get_result_nnz();
@@ -1221,7 +1221,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
 multiply_elementwise_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1243,7 +1243,7 @@ csr_view<float> A(values, rowptr, colind, shape, nnz);
 csr_view<float> C(m, n);
 // auto C = matrix_handle(csr_view<float>(...), allocator);
 
-operation_state_t state(allocator);
+operation_state state(allocator);
 add_inspect(policy, state, A, B, C); // optional
 add_compute(policy, state, A, B, C);
 index_t nnz = state.get_result_nnz();
@@ -1269,7 +1269,7 @@ auto pred = [](auto i, auto j, auto v) {
               return (i < 10 ) && (j < 10);
             };
 
-operation_state_t state(allocator);
+operation_state state(allocator);
            
 // matrix_handle is opaque and may contain vendor optimization details
 matrix_handle A(A_view, allocator);
@@ -1412,7 +1412,7 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \midrule        
         \texttt{matrix\_handle} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations take either views (e.g.~\texttt{csr\_view<T>}) or matrix handles. \\ 
     \midrule        
-        \texttt{operation\_state\_t} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
+        \texttt{operation\_state} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
         \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_handle} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_handle} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
     \midrule    
@@ -1422,9 +1422,7 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \caption{Summary of types introduced by the standard.} 
     \label{tab:newtypes}
 \end{table}
-\todo[inline]{Chris: Are these all of the introduced types?}
-\todo[inline]{Are descriptions accurate and sufficient for a summary?}
-\todo[inline]{Can we be consistent about suffix \_t?}
+
 
 %\subsection{Functionality Generating Sparse Output Data}
 
