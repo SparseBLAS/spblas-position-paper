@@ -1187,7 +1187,12 @@ for (i=0 i<n; i++) {
 \end{minted}
 \end{enumerate}
 
-
+\begin{figure}
+    \centering
+    \includegraphics[width=.9\columnwidth]{graphics/different_spgemm.png}
+    \caption{Different workflows for the CSR-based SPGEMM.}
+    \label{fig:spgemm_workflows}
+\end{figure}
 
 
 Up to now, we provided motivation and details for the design of the API for the sparse matrix - sparse matrix multiply operation, but the same two-stage interface applies also to other functionality with nonzero structure unknown a-priori.
