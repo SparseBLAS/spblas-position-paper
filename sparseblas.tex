@@ -367,12 +367,13 @@ hardware.
 Furthermore, we acknowledge in this proposal that for repeated application of a sparse operator, the initial investment in optimization -- analyzing sparsity patterns and characteristics, and fine-tuning format and execution policies -- can quickly be amortized by faster execution. We thus propose interfaces also allowing for an optimization phase prior to repeated execution of functionality.
 
 \section{The Three Archetypes for the Sparse BLAS Design}
-While there exists a long list of sparse linear algebra functionality, for the design of an interface standard it is useful to identify groups of functionality sharing the same properties. We identified three distinct archetypes based on their computational complexity, memory requirements, and parallelization strategies. 
+\label{sec:archetype}
+While there exists a long list of sparse linear algebra functionality, for the design of an interface standard, it is useful to identify groups of functionality sharing the same properties. We identified three distinct archetypes based on their computational complexity, memory requirements, and parallelization strategies. 
 
-The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), which is defined by the multiplication of a sparse matrix by a dense vector to produce a dense output vector. It is generally considered the most predictable operation because the output size is known beforehand, allowing for straightforward memory allocation. While the design of an interface should support for various input formats (e.g. by accepting ana abstract matrix operator), the operation is typically memory-bandwidth limited and trivial to parallelize by partitioning the matrix rows among different execution units. 
+The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), which is defined by the multiplication of a sparse matrix by a dense vector to produce a dense output vector. It is generally considered the most predictable operation because the output size is known beforehand, allowing for straightforward memory allocation. While the design of an interface should support various input formats (e.g., by accepting an abstract matrix operator), the operation is typically memory-bandwidth limited and trivial to parallelize by partitioning the matrix rows among different execution units. 
 
 
-In contrast, \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM) represents a much more complex archetype due to the unknown output sparsity pattern. Because the number of non-zero entries in the resulting matrix cannot be determined a priori, a multi-stage design design is needed. This process begins with an inspection or symbolic phase to compute the sparsity pattern, followed by memory allocation, and finally a numeric phase to calculate the actual values. Because the workload can be highly unbalanced, the parallelization strategies for SpGEMM can range from row-parallel and column-parallel to sub-matrix parallel and element-parallel.
+In contrast, \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM) represents a much more complex archetype due to the unknown output sparsity pattern. Because the number of non-zero entries in the resulting matrix cannot be determined a priori, a multi-stage design is needed. This process begins with an inspection or symbolic phase to compute the sparsity pattern, followed by memory allocation, and finally a numeric phase to calculate the actual values. Because the workload can be highly unbalanced, the parallelization strategies for SpGEMM can range from row-parallel and column-parallel to sub-matrix parallel and element-parallel.
 
 The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), involves solving systems where the sparse matrix is triangular or only a triangular part of the matrix is considered. For this reason, the design relies heavily on property tags to inform the solver whether the matrix stored is lower or upper triangular or if it possesses symmetry that can be exploited for faster execution. Although the output size is as predictable as that of SpMV, the operation is inherently sequential because each element of the output vector may depend on previously computed values. To extract parallelism, the library must often construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix. 
 
@@ -383,7 +384,7 @@ The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), involves sol
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
 To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, eigensolvers, and preconditioners. Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
 
-Our scope entails \textit{sparse storage format standardization} as well as \textit{conversion between formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a Sparse Matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a spare output with sparsity pattern beforehand.
+Our scope entails \textit{sparse storage format standardization} as well as \textit{conversion between formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a Sparse Matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
 
 \begin{table}[h]
@@ -410,7 +411,7 @@ Our scope entails \textit{sparse storage format standardization} as well as \tex
        Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & Single-stage\\
     \bottomrule
     \end{tabular}
-    \caption{List of the Sparse BLAS functionalities. Uppercase letters represent matrices; lowercase represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
+    \caption{List of the Sparse BLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
     \label{tab:scope}
 \end{table}
 
@@ -427,7 +428,7 @@ the standard, and each of these formats will be supported through a lightweight,
 
 
 
-Some applications require the structure of sparse matrices only (i.e.,~the pattern of non-zero elements) and not the values themselves. Other applications may use the same value in all nonzero locations, we may call these iso-valued matrices. We do not provide a specific type for structure-only matrices but instead define iso-valued matrices.  We anticipate iso-valued matrix views being created via CSR, CSC, or COO matrix views whose value arrays are replaced by a symbolic ``iso array'' whose values are all the same.
+Some applications require the structure of sparse matrices only (i.e.,~the pattern of non-zero elements) and not the values themselves. Other applications may use the same value in all nonzero locations; we may call these iso-valued matrices. We do not provide a specific type for structure-only matrices but instead define iso-valued matrices.  We anticipate iso-valued matrix views being created via CSR, CSC, or COO matrix views whose value arrays are replaced by a symbolic ``iso array'' whose values are all the same.
 
 % A note on types used in the tables...
 Table \ref{tab:csr_param} outlines the input parameters required to construct a CSR matrix. These input parameters are defined by three important types: \texttt{scalar\_type}, which is the type of the scalar elements stored in the sparse matrix, \texttt{index\_type}, which is the type used to store explicit indices, and \texttt{offset\_type}, which is the type used to store offsets into other arrays.  The \texttt{index\_type} limits the maximum dimensions of a matrix that can be stored, while \texttt{offset\_type} limits the maximum number of nonzeros that can be stored.  This is useful, for example, when large matrices may require \texttt{int64\_t} for \texttt{rowptr} elements in order to avoid integer overflow during calculations involving \texttt{rowptr}.
@@ -676,61 +677,9 @@ auto A_handle = matrix_handle(A, allocator);
 
 
 
+\subsection{Views on Matrix Data}
 
 
-
-
-\iffalse
-
-
-
-
-
-% We also recognize that a Sparse-BLAS standard can have two types of users, a scientist who wants to prototype a simulation code quickly, but also an expert mathematical library developer who wants full control over his data and the operations, and to minimize costs.
-
-% A separate section for types: owning vs non-owning; opaque vs user-visible class?
-
-\paragraph{Opaque objects, data-owning API}
-% This section is taken and extrapolated from the Sparse Matrix Type And Representations Discussion working group of the Sparse BLAS23 WS.
-
-In this API, two object classes are defined: 1) matrix handles and 2) vector handles, both of which can represent either sparse or dense data. Because these objects are opaque, any access to the data requires specific API calls which can come with a cost (e.g., a matrix format conversion).
-
-The execution flow with this API relies on the following four main stages:
-\begin{enumerate}
-    \item handle creation: this function takes in user data and returns an opaque matrix or vector handle. The input can be given in several formats, e.g. COO or CSR for matrices (and eventually more formats, see \Cref{sec:sparse-formats}), but the actual data storage format within the handle is up to the library implementer.
-    \item (optional) hints stage: this function allows the user to configure a structure to give hints to the API, e.g. prevent or favor aggressive optimizations, what are the properties of the storage, the linear operator, etc.
-    % \item optimize: do we need this, or we say it's implicit either in the hints or execution phase?
-    \item execution stage: this effectively executes the operation(s), e.g. the sparse matrix-vector product.
-    %\item deletion: finally, all temporary data must be deallocated by an explicit call to the library.
-\end{enumerate}
-
-In a typical use case, the first stage is only called once per handle, and in between any number of calls to the execution stage can be done. To accelerate the application calls, an optional hints stage can also be used. Multiple hints can be given depending on the situation, for example:
-\begin{itemize}
-\item used once or used within a solver loop,
-\item format storage properties: (lower/upper/full, sorted/unsorted, repeated indices)
-\item linear operator properties: (general(default), symmetric/hermitian, triangular\_lower/triangular\_upper)  
-\end{itemize}
-
-%\todo[inline]{In my opinion, one of the biggest uses for hints is actually related to the op() modifier like transpose/nontrans/conjugate-transpose operations, for instance to prepare for $A^T$ operation by either making transpose copy and storing it in the attached-to-matrix bag of optimizations... }
-
-
-\paragraph{Transparent, non-data-owning API}
-In this API, two types of objects are defined: 1) matrix views, which can be either CSR, CSC, or COO views, and 2) plain dense vectors and matrices. The matrix views need to be explicitly instantiated from user data (e.g., a triplet of pointers for row pointers, column indices, and values for CSR, see \Cref{sec:sparse-formats}) and they never get ownership of that data.
-
-Because it is non-owning, the API takes specific care of not allocating data by itself, but instead relies on the user to allocate any output data, e.g. the matrix $C$ in the SpGEMM case ($C=A\cdot B$). For this reason, the following steps define the usage of the non-owning, view-based API:
-\begin{enumerate}
-    \item views creation: the user pointers are packed into \texttt{csr\_view} and other types depending on the matrix format. Note that the matrix format cannot change except via explicit conversion calls. In this case, conversion requires an extra data copy allocated by the user, and the initial data will become stale.
-    \item \fb{From a design point of view, the \textbf{inspect phase} is for optimization purpose (multiple calls). Memory allocation is an independent problem that we can address with a memory allocator/memory resource} (optional) inspect stage: for every function, e.g. \texttt{multiply}, a \texttt{multiply\_inspect} variant exists which returns an opaque \texttt{info} object. The role of this API is two-fold: a) when the user needs to allocate data for the actual execution of the call, the returned info object contains the sizes to be allocated, and b) eventually, vendor-specific optimizations can be hidden within the \texttt{info} object and can be used as hints if given to subsequent API calls.
-    \item (optional) user allocation: if the previous inspect call returned an \texttt{info} object with sizes to be allocated, the user must allocate them manually. Eventually, API helpers can be implemented for this stage for common use cases.
-    \item execution stage: this effectively executes the operation, for the \texttt{multiply} operation, the function would be called \texttt{multiply\_execute}.
-\end{enumerate}
-
-Note that, unlike the data-owning, opaque API, here the user has full control over the memory, which also means that an extra stage with user allocations is required. Because of this execution flow, running complex operations using this API creates a short back-and-forth between the API and the user. Unlike in the opaque, data-owning API, here the API abides much closer to the user requirements and there is less room for vendor-specific optimizations, although it is possible thanks to the \texttt{info} objects.
-
-\noindent
-
-\fi
-%\todo[inline]{Threading model and support?}
 
 \subsection{Horizontal and Vertical Interoperability}
 
@@ -848,23 +797,23 @@ A->apply(alpha, x, beta, y);
 
 \end{enumerate}
 
-Note that the \textit{handle} in rocSPARSE, cuSPARSE and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked at which time it globally initializes their Sparse BLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
+Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their Sparse BLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
 
 \subsection{API Design Considerations}
 From a high-level point of view, there exist two classes of sparse BLAS operations:
 \begin{enumerate}
-    \item Operations where the sparsity pattern of the output object is known a priori, e.g. the multiplication of a sparse matrix with a vector or a dense matrix, or the sampled multiplication of two dense matrices, or the scaling of a matrix. These operations can be realized with a single kernel operating on pre-allocated output data.
-    \item Operations where the sparsity pattern of the output object is not known a priori, e.g. the multiplication of two sparse matrices, a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
-    For these operations, it is impossible to execute them using a single kernel as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
+    \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. 
+    \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
+    For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class operate on matrix\_view structures and are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
 \end{enumerate} 
 
 For both single-stage and multi-stage operations that produce sparse output, the sparsity structure of the output is based on the symbolic operation, not on the numeric operations. In other words, a numeric calculation resulting in a numeric zero does not result in omitting this entry from the output sparsity pattern.
 
 
-While there exist strong arguments for unifying the interface for the different functionality to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of known sparsity pattern, and a multi-stage API for functionality that produces output of unknown sparsity pattern. 
+While there exist strong arguments for unifying the interface for the different functionality to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of a known sparsity pattern, and a multi-stage API for functionality that produces output of an unknown sparsity pattern. 
 
-Functionality operating on sparse objects differ also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix handle. The optimization may in particular pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization but can not access additional information in the optimization structure of a matrix handle.
-If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection is used. 
+Functionality operating on sparse objects differ also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix handle. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization, but can not access additional information in the optimization structure of a matrix handle.
+If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
 This concept of an optional inspect phase is in line with the current design of vendor interfaces, see Section \ref{sec:spmvReview}.
 
 
@@ -1072,10 +1021,10 @@ multiply_elementwise_fill(policy, state, A, B, C);
 \end{listing}
 \fi
 
-\subsection{Multi-Stage API for Operations with unknown Output}
+\subsubsection{Multi-Stage API for Operations with unknown Output}
 
 
-As mentioned above, a fundamental difference to dense BLAS functionality is that for basic operations on sparse objects, the sparsity pattern (and therewith the sparse data structure) is not always known beforehand. An example is the multiplication of two sparse matrices $A, B$, resulting in another sparse matrix $C = A\cdot B$ with a pattern that is typically unknown prior to the computation. In consequence, functionality producing sparse output with the sparsity pattern unknown prior to the computation is typically split into multiple phases. From a high-level standpoint, one can decompose such functionality into the following phases with strictly defined pre-conditions and post-conditions:
+As mentioned above, a fundamental difference to dense BLAS functionality is that for basic operations on sparse objects, the sparsity pattern (and therewith the sparse data structure) is not always known beforehand. An example is the third archetype identified in~\cref{sec:archetype}: the multiplication of two sparse matrices $A, B$, resulting in another sparse matrix $C = A\cdot B$ with a pattern that is typically unknown prior to the computation. In consequence, functionality producing sparse output with the sparsity pattern unknown prior to the computation is typically split into multiple phases. From a high-level standpoint, one can decompose such functionality into the following phases with strictly defined pre-conditions and post-conditions:
 
 \begin{enumerate}
     \item \texttt{inspect phase} -- (optional) prepare any potential optimizations for subsequent phases, or may do nothing
