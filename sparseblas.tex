@@ -22,6 +22,7 @@
 \usepackage{marginnote}
 \usepackage{xspace}
 \usepackage[T1]{fontenc}
+\usepackage{multicol}
 
 \setlength{\marginparwidth}{4cm}
 \newcommand{\fb}[1]{\todo[color=green!30]{\footnotesize #1}}
@@ -365,6 +366,18 @@ hardware.
 %modern Sparse BLAS standard must support this mode of execution natively. 
 Furthermore, we acknowledge in this proposal that for repeated application of a sparse operator, the initial investment in optimization -- analyzing sparsity patterns and characteristics, and fine-tuning format and execution policies -- can quickly be amortized by faster execution. We thus propose interfaces also allowing for an optimization phase prior to repeated execution of functionality.
 
+\section{The Three Archetypes for the Sparse BLAS Design}
+While there exists a long list of sparse linear algebra functionality, for the design of an interface standard it is useful to identify groups of functionality sharing the same properties. We identified three distinct archetypes based on their computational complexity, memory requirements, and parallelization strategies. 
+
+The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), which is defined by the multiplication of a sparse matrix by a dense vector to produce a dense output vector. It is generally considered the most predictable operation because the output size is known beforehand, allowing for straightforward memory allocation. While the design of an interface should support for various input formats (e.g. by accepting ana abstract matrix operator), the operation is typically memory-bandwidth limited and trivial to parallelize by partitioning the matrix rows among different execution units. 
+
+
+In contrast, \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM) represents a much more complex archetype due to the unknown output sparsity pattern. Because the number of non-zero entries in the resulting matrix cannot be determined a priori, a multi-stage design design is needed. This process begins with an inspection or symbolic phase to compute the sparsity pattern, followed by memory allocation, and finally a numeric phase to calculate the actual values. Because the workload can be highly unbalanced, the parallelization strategies for SpGEMM can range from row-parallel and column-parallel to sub-matrix parallel and element-parallel.
+
+The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), involves solving systems where the sparse matrix is triangular or only a triangular part of the matrix is considered. For this reason, the design relies heavily on property tags to inform the solver whether the matrix stored is lower or upper triangular or if it possesses symmetry that can be exploited for faster execution. Although the output size is as predictable as that of SpMV, the operation is inherently sequential because each element of the output vector may depend on previously computed values. To extract parallelism, the library must often construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix. 
+
+
+
 \section{Functionality Scope of the Sparse BLAS}
 
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
@@ -620,26 +633,36 @@ There exist different strategies for handling the ownership of data in sparse li
 
 There are multiple reasons for having these two types of API. 1) transparent, non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), but on the other hand, owning matrix objects come with an initial usage cost and require copies; 2) non-owning types require multiple phases for their instantiation and allocation which must be explicitly exposed to the user, which can be especially complex and require several steps for more complex operations (e.g., Sparse-Matrix times Sparse-Matrix product -- SpGEMM); 3) with transparent, non-owning objects, the internal data can always be inspected and accessed at little cost, whereas accessors are required for opaque objects and can come with an extra cost.
 
-Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed, and complementary, and providing these two types of API will satisfy most needs. Generally, designing a non-owning API for functionality is significantly harder. For this reason, in this first version of an interface design, 
+Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed and complementary, and providing these two types of API will satisfy most needs. Generally, designing a non-owning API for functionality is significantly harder. For this reason, in this first version of an interface design, 
 we focus on the second option, the non-owning API for functionality. However, as we will detail next, we extend this approach to allow for a moderate level of optimization. 
-In this non-owning API, the user owns the data and light-weight views are used to expose the functionality to the library operations. In particular, the light-weight views expose the raw pointers and size information of, for example, a CSR matrix, dense matrix, or a COO matrix.
+In this non-owning API, the user owns the data, and light-weight views are used to expose the functionality to the library operations. In particular, the light-weight views expose the raw pointers and size information of, for example, a CSR matrix, dense matrix, or a COO matrix.
 
-As discussed, this approach limits the optimization potential for the libraries. 
-In particular, the light-weight views do not allow to 
+
+\subsection{Matrix Wrappers and Matrix Objects}
+
+As discussed, the non-owning approach limits the optimization potential for the libraries, as they can not handle sparse matrices in a hardware-optimized format of their choice or
 store additional information that can be exploited
 by algorithms operating on the sparse matrices, like symmetry, upper or lower triangular structure, matrix transpose, etc. 
-Without breaking the concept of light-weight views, 
-we enable optimization and storing additional information by wrapping the view into a \texttt{matrix\_handle} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. Important is that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
 
-Some users want to keep control of all available memory, in particular control how data structures are allocated. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_handle}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
+With the intention of allowing for aggressive optimization while to a large degree preserving the concept of light-weight views, we suggest a two-level design where the first level is a ``view-like'' wrapper that encapsulates the user-owned raw data, and a matrix\_handle as the second level extends the matrix wrapper with a library-managed structure that can contain additional data for optimization.
 
-In \Cref{fig:csrmatrixhandle} we give an example how a CSR matrix structure is passed as a light-weight view to a library and a \texttt{matrix\_handle} is wrapped around it to allow for storing additional information.
+The matrix wrapper -- we use the notation ``matrix\_view'' wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the ``matrix\_view'' is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix\_view.'' For example, when creating a sparse matrix as the output of a function, the user-owned data structure is filled. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions. 
 
+To allow libraries for aggressive optimization, the ``matrix\_view'' is encapsulated in a \texttt{matrix\_handle} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
+
+Some users want to keep control of all available memory, in particular, control how data structures are allocated. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_handle}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
+
+In \Cref{fig:csrmatrixhandle} we demonstrate how the ``matrix\_view'' wraps a user-owned CSR matrix structure, then encapsulates the ``matrix\_view'' into a matrix\_handle. 
+
+
+Generally speaking, any sparse BLAS functionality should take matrix\_handles as the input arguments and create matrix\_views as output arguments - if creating sparse matrices as output.
+\todo{How about a masking operation? Is the input mask a matrix\_handle or a matrix\_opt? Where is the output stored in?}
+Furthermore, any change to a matrix\_view that is wrapped into a matrix\_handle has to be propagated explicitly to the matrix\_handle, as any library-owned optimization would otherwise not know about the changes in the matrix\_view. Conversely, only a few sparse BLAS functionalities change the matrix\_view underlying a matrix\_handle input argument. (These include sorting, transposing, etc.) 
 
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace sparseblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_view<float> A(values, rowptr, colind, shape, nnz, tags);
 
 // matrix_handle is opaque and may contain 
 // vendor optimization details
@@ -649,8 +672,7 @@ auto A_handle = matrix_handle(A, allocator);
 \caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_handle} with user-specified \texttt{allocator}.}
 \end{listing}
 
-\textbf{HA: to discuss remove the next statement, or?}
-We note that the API is expected to accept both plain views or \texttt{matrix\_handle}'s. If plain views are passed in, the library has no optimization structure at hand and can not store any additional matrix information that persists beyond the operation.
+
 
 
 
