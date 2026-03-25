@@ -646,38 +646,38 @@ As discussed, the non-owning approach limits the optimization potential for the 
 store additional information that can be exploited
 by algorithms operating on the sparse matrices, like symmetry, upper or lower triangular structure, matrix transpose, etc. 
 
-With the intention of allowing for aggressive optimization while to a large degree preserving the concept of light-weight views, we suggest a two-level design where the first level is a ``view-like'' wrapper that encapsulates the user-owned raw data, and a matrix\_handle as the second level extends the matrix wrapper with a library-managed structure that can contain additional data for optimization.
+With the intention of allowing for aggressive optimization while to a large degree preserving the concept of light-weight views, we suggest a two-level design where the first level is a ``view-like'' wrapper that encapsulates the user-owned raw data, and a \texttt{matrix\_opt} as the second level extends the matrix wrapper with a library-managed structure that can contain additional data for optimization.
 
-The matrix wrapper -- we use the notation ``matrix\_view'' wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the ``matrix\_view'' is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix\_view.'' For example, when creating a sparse matrix as the output of a function, the user-owned data structure is filled. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions. 
+The matrix wrapper -- we use the notation ``matrix\_wrapper'' wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the ``matrix\_wrapper'' is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix\_view.'' For example, when creating a sparse matrix as the output of a function, the user-owned data structure is filled. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions. 
 
-To allow libraries for aggressive optimization, the ``matrix\_view'' is encapsulated in a \texttt{matrix\_handle} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
+To allow libraries for aggressive optimization, the ``matrix\_wrapper'' is encapsulated in a \texttt{matrix\_opt} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
 
-Some users want to keep control of all available memory, in particular, control how data structures are allocated. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_handle}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
+Some users want to keep control of all available memory, in particular, control how data structures are allocated. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
 
-In \Cref{fig:csrmatrixhandle} we demonstrate how the ``matrix\_view'' wraps a user-owned CSR matrix structure, then encapsulates the ``matrix\_view'' into a matrix\_handle. 
+In \Cref{fig:csrmatrixhandle} we demonstrate how the ``matrix\_wrapper'' wraps a user-owned CSR matrix structure, then encapsulates the ``matrix\_wrapper'' into a \texttt{matrix\_opt}. 
 
 
-Generally speaking, any sparse BLAS functionality should take matrix\_handles as the input arguments and create matrix\_views as output arguments - if creating sparse matrices as output.
-\todo{How about a masking operation? Is the input mask a matrix\_handle or a matrix\_opt? Where is the output stored in?}
-Furthermore, any change to a matrix\_view that is wrapped into a matrix\_handle has to be propagated explicitly to the matrix\_handle, as any library-owned optimization would otherwise not know about the changes in the matrix\_view. Conversely, only a few sparse BLAS functionalities change the matrix\_view underlying a matrix\_handle input argument. (These include sorting, transposing, etc.) 
+Generally speaking, any sparse BLAS functionality should take \texttt{matrix\_opt}s as the input arguments and create matrix\_wrappers as output arguments - if creating sparse matrices as output.
+\todo{How about a masking operation? Is the input mask a  \texttt{matrix\_opt} or a \texttt{matrix\_opt}? Where is the output stored in?}
+Furthermore, any change to a matrix\_wrapper that is wrapped into a  \texttt{matrix\_opt} has to be propagated explicitly to the \texttt{matrix\_opt}, as any library-owned optimization would otherwise not know about the changes in the matrix\_wrapper. Conversely, only a few sparse BLAS functionalities change the matrix\_wrapper underlying a \texttt{matrix\_opt} input argument. (These include sorting, transposing, etc.) 
 
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace sparseblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz, tags);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz, tags);
 
-// matrix_handle is opaque and may contain 
+// matrix_opt is opaque and may contain 
 // vendor optimization details
-auto A_handle = matrix_handle(A, allocator);
+auto A_opt = matrix_opt(A, allocator);
 \end{minted}
 \label{fig:csrmatrixhandle}
-\caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_handle} with user-specified \texttt{allocator}.}
+\caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
 \end{listing}
 
 
 
 \subsection{Views on Matrix Data}
-For situations where a sparse object is not used in its original form, but in a modification, e.g., only a submatrix (lower triangular) or in transposed form, modifying the user-owned data in the matrix\_view conflicts with the non-mutability of the user-owned data, and creating an explicit copy can introduce significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
+For situations where a sparse object is not used in its original form, but in a modification, e.g., only a submatrix (lower triangular) or in transposed form, modifying the user-owned data in the matrix\_wrapper conflicts with the non-mutability of the user-owned data, and creating an explicit copy can introduce significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
 
 \begin{table}[h]
     \centering
@@ -698,7 +698,7 @@ For situations where a sparse object is not used in its original form, but in a 
        \hline
        \verb|spblas::view::symmetric(M, uplo, diag)| & \makecell[l]{Expose symmetric matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
        \hline
-       \verb|spblas::view::hermitian(M, uplo, diag)| & \makecell[l]{Expose hermitian matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
+       \verb|spblas::view::hermitian(M, uplo, diag)| & \makecell[l]{Expose Hermitian matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
        \hline
     %\bottomrule
     \end{tabular}
@@ -706,7 +706,7 @@ For situations where a sparse object is not used in its original form, but in a 
     \label{tab:views}
 \end{table}
 
-Libraries are free to implement views however they see fit. For instance, a simple masked access works well for lower triangular matrices in matrix-vector products. However, for transposed operations, it may be better to store an explicit copy in the matrix\_handle to optimize performance.
+Libraries are free to implement views however they see fit. For instance, a simple masked access works well for lower triangular matrices in matrix-vector products. However, for transposed operations, it may be better to store an explicit copy in the \texttt{matrix\_opt} to optimize performance.
 
 
 
@@ -833,7 +833,7 @@ From a high-level point of view, there exist two classes of sparse BLAS operatio
 \begin{enumerate}
     \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. 
     \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
-    For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class operate on matrix\_view structures and are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
+    For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class operate on matrix\_wrapper structures and are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
 \end{enumerate} 
 
 For both single-stage and multi-stage operations that produce sparse output, the sparsity structure of the output is based on the symbolic operation, not on the numeric operations. In other words, a numeric calculation resulting in a numeric zero does not result in omitting this entry from the output sparsity pattern.
@@ -841,7 +841,7 @@ For both single-stage and multi-stage operations that produce sparse output, the
 
 While there exist strong arguments for unifying the interface for the different functionality to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of a known sparsity pattern, and a multi-stage API for functionality that produces output of an unknown sparsity pattern. 
 
-Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix handle. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization, but can not access additional information in the optimization structure of a matrix handle.
+Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix object. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization, but can not access additional information in the optimization structure of a matrix object.
 If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
 This concept of an optional inspect phase is in line with the current design of vendor interfaces, see Section \ref{sec:spmvReview}.
 
@@ -853,15 +853,15 @@ Note that all operations take \texttt{policy} and \texttt{state} objects as inpu
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with known output can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for some of the functionality, noting that the functionality in general accepts both, plain views on the objects and matrix-handles, with the latter allowing for additional optimization.
+Operations with known output can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for some of the functionality, noting that the functionality in general accepts both, plain views on the objects and \texttt{matrix\_opt}s, with the latter allowing for additional optimization.
 
 %\linesep
 
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace sparseblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
 // scale() overwrites the values of A 
 operation_state state(allocator);
@@ -877,11 +877,11 @@ scale(policy, state, 2.3, A);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace sparseblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
-// matrix_handle is opaque and may contain 
+// matrix_opt is opaque and may contain 
 // vendor optimization details
-auto A_handle = matrix_handle(A, allocator);
+auto A_opt = matrix_opt(A, allocator);
 
 // A is const; function returns Inf norm
 operation_state state(allocator);
@@ -896,8 +896,8 @@ auto inf_nrm = matrix_inf_norm(policy, state, A);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace sparseblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
 operation_state state(allocator);
 // A is const; function returns Frobenius norm
@@ -914,24 +914,24 @@ auto frob_nrm = matrix_frob_norm(state, A);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 auto x = std::mdspan(raw_x.data(), 100);
 auto y = std::mdspan(raw_y.data(), 100);
 
-// matrix_handle is opaque and may contain 
+// matrix_opt is opaque and may contain 
 // vendor optimization details
-auto A_handle = matrix_handle(A, allocator);
+auto A_opt = matrix_opt(A, allocator);
 
 // create a state for the optimization of the routine
 operation_state state(allocator);
 
 // optional inspect phase can add information 
-// to the matrix handle
-multiply_inspect(policy, state, A_handle, x, y);
+// to the matrix opt
+multiply_inspect(policy, state, A_opt, x, y);
 
 // actual multiplication y = A * x
-multiply(policy, state, A_handle, x, y); 
+multiply(policy, state, A_opt, x, y); 
 
 // alternatively, the multiplication can use the plain views
 // limiting the optimization opportunities
@@ -944,25 +944,25 @@ multiply(policy, state, A, x, y);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 float alpha = ..., beta = ...;
 
 auto X = std::mdspan(raw_x.data(), 100, 100);
 auto Y = std::mdspan(raw_y.data(), 100, 100);
 
-// matrix_handle is opaque and may contain
+// matrix_opt is opaque and may contain
 // vendor optimization details
-auto A_handle = matrix_handle(A, allocator);
+auto A_opt = matrix_opt(A, allocator);
 
 // create a state for the optimization of the routine
 operation_state state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
-multiply_inspect(policy, state, scaled(alpha, A_handle), X, scaled(beta, Y), Y);
+multiply_inspect(policy, state, scaled(alpha, A_opt), X, scaled(beta, Y), Y);
 
 // actual multiplication Y = alpha * A * X + beta * Y
-multiply(policy, state, scaled(alpha, A_handle), X, scaled(beta, Y), Y); 
+multiply(policy, state, scaled(alpha, A_opt), X, scaled(beta, Y), Y); 
 
 // alternatively, the multiplication can use the plain views
 // limiting the optimization opportunities
@@ -979,14 +979,14 @@ using namespace spblas;
 // Matrix T data is already in lower or upper triangular form
 // physically in the matrix arrays for the triangular
 // solve
-csr_view<float> T(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> T(values, rowptr, colind, shape, nnz);
 
 auto x = std::mdspan(raw_x.data(), 100);
 auto b = std::mdspan(raw_y.data(), 100);
 
-// matrix_handle is opaque and may contain
+// matrix_opt is opaque and may contain
 // vendor optimization details
-auto T_handle = matrix_handle(T, allocator);
+auto T_handle = matrix_opt(T, allocator);
 
 // create a state for the optimization of the routine
 operation_state state(allocator);
@@ -1013,7 +1013,7 @@ using namespace spblas;
 auto X = std::mdspan(raw_x.data(), m, k);
 auto Y = std::mdspan(raw_b.data(), k, n);
 // sample mask is the pattern of CSR matrix output
-csr_view<float> C(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> C(values, rowptr, colind, shape, nnz);
 
 operation_state state(allocator);
 sampled_multiply_inspect(policy, state, X, Y, C);
@@ -1032,11 +1032,11 @@ sampled_multiply(policy, state, X, Y, C);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 // ... likewise for B
-csr_view<float> C(m, n);
-// auto C = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> C(m, n);
+// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
 
 operation_state state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
@@ -1091,11 +1091,11 @@ can be realized using the following sequence of steps (using APIs that will be d
 \todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
-// csr_view<float> A,B,D filled elsewhwere
-// csr_view<float> C(c_nrows, c_ncols);
-// auto A_obj = matrix_handle(A, allocator);
-// auto B_obj = matrix_handle(B, allocator);
-// auto D_obj = matrix_handle(D, allocator);
+// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> C(c_nrows, c_ncols);
+// auto A_obj = matrix_opt(A, allocator);
+// auto B_obj = matrix_opt(B, allocator);
+// auto D_obj = matrix_opt(D, allocator);
 
 operation_state state(allocator);
 multiply_inspect(policy, state, 
@@ -1124,11 +1124,11 @@ Inspecting the pre-conditions and post-conditions listed above, we note that the
 \todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
-// csr_view<float> A,B,D filled elsewhwere
-// csr_view<float> C(c_nrows, c_ncols);
-// auto A_obj = matrix_handle(A, allocator);
-// auto B_obj = matrix_handle(B, allocator);
-// auto D_obj = matrix_handle(D, allocator);
+// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> C(c_nrows, c_ncols);
+// auto A_obj = matrix_opt(A, allocator);
+// auto B_obj = matrix_opt(B, allocator);
+// auto D_obj = matrix_opt(D, allocator);
 
 operation_state state(allocator);
 multiply_inspect(policy, state, 
@@ -1153,8 +1153,8 @@ Some scenarios additionally benefit from splitting the multiplication of sparse 
 
 \begin{minted}{c++}
 using namespace spblas;
-// csr_view<float> A,B,D filled elsewhwere
-// csr_view<float> C(c_nrows, c_ncols);
+// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> C(c_nrows, c_ncols);
 
 operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
@@ -1241,7 +1241,7 @@ Up to now, we provided motivation and details for the design of the API for the 
 \begin{minted}{c++}
 using namespace spblas;
 auto A = std::mdspan(raw_x.data(), m, k);
-csr_view<float> B(m, n);
+csr_wrapper<float> B(m, n);
 
 operation_state state(allocator);
 convert_inspect(policy, state, A, B);
@@ -1259,11 +1259,11 @@ convert_fill(policy, state, A, B);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 // ... likewise for B
-csr_view<float> C(m, n);
-// auto C = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> C(m, n);
+// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
 
 operation_state state(allocator);
 multiply_elementwise_inspect(policy, state, A, B, C); // optional
@@ -1281,11 +1281,11 @@ multiply_elementwise_fill(policy, state, A, B, C);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 // ... likewise for B
-csr_view<float> C(m, n);
-// auto C = matrix_handle(csr_view<float>(...), allocator);
+csr_wrapper<float> C(m, n);
+// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
 
 operation_state state(allocator);
 add_inspect(policy, state, A, B, C); // optional
@@ -1302,8 +1302,8 @@ add_fill(policy, state, A, B, C);
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A_view(values, rowptr, colind, shape, nnz);
-csr_view<float> B(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A_view(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> B(values, rowptr, colind, shape, nnz);
 
 auto pred = [](auto i, auto j, auto v) {
               return v > 0;
@@ -1315,8 +1315,8 @@ auto pred = [](auto i, auto j, auto v) {
 
 operation_state state(allocator);
            
-// matrix_handle is opaque and may contain vendor optimization details
-matrix_handle A(A_view, allocator);
+// matrix_opt is opaque and may contain vendor optimization details
+matrix_opt A(A_view, allocator);
 filter_compute(policy, state, A, B, pred);
 index_t nnz = state.get_result_nnz();
 // the user can allocate the arrays for the output structure
@@ -1400,24 +1400,24 @@ A vendor might implement the Sparse BLAS \textit{inspect} and \textit{compute} p
 For example, here vendor optimization details may be captured in an opaque \texttt{info} object created by \texttt{multiply\_inspect}. This is bound to a matrix view during the execute call, where the optimizations can be put to use by calling into a vendor library:
 \fi
 \iffalse
-% with matrix_handle
-A vendor might implement the Sparse BLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase. We create the \textit{matrix\_handle} with view such that vendor can store the optimization specific to the matrix itself in the \textit{matrix\_handle}. Vendors could then implement the Sparse BLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{matrix\_handle} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{matrix\_handle} object's destructor is called.
+% with matrix_opt
+A vendor might implement the Sparse BLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase. We create the \textit{matrix\_opt} with a \texttt{matrix\_wrapper} such that the library can store the optimization specific to the matrix itself in the \textit{matrix\_opt}. Vendors could then implement the Sparse BLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{matrix\_opt} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{matrix\_opt} object's destructor is called.
 
-For example, here vendor optimization details may be captured in an opaque \texttt{matrix\_handle} object created by \texttt{multiply\_inspect}. This is bound to a matrix view during the execute call, where the optimizations can be put to use by calling into a vendor library:
+For example, here vendor optimization details may be captured in an opaque \texttt{matrix\_opt} object created by \texttt{multiply\_inspect}. This is bound to a matrix view during the execute call, where the optimizations can be put to use by calling into a vendor library:
 
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 auto x = std::mdspan(raw_x.data(), 100);
 auto y = std::mdspan(raw_y.data(), 100);
 
-// matrix_handle is opaque and may contain vendor optimization details
-auto A_handle = matrix_handle(A, allocator);
+// matrix_opt is opaque and may contain vendor optimization details
+auto A_opt = matrix_opt(A, allocator);
 
-// y = A * x: vendor optimizations in matrix_handle may be used
-multiply_inspect(A_handle, x, y);
-multiply(A_handle, x, y); 
+// y = A * x: vendor optimizations in matrix_opt may be used
+multiply_inspect(A_opt, x, y);
+multiply(A_opt, x, y); 
 \end{minted}
 
 
@@ -1426,7 +1426,7 @@ The API for both single-stage functions and multi-stage functions will also need
 For example, here \texttt{scaled()} will return a \texttt{scaled\_view}, and applying \texttt{alpha} to \texttt{b} may happen within a vendor kernel:
 \begin{minted}{c++}
 using namespace spblas;
-csr_view<float> A(values, rowptr, colind, shape, nnz);
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 // Scale every value of `A` by 5 in place.
 scale(5.f, A);
@@ -1452,13 +1452,13 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \toprule
     \textbf{Type} & \textbf{Definition} & \textbf{Notes}\\ 
     \midrule
-        \texttt{csr\_view<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{https://en.cppreference.com/w/cpp/ranges/view}. Operations take either views or matrix handles. \\
+        \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{https://en.cppreference.com/w/cpp/ranges/view}. Operations take either views or matrix handles. \\
     \midrule        
-        \texttt{matrix\_handle} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations take either views (e.g.~\texttt{csr\_view<T>}) or matrix handles. \\ 
+        \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{matrix\_wrapper} as output arguments.\\
     \midrule        
         \texttt{operation\_state} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
-        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_handle} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_handle} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
+        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
     \midrule    
         \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
     \bottomrule
