@@ -1082,12 +1082,12 @@ In Table~\ref{tab:scope} we list several: sparse matrix -- sparse matrix multipl
  
 Acknowledging the previously motivated \textit{inspect} phase, the multiplication of two sparse matrices 
 
-\begin{equation*}
+\begin{equation}
 \label{eq:spgemm}
 C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) + \beta \cdot D
-\end{equation*}
+\end{equation}
 
-can be realized using the following sequence of steps (using APIs that will be defined subsequently):
+can be realized using the following sequence of steps:
 \todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
@@ -1108,7 +1108,7 @@ multiply_fill_symbolic(policy, state,
     alpha, A_obj, B_obj, beta, D_obj, C);
 multiply_numeric(policy, state, 
     alpha, A_obj, B_obj, beta, D_obj, C);
-// C CSR structure and values are now ready to be used
+// csr_wrapper C is now ready to be used
 \end{minted}
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
@@ -1139,10 +1139,12 @@ index_t nnz = state.get_result_nnz();
 //T the user allocates the arrays for C
 multiply_fill(policy, state, 
     alpha, A_obj, B_obj, beta, D_obj, C);
-// C CSR structure and values are now ready to be used
+// csr_wrapper C is now ready to be used
 \end{minted}
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
+
+Also this interface gives some freedom how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \Cref{fig:spgemm_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
 
 
 \iffalse
@@ -1153,19 +1155,19 @@ Some scenarios additionally benefit from splitting the multiplication of sparse 
 
 \begin{minted}{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> A,B,D filled elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
 
 operation_state state(allocator);
 multiply_inspect(policy, state, A, B, C, D); // optional
 multiply_symbolic_compute(policy, state, A, B, C, D);
 index_t nnz = state.get_result_nnz();
-// allocate C arrays and put in C (possibly both structure
+// allocate C arrays and put in C (possibly both structures
 // and values or just structure arrays at this point)
 multiply_symbolic_fill(policy, state, A, B, C, D);
-// C structure is now able to be used
+// C structure is ready to be used
 
-// allocate, if necessary, values arrays and place them in C
+// allocate, if necessary, value arrays and place them in C
 multiply_numeric_compute(policy, state, A, B, C, D);
 multiply_numeric_fill(policy, state, A, B, C, D);
 // C structure and values are now able to be used
@@ -1454,7 +1456,7 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \midrule
         \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{https://en.cppreference.com/w/cpp/ranges/view}. Operations take either views or matrix handles. \\
     \midrule        
-        \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{matrix\_wrapper} as output arguments.\\
+        \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{matrix\_wrapper} as output arguments.\\
     \midrule        
         \texttt{operation\_state} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
@@ -1473,7 +1475,7 @@ A number of new types have been introduced in the preceding sections. Table \ref
 \section{Execution Model}
 \label{sec:async_api}
 
-The world of high-performance computing has recently transformed from a CPU-centric model to a heterogeneous model in which computations must be performed on CPUs, GPUs, and other accelerators. To support these heterogeneous environments, computing languages and libraries have evolved from supporting only \textit{synchronous execution models}, where a kernel or function is submitted, enqueued, and executed immediately to a \textit{asynchronous execution models}, where kernel submission is executed without waiting for completion. This separation between kernel submission and kernel execution has proved beneficial for enabling performance on heterogeneous systems by both avoiding unnecessary synchronization as well as allowing data movement, kernel launch, and other overheads associated with heterogeneous execution to be hidden.
+The world of high-performance computing has recently transformed from a CPU-centric model to a heterogeneous model in which computations must be performed on CPUs, GPUs, and other accelerators. To support these heterogeneous environments, computing languages and libraries have evolved from supporting only \textit{synchronous execution models}, where a kernel or function is submitted, enqueued, and executed immediately to \textit{asynchronous execution models}, where kernel submission is executed without waiting for completion. This separation between kernel submission and kernel execution has proved beneficial for enabling performance on heterogeneous systems by both avoiding unnecessary synchronization as well as allowing data movement, kernel launch, and other overheads associated with heterogeneous execution to be hidden.
 
 Standard \cplusplus is transitioning toward a
 standard model for asynchronous execution with \texttt{std::execution} (senders and receivers)~\cite{p2300r7,p3300r0}, serves as the glue for different libraries with asynchronous operations to interoperate with one another.  Given the increased performance and ease-of-use associated with using standard tools to handle asynchrony instead of disparate vendor APIs, we recognize the importance of using standard, interoperable tools for asynchrony. In the future, we anticipate adopting the \texttt{std::execution} model, with a collection of asynchronous methods that extend the standard Sparse BLAS API using \texttt{std::execution} concepts. However, given the early stage of \texttt{std::execution} implementations, this full specification will likely have to wait until the ecosystem is more mature.
@@ -1484,7 +1486,7 @@ Second, all asynchronous and synchronous APIs that inspect or execute shall take
 Third, any implementation-defined objects that control asynchronous behavior (e.g. CUDA/ROCm \textit{stream}s or SYCL \textit{sycl::queue} and \textit{sycl::event} objects) can be provided to the algorithm through an implementation-defined execution policy.
 Fourth, we observe that scaling values in Sparse BLAS operations (e.g. $\alpha$ and $\beta$ in sparse matrix-vector multiplication, $y = \alpha A\cdot x + \beta y$) may be represented as either arguments provided on the host or as device-side scalars that will be dynamically computed by another asynchronous kernel. A high-quality implementation should support both sources of scaling values.
 
-Some libraries provide a mechanism for the user to select which of one or more internal algorithms they want to be used in a particular sparse BLAS operation. The default behavior is for the library to make such algorithmic choices, perhaps using information gained from analysis of the inputs in the optional ``inspect phase.'' However, in the case that the user would like to select a particular implementation-defined algorithm implementation, this should be supported by vendors via their own implementation-defined execution policies.
+Some libraries provide a mechanism for the user to select which of one or more internal algorithms they want to be used in a particular sparse BLAS operation. The default behavior is for the library to make such algorithmic choices, perhaps using information gained from analysis of the inputs in the optional ``inspect phase.'' However, in the case that the user would like to select a particular algorithm implementation, this should be supported by vendors via their own implementation-defined execution policies.
 
 %More details and specific recommendations for the asynchronous execution model may be provided at a future time.
 
@@ -1497,13 +1499,13 @@ The world of high-performance computing is expanding into heterogeneous computin
 
 \subsection{Asynchronous Execution Model}
 
-In the subsequent, we will make use of the terminology of the SYCL 2020 language specification~\cite{SYCL2020Specification} to describe the asynchronous API design, though similar concepts show up in CUDA, in ROCm, and other languages that support an asynchronous execution model. We assume there is a \textit{host} machine (typically a CPU) where the program is being executed and which may have one or more attached \textit{devices} (CPU/GPU/FPGA/etc, possibly including the host machine itself) on which the kernels may be enqueued and executed. The main host thread proceeds in a standard synchronous manner and kernels are submitted to one or more \textit{queue}s, each of which maps to a particular \textit{device} where they will be executed. Once the kernel is submitted, the main host thread continues on and does not need to wait for the kernel to complete, much less even start execution, unless an explicit wait command is enqueued. 
+In the subsequent sections, we will make use of the terminology of the SYCL 2020 language specification~\cite{SYCL2020Specification} to describe the asynchronous API design, though similar concepts show up in CUDA, in ROCm, and other languages that support an asynchronous execution model. We assume there is a \textit{host} machine (typically a CPU) where the program is being executed and which may have one or more attached \textit{devices} (CPU/GPU/FPGA/etc, possibly including the host machine itself) on which the kernels may be enqueued and executed. The main host thread proceeds in a standard synchronous manner and kernels are submitted to one or more \textit{queue}s, each of which maps to a particular \textit{device} where they will be executed. Once the kernel is submitted, the main host thread continues on and does not need to wait for the kernel to complete, much less even start execution, unless an explicit wait command is enqueued. 
 
-An \textit{in-order queue} will asynchronously execute any submitted \textit{commands} (asynchronous host tasks, memory operations, device kernels, barriers, etc) submitted to the queue one after another based on submission order and provides sufficient flexibility for many, if not most, applications and algorithms. CUDA and ROCm \textit{streams} are commonly used similar to in-order queues, though there exists workarounds to enable out-of-order execution as well. 
+An \textit{in-order queue} will asynchronously execute any submitted \textit{commands} (asynchronous host tasks, memory operations, device kernels, barriers, etc) submitted to the queue one after another based on submission order and provides sufficient flexibility for many, if not most, applications and algorithms. CUDA and ROCm \textit{streams} are commonly used similar to in-order queues, though there exist workarounds to enable out-of-order execution as well. 
 
 \todo[inline]{add graph view of asynchronous in-order queue execution here}
 
-When an algorithm requires more flexibility, the \textit{out-of-order queue} is also provided and allows developers to explicitly construct a \textit{directed a-cyclic graph} (DAG) of commands (possibly between one or more queues/devices) using an \textit{event} object associated with each command submitted and which can be added as input dependencies for subsequent command submissions that should depend on that command being completed before executing itself. The \textit{event} can also be used to explicitly track the status of a command or used to explicitly add synchronization to the host thread. 
+When an algorithm requires more flexibility, the \textit{out-of-order queue} is also provided and allows developers to explicitly construct a \textit{directed a-cyclic graph} (DAG) of commands (possibly between one or more queues/devices) using an \textit{event} object associated with each command submitted and which can be added as input dependencies for subsequent command submissions that should depend on that command being completed before executing itself. The \textit{event} can also be used to explicitly track the status of a command or to explicitly add synchronization to the host thread. 
 
 In the SYCL language extension, a \textit{queue} (with associated \textit{device}) is always required to specify where the operation will be performed. Any memory arrays on a device or host that are used in a kernel should be accessible from the \textit{device} that the kernel is submitted to. From a library design perspective, this means that the data arrays for a matrix or right-hand side or solution vectors are themselves tied to a particular \textit{device} where they will be used, and it is the users' responsibility to ensure that the \textit{queue} and data are compatible. 
 
@@ -1516,7 +1518,7 @@ We propose to differentiate between synchronous and asynchronous API and their b
 void func(/*args*/);       // blocking or synchronous API
 void func_async(/*args*/); // non-blocking or asynchronous API
 \end{lstlistings}
-In the asynchronous case, the function may return and the main thread can continue execution before the function's operations have been executed. 
+In the asynchronous case, the function may return, and the main thread can continue execution before the function's operations have been executed. 
 
 
 Seeing as most algorithms using Sparse BLAS APIs naturally support the \textit{in-order asynchronous} execution model, we will focus on it and leave possible extensions to support the \textit{out-of-order asynchronous} execution model for future work. We simply note that there are additional arguments that would be required to keep track of the input and output \textit{events} or set of \textit{events} along with the \textit{queue}/ \textit{stream} object that allows constructing the directed acyclic graph of commands to be executed.
@@ -1530,7 +1532,7 @@ There are three main possibilities for how to handle the design of in-order sync
 The \textbf{first design} option is to allow the necessary language extensions to be exposed in the API directly.
 \begin{lstlistings}
 // Design 1: Any language extensions are exposed in API after
-//           the specified sparse blas arguments.
+//           the specified sparse BLAS arguments.
 void func1(/* sparse blas args */,
            /*language specific args*/ sycl::queue &q);
 void func1_async(/* sparse blas args */, 
@@ -1545,7 +1547,7 @@ The \textbf{second design} option is to introduce a global opaque handle as desc
 void func2(/* sparse blas args */, spblas_handle_t handle);
 void func2_async(/* sparse blas args */, spblas_handle_t handle);
 \end{lstlistings}
-This has the advantage of matching many existing implementations, but has the disadvantage, that the handle might not be necessary for all implementations, but would still be required in all cases.
+This has the advantage of matching many existing implementations, but has the disadvantage that the handle might not be necessary for all implementations, but would still be required in all cases.
 
 The \textbf{third design} option is the most \cplusplus-like
 and introduces the concept of an execution policy into our proposed Sparse BLAS APIs. When necessary for a language extension, custom execution policies could be defined that take in relevant language extension arguments and provide them to the implementation.
