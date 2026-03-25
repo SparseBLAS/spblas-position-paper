@@ -23,6 +23,7 @@
 \usepackage{xspace}
 \usepackage[T1]{fontenc}
 \usepackage{multicol}
+\usepackage{makecell}
 
 \setlength{\marginparwidth}{4cm}
 \newcommand{\fb}[1]{\todo[color=green!30]{\footnotesize #1}}
@@ -675,9 +676,37 @@ auto A_handle = matrix_handle(A, allocator);
 
 
 
-
-
 \subsection{Views on Matrix Data}
+For situations where a sparse object is not used in its original form, but in a modification, e.g., only a submatrix (lower triangular) or in transposed form, modifying the user-owned data in the matrix\_view conflicts with the non-mutability of the user-owned data, and creating an explicit copy can introduce significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
+
+\begin{table}[h]
+    \centering
+    \footnotesize
+    \begin{tabular}{|l|l|}
+    %\toprule
+    \hline
+    \makecell[c]{\textbf{\texttt{view}}} & \makecell[c]{\textbf{Description}}\\
+    %\midrule
+    \hline
+       \verb|spblas::view::transpose(M)| & \makecell[l]{Expose transposed data of argument \texttt{M}.} \\
+       \hline
+       \verb|spblas::view::conjugate(M)| & \makecell[l]{Expose conjugated data of argument \texttt{M}.} \\
+       \hline
+       \verb|spblas::view::triangle(M, uplo, diag)| & \makecell[l]{Expose \texttt{uplo} triangular data of argument \texttt{M}.} \\
+       \hline
+       \verb|spblas::view::diagonal(M, diag)| & \makecell[l]{Expose diagonal data (not strictly lower \\ or upper triangle) of argument \texttt{M}.} \\
+       \hline
+       \verb|spblas::view::symmetric(M, uplo, diag)| & \makecell[l]{Expose symmetric matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
+       \hline
+       \verb|spblas::view::hermitian(M, uplo, diag)| & \makecell[l]{Expose hermitian matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
+       \hline
+    %\bottomrule
+    \end{tabular}
+    \caption{Instances of the \texttt{view} wrapper in Sparse BLAS.} add 
+    \label{tab:views}
+\end{table}
+
+Libraries are free to implement views however they see fit. For instance, a simple masked access works well for lower triangular matrices in matrix-vector products. However, for transposed operations, it may be better to store an explicit copy in the matrix\_handle to optimize performance.
 
 
 
@@ -812,16 +841,16 @@ For both single-stage and multi-stage operations that produce sparse output, the
 
 While there exist strong arguments for unifying the interface for the different functionality to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of a known sparsity pattern, and a multi-stage API for functionality that produces output of an unknown sparsity pattern. 
 
-Functionality operating on sparse objects differ also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix handle. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization, but can not access additional information in the optimization structure of a matrix handle.
+Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix handle. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. If the user feeds in plain views into the operation, the inspect phase can invoke operation-specific optimization, but can not access additional information in the optimization structure of a matrix handle.
 If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
 This concept of an optional inspect phase is in line with the current design of vendor interfaces, see Section \ref{sec:spmvReview}.
 
 
 
 In the next sections, we will discuss the single-stage API for functionality producing output with a-priori known sparsity pattern and the multi-stage API for functionality producing output with a-priori unknown sparsity pattern.
-Note, that all operations take \texttt{policy} and \texttt{state} objects as inputs. The \texttt{policy} object is opaque to the user. It may contain any vendor-specific execution policies, similar to a \texttt{stream} or \texttt{queue}. The \texttt{state} object is operation-specific and can be used to store any operation-specific data, e.g. a dependency graph in a triangular solve or data in an operation-specific library-internal representation. For the multi-stage functionality, it may also contain information about which stages have already been completed to avoid re-calculation.
+Note that all operations take \texttt{policy} and \texttt{state} objects as inputs. The \texttt{policy} object is opaque to the user. It may contain any vendor-specific execution policies, similar to a \texttt{stream} or \texttt{queue}. The \texttt{state} object is operation-specific and can be used to store any operation-specific data, e.g., a dependency graph in a triangular solve or data in an operation-specific library-internal representation. For the multi-stage functionality, it may also contain information about which stages have already been completed to avoid re-calculation.
 
-\subsection{Single-Stage API for Operations with known Output}
+\subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
 Operations with known output can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for some of the functionality, noting that the functionality in general accepts both, plain views on the objects and matrix-handles, with the latter allowing for additional optimization.
@@ -1024,7 +1053,7 @@ multiply_elementwise_fill(policy, state, A, B, C);
 \subsubsection{Multi-Stage API for Operations with unknown Output}
 
 
-As mentioned above, a fundamental difference to dense BLAS functionality is that for basic operations on sparse objects, the sparsity pattern (and therewith the sparse data structure) is not always known beforehand. An example is the third archetype identified in~\cref{sec:archetype}: the multiplication of two sparse matrices $A, B$, resulting in another sparse matrix $C = A\cdot B$ with a pattern that is typically unknown prior to the computation. In consequence, functionality producing sparse output with the sparsity pattern unknown prior to the computation is typically split into multiple phases. From a high-level standpoint, one can decompose such functionality into the following phases with strictly defined pre-conditions and post-conditions:
+As mentioned above, a fundamental difference to dense BLAS functionality is that for basic operations on sparse objects, the sparsity pattern (and therewith the sparse data structure) is not always known beforehand. An example is the multiplication of two sparse matrices $A, B$, resulting in another sparse matrix $C = A\cdot B$ with a pattern that is typically unknown prior to the computation. In consequence, functionality producing sparse output with the unknown output sparsity pattern is typically split into multiple phases. From a high-level standpoint, one can decompose such functionality into the following phases with strictly defined pre-conditions and post-conditions:
 
 \begin{enumerate}
     \item \texttt{inspect phase} -- (optional) prepare any potential optimizations for subsequent phases, or may do nothing
@@ -1041,13 +1070,20 @@ As mentioned above, a fundamental difference to dense BLAS functionality is that
     Post-Condition: Numeric values in the sparse output structure are filled and valid.}
 \end{enumerate}
 
-We note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one function. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values. An example is the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values.
 
-An important design question for functionality producing sparse output is whether the memory allocation is done by the user or the library. While there exist strong arguments on both sides, and passing a memory allocator to the library poses an elegant way to resolve memory location and ownership, we initially propose an interface that requires the library user to allocate the memory for the sparse output data after providing the memory requirement information. While we, in the following, focus on the multiplication of sparse matrices (typically called SpGEMM in literature), the considerations and design aspects also hold for other basic functionality producing output with a sparsity pattern unknown prior to the computation. In Table~\ref{tab:scope} we list several: sparse matrix -- sparse matrix multiplication, matrix sparse format conversion, filter operations removing elements below a pre-defined threshold, and the addition of sparse matrices with generally differing sparsity patterns.
+An important design question for functionality producing sparse output is whether the memory allocation is done by the user or the library. While there exist strong arguments on both sides, and passing a memory allocator to the library poses an elegant way to resolve memory location and ownership, we initially propose an interface that requires the library user to allocate the memory for the sparse output data after providing the memory requirement information. 
+
+
+So far, we have discussed exclusively the multiplication of sparse matrices (typically called SpGEMM in literature), the considerations and design aspects also hold for other basic functionality producing output with a sparsity pattern unknown prior to the computation. 
+
+
+
+In Table~\ref{tab:scope} we list several: sparse matrix -- sparse matrix multiplication, matrix sparse format conversion, filter operations removing elements below a pre-defined threshold, and the addition of sparse matrices with generally differing sparsity patterns.
  
 Acknowledging the previously motivated \textit{inspect} phase, the multiplication of two sparse matrices 
 
 \begin{equation*}
+\label{eq:spgemm}
 C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) + \beta \cdot D
 \end{equation*}
 
@@ -1063,27 +1099,55 @@ using namespace spblas;
 
 operation_state state(allocator);
 multiply_inspect(policy, state, 
-    A_obj, B_obj, C, D_obj); // optional
+    alpha, A_obj, B_obj, beta, D_obj, C); // optional
 multiply_compute_symbolic(policy, state, 
-    A_obj, B_obj, C, D_obj);
+    alpha, A_obj, B_obj, beta, D_obj, C);
 index_t nnz = state.get_result_nnz();
 //T the user allocates the arrays for C
 multiply_fill_symbolic(policy, state, 
-    A_obj, B_obj, C, D_obj);
-multiply_compute_numeric(policy, state, 
-    A_obj, B_obj, B, C, D_obj);
+    alpha, A_obj, B_obj, beta, D_obj, C);
+multiply_numeric(policy, state, 
+    alpha, A_obj, B_obj, beta, D_obj, C);
 // C CSR structure and values are now ready to be used
 \end{minted}
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
 
-A standard way to is to place the structural analysis in the \texttt{multiply\_compute} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
+A standard way is to place the structural analysis in the \texttt{multiply\_compute} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
 
-The only step that has to critically happen in the \texttt{multiply\_compute} routine is the computation of the number of nonzero entries in the output to be able to allocate the output data structure. The \texttt{multiply\_fill} routine is required to fill the user provided arrays with the output data so that it is usable after \texttt{multiply\_fill} stage. These are the only requirements on the \texttt{multiply\_compute} and \texttt{multiply\_fill} stages, and thus the developers are left with a lot of freedom to realize the functionality. For example, developers can decide to already fill the CSR \texttt{rowptr} in the \texttt{multiply\_compute} routine. Or pack even more into this first stage: An approach allowing for more library-internal optimization may be to pack both the structural analysis and the multiplication into the \texttt{multiply\_compute} routine using an internal output data structure that is part of the \texttt{state} object. The \texttt{multiply\_fill} routine then only extracts the result into the output data structure allocated by the user. Any library-internal output data structures live in the state object and would be deleted when state is destroyed. Such an implementation does not break the interface design.
+The only step that has to happen critically in the \texttt{multiply\_compute} routine is the computation of the number of nonzero entries in the output to be able to allocate the output data structure. The \texttt{multiply\_fill} routine is required to fill the user-provided arrays with the output data so that it is usable after \texttt{multiply\_fill} stage. These are the only requirements on the \texttt{multiply\_compute} and \texttt{multiply\_fill} stages, and thus the developers are left with a lot of freedom to realize the functionality. For example, developers can decide to already fill the CSR \texttt{rowptr} in the \texttt{multiply\_compute} routine. Or pack even more into this first stage: An approach allowing for more library-internal optimization may be to pack both the structural analysis and the multiplication into the \texttt{multiply\_compute} routine using an internal output data structure that is part of the \texttt{state} object. The \texttt{multiply\_fill} routine then only extracts the result into the output data structure allocated by the user. Any library-internal output data structures live in the state object and would be deleted when the state is destroyed. Such an implementation does not break the interface design.
 
 A critical question is how the library allocates these internal buffers, via a library-preferred allocator or an allocator passed to the library from the user. This boils down to whether the user has buffer management on the application level, i.e., manages all the device memory in the application. At the same time, requiring the user to always provide an allocator to the library can become cumbersome. In the current design proposal, we allow the user to pass in a memory allocator (for the memory space where the computations are executed, i.e. the ``compute device'') that is then used by the library for the allocation of buffers. If no allocator is passed, the library is free to use its own allocator.
 
-Some scenarios additionally benefit from splitting the multiplication of sparse matrices and other routines operating on sparse data structures into a symbolic and a numeric stage. This, for example, can allow for additional optimization in the repeated multiplication of matrices changing only the numeric values but preserving the sparsity pattern. Hence, we propose a variant of the above interface splitting the routines
+Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one function. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, an alternative API for realizing \eqref{eq:spgemm} is:
+
+\todo[inline]{C is not an obj, but the CSR view}
+\begin{minted}{c++}
+using namespace spblas;
+// csr_view<float> A,B,D filled elsewhwere
+// csr_view<float> C(c_nrows, c_ncols);
+// auto A_obj = matrix_handle(A, allocator);
+// auto B_obj = matrix_handle(B, allocator);
+// auto D_obj = matrix_handle(D, allocator);
+
+operation_state state(allocator);
+multiply_inspect(policy, state, 
+    alpha, A_obj, B_obj, beta, D_obj, C); // optional
+multiply_compute(policy, state, 
+    alpha, A_obj, B_obj, beta, D_obj, C);
+index_t nnz = state.get_result_nnz();
+//T the user allocates the arrays for C
+multiply_fill(policy, state, 
+    alpha, A_obj, B_obj, beta, D_obj, C);
+// C CSR structure and values are now ready to be used
+\end{minted}
+% \fb{\texttt{A, B, C, D} are repeated in all functions}
+% \fb{\texttt{allocator} is not mentioned in the text}
+
+
+\iffalse
+
+Some scenarios additionally benefit from splitting the multiplication of sparse matrices and other routines operating on sparse data structures into a symbolic and a numeric stage. This, for example, can allow for additional optimization in the repeated multiplication of matrices, changing only the numeric values but preserving the sparsity pattern. Hence, we propose a variant of the above interface, splitting the routines
 \texttt{multiply\_compute} and
 \texttt{multiply\_fill} into two:
 
@@ -1106,6 +1170,8 @@ multiply_numeric_compute(policy, state, A, B, C, D);
 multiply_numeric_fill(policy, state, A, B, C, D);
 // C structure and values are now able to be used
 \end{minted}
+
+
 
 Because we do not specify at which phase the output matrix is prepared internally, the \textit{compute phase} (e.g. \texttt{multiply\_numeric\_compute}) and the \textit{fill phase} (e.g. \texttt{sparse\_multiply\_numeric\_fill}) should be regarded as a pair and for repeated execution, both phases should be called.  It is up to implementations to detect on repeated calls which internal data in the \texttt{multiply\_state\_t} object is reusable and what must be recomputed.
 
@@ -1140,7 +1206,7 @@ for (i=0 i<n; i++) {
 }
 \end{minted}
 \item 
-Using the split into numeric and symbolic phase for repeated invocation of the functionality with numerically differing matrices:
+Using the split into numeric and symbolic phases for repeated invocation of the functionality with numerically differing matrices:
 \begin{minted}{c++}
 
 operation_state state(allocator);
@@ -1164,6 +1230,8 @@ for (i=0 i<n; i++) {
     \caption{Different workflows for the CSR-based SPGEMM.}
     \label{fig:spgemm_workflows}
 \end{figure}
+
+\fi
 
 
 Up to now, we provided motivation and details for the design of the API for the sparse matrix - sparse matrix multiply operation, but the same two-stage interface applies also to other functionality with nonzero structure unknown a-priori.
