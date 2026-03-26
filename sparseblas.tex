@@ -146,32 +146,6 @@ In an inclusive, cross-institutional effort involving numerous academic institut
 \tableofcontents
 
 \section{Introduction and Motivation}
-\iffalse
-While sparse matrix computations are at the heart of many science and engineering applications, the Sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, not considering the plethora of optimization options relevant to today's accelerator architectures, such as GPUs. 
-
-In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. 
-
-While we may include more high-level routines in the future, we initially restrict ourselves to basic functionality and also retain the familiar name BLAS (Basic Linear Algebra Subroutines).
-
-%\todo[inline]{Mark: coverage still seems basic: norms, matrix-vector and matrix-matrix multiply.
-%We're not adding higher level algorithms like CG, GMRES, etc.}
-
-%% Mark: Fortran uses "subroutine". BLAS originally stood for "subprograms", again Fortran nomenclature.
-% , and we recognize that the word ``subroutine'' is no longer commonly used in computing. 
-
-Our API is designed to run on accelerators as well as traditional CPUs. This is especially important given the pervasiveness of accelerators in computing and the challenges in achieving high performance from such hardware, which further increases the value of Sparse BLAS. 
-%We also consider less dominant platforms such as heterogeneous and distributed computing.
-
-We recognize that linear algebra is a fundamental topic beyond classical mathematical disciplines and physical sciences. Over the past decade, sparsity has emerged as an important element of computation in AI. We argue that a Sparse BLAS standard would provide a useful set of tools for modern AI frameworks, potentially expanding to standardize new functionality such as low- and mixed-precision computation and batch processing, and easing integration with high-level deep learning frameworks.
-
-Furthermore, we are modernizing the language bindings due to the rising
-popularity of \cplusplus and the declining usage of Fortran.
-We acknowledge and discuss the use of high-level languages such as Python and Julia, recognizing the benefits they offer, including their versatility, user-friendliness, and community support.
-
-\fi
-
-
-
 
 Despite the fact that Sparse matrix computations are at the heart of many science and engineering applications the Sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, not considering the plethora of optimization options relevant to today's accelerator architectures, such as GPUs. 
 
@@ -530,39 +504,9 @@ Possible future extension formats include CSR(4), CSC(4), BSR / BSC, variable BS
 Many sparse formats can be generalized to a block version, leading to more suitable data structures when dealing with dense block structures typical of matrices found in many simulation codes and obtained with the finite element method (FEM) or the discontinuous Galerkin method (DG). These data structures reduce the memory footprint and propose suitable storage for using dense linear algebra.  
 For instance, the BSR (or BCSR, Block Compressed Sparse Row) format extends the CSR format by using square block-dense matrices rather than scalars for the values. Information describing the characteristics of its blocks, such as the dimension \texttt{bsize} and the internal storage \texttt{bstorage} (row-oriented or column-oriented layout), must be included. The array \texttt{values} stores non-zero blocks contiguously.
 
-While we acknowledge the wide-spread use of block formats, we exclude them in this first version of an API design proposal. This is motivated by the idea of keeping this document within reasonable length and complexity.
+While we acknowledge the wide-spread use of block formats, we exclude them in this first version of an API design proposal. This is motivated by the idea of keeping this document within a reasonable length and complexity.
 
 
-\iffalse
-Parameters for BSR are given in Table \ref{tab:bsr_param}. 
-
-\begin{table}[htbp]
-\scriptsize
-\begin{center}
-     \begin{tabular}{l l l}
-         \toprule
-         \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-         \midrule
-         \texttt{index\_type} & \texttt{bsize} & The block size \\
-         \texttt{storage\_type} & \texttt{bstorage} & The block storage: row-oriented or column-oriented \\
-         \texttt{index\_type} & \texttt{nrowb} & Number of row blocks of the matrix \\
-         \texttt{index\_type} & \texttt{ncolb} & Number of column blocks of the matrix \\
-         \texttt{offset\_type} & \texttt{nnzb} & Structural number of non-zero blocks of the matrix \\
-         \texttt{offset\_type} array & \texttt{rowptr} & Row block pointer array (length: \texttt{nrowb+1}) \\
-         \texttt{index\_type} array & \texttt{colindx} & Column block indices array (length: \texttt{nnzb}) \\
-         \texttt{scalar\_type} array & \texttt{values} & Structural block values (length: $\texttt{nnzb} \times \texttt{bsize}^2$) \\
-         \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
-         \bottomrule
-     \end{tabular}
-\end{center}
-     \caption{BSR input parameters}
-    \label{tab:bsr_param}
-\end{table}
-
-Some characteristics of a sparse matrix stored with a BSR format can be easily calculated. Hence, the number of rows and the number of columns are the number of row blocks multiplied by the block size, $\texttt{nrowb} \times \texttt{bsize}$, and the number of column blocks multiplied by the block size, $\texttt{ncolb} \times \texttt{bsize}$, respectively. The total number of non-zeros is the number of non-zero blocks multiplied by the square of the block size, $\texttt{nnzb} \times \texttt{bsize}^2$. The row index and the column index of the first scalar element of a given block are the row block index multiplied by the block size \texttt{bsize} and the column block index, obtained with the array \texttt{colindx}, multiplied by the block size \texttt{bsize}, respectively.
-\newline 
-\newline
-\fi
 
 We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support dense matrices in the same style as the recently standardized \texttt{std::linalg} C++ BLAS interface~\cite{cpplinalg:p1673r13}.  Users can create an \texttt{mdspan} view with a data handle (a pointer is the most common example, although different data handles may appear as defined by an accessor policy) along with matrix extents, representing the matrix's dimensions.  Once an \texttt{mdspan} view has been created, the user can pass in a single argument to represent a dense matrix, instead of passing in multiple arguments for the pointer, dimensions, and stride.  \texttt{std::mdspan} supports a large degree of compile-time customization, including compile-time constant extents, customization of index type view extents, as well as custom layout and accessor policies.  Row- and column- major matrices are supported by standard-defined layout policies (\texttt{std::layout\_right} and \texttt{std::layout\_left}).  We anticipate vendors restricting users to only a subset of the possible \texttt{mdspan}s, such as \texttt{mdspan}s with standard-defined layout policies, default accessors, and an order of one or two.  These \texttt{mdspan}s could be directly passed into most vendor-provided implementations that expect a traditional dense matrix represented by a pointer, dimensions, stride, and row or column major layout.  Unsupported \texttt{mdspan}s would trigger a clear compile error message in a high-quality implementation.
 
@@ -648,18 +592,14 @@ by algorithms operating on the sparse matrices, like symmetry, upper or lower tr
 
 With the intention of allowing for aggressive optimization while to a large degree preserving the concept of light-weight views, we suggest a two-level design where the first level is a ``view-like'' wrapper that encapsulates the user-owned raw data, and a \texttt{matrix\_opt} as the second level extends the matrix wrapper with a library-managed structure that can contain additional data for optimization.
 
-The matrix wrapper -- we use the notation ``format\_wrapper'' wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the ``format\_wrapper'' is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix\_view.'' For example, when creating a sparse matrix as the output of a function, the user-owned data structure is filled. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions. 
+The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view.'' For example, when creating a sparse matrix as the output of a function, the user-owned data structure is filled. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions. 
 
-To allow libraries for aggressive optimization, the ``format\_wrapper'' is encapsulated in a \texttt{matrix\_opt} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
+To allow libraries for aggressive optimization, the format wrapper is encapsulated in a \texttt{matrix\_opt} that contains both the view to the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
 
 Some users want to keep control of all available memory, in particular, control how data structures are allocated. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
 
-In \Cref{fig:csrmatrixhandle} we demonstrate how the ``format\_wrapper'' wraps a user-owned CSR matrix structure, then encapsulates the ``format\_wrapper'' into a \texttt{matrix\_opt}. 
+In \Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
 
-
-Generally speaking, any sparse BLAS functionality should take \texttt{matrix\_opt}s as the input arguments and create format\_wrappers as output arguments - if creating sparse matrices as output.
-\todo{How about a masking operation? Is the input mask a  \texttt{matrix\_opt} or a \texttt{matrix\_opt}? Where is the output stored in?}
-Furthermore, any change to a format\_wrapper that is wrapped into a  \texttt{matrix\_opt} has to be propagated explicitly to the \texttt{matrix\_opt}, as any library-owned optimization would otherwise not know about the changes in the format\_wrapper. Conversely, only a few sparse BLAS functionalities change the format\_wrapper underlying a \texttt{matrix\_opt} input argument. (These include sorting, transposing, etc.) 
 
 \begin{listing}[H]
 \begin{minted}{c++}
@@ -674,10 +614,11 @@ auto A_opt = matrix_opt(A, allocator);
 \caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
 \end{listing}
 
-
+If the user applies changes to the arguments wrapped in the \texttt{csr\_wrapper}, an already created \texttt{matrix\_opt} will not reflect these changes. To propagate any changes in the user-owned data, an \texttt{update\_matrix} function has to be invoked.
+Generally speaking, any sparse BLAS functionality takes \texttt{matrix\_opt}s as the input arguments and only modifies the user-owned data only if explicitly detailed in the functionality description. If sparse BLAS routine creates a sparse matrix as output, this output argument needs to be a \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
 \subsection{Views on Matrix Data}
-For situations where a sparse object is not used in its original form, but in a modification, e.g., only a submatrix (lower triangular) or in transposed form, modifying the user-owned data in the format\_wrapper conflicts with the non-mutability of the user-owned data, and creating an explicit copy can introduce significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
+In some situations, a sparse matrix object is not used in its original form, but in a modified form, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, modifying the user-owned data in the \texttt{xyz\_wrapper} would conflict with the non-mutability of the user-owned data. Creating an explicit copy on the other hand would introduce a significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
 
 \begin{table}[h]
     \centering
@@ -685,7 +626,7 @@ For situations where a sparse object is not used in its original form, but in a 
     \begin{tabular}{|l|l|}
     %\toprule
     \hline
-    \makecell[c]{\textbf{\texttt{view}}} & \makecell[c]{\textbchaf{Description}}\\
+    \makecell[c]{\textbf{\texttt{view}}} & \makecell[c]{\textbf{Description}}\\
     %\midrule
     \hline
        \verb|spblas::view::transpose(M)| & \makecell[l]{Expose transposed data of argument \texttt{M}.} \\
@@ -853,60 +794,8 @@ Note that all operations take \texttt{policy} and \texttt{state} objects as inpu
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with known output can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for some of the functionality, noting that the functionality in general accepts both, plain views on the objects and \texttt{matrix\_opt}s, with the latter allowing for additional optimization.
+Operations with known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for the two archetypes producing known output size: the sparse matrix vector multiplication and the sparse triangular solve. We list the interface to the other sparse BLAS functionality producing output of known size in the appendix.
 
-%\linesep
-
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace sparseblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
-
-// scale() overwrites the values of A 
-operation_state state(allocator);
-scale(policy, state, 2.3, A);
-\end{minted}
-\caption{Scaling, $A := \alpha A$}
-\end{listing}
-%\todo[inline]{The table in Section 3 is assigning to a different matrix, but my understanding is we'd want this in-place, like std::linalg?}
-
-
-%\linesep
-
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace sparseblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-
-// matrix_opt is opaque and may contain 
-// vendor optimization details
-auto A_opt = matrix_opt(A, allocator);
-
-// A is const; function returns Inf norm
-operation_state state(allocator);
-auto inf_nrm = matrix_inf_norm(policy, state, A);
-\end{minted}
-\caption{Inf Matrix Norm, $\alpha = \|A\|_\text{inf}$.}
-\end{listing}
-
-
-%\linesep
-
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace sparseblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
-
-operation_state state(allocator);
-// A is const; function returns Frobenius norm
-auto frob_nrm = matrix_frob_norm(policy, state, A);
-// or - without passing a policy, resulting in a default:
-auto frob_nrm = matrix_frob_norm(state, A);
-\end{minted}
-\caption{Frobenius Matrix Norm, $\alpha = \|A\|_F$}
-\end{listing}
 
 
 
@@ -1121,7 +1010,7 @@ A critical question is how the library allocates these internal buffers, via a l
 
 Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one function. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, an alternative API for realizing \eqref{eq:spgemm} is:
 
-\todo[inline]{C is not an obj, but the CSR view}
+
 \begin{minted}{c++}
 using namespace spblas;
 // csr_wrapper<float> A,B,D filled elsewhwere
@@ -1147,192 +1036,8 @@ multiply_fill(policy, state,
 Also this interface gives some freedom how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \Cref{fig:spgemm_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
 
 
-\iffalse
 
-Some scenarios additionally benefit from splitting the multiplication of sparse matrices and other routines operating on sparse data structures into a symbolic and a numeric stage. This, for example, can allow for additional optimization in the repeated multiplication of matrices, changing only the numeric values but preserving the sparsity pattern. Hence, we propose a variant of the above interface, splitting the routines
-\texttt{multiply\_compute} and
-\texttt{multiply\_fill} into two:
-
-\begin{minted}{c++}
-using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhere
-// csr_wrapper<float> C(c_nrows, c_ncols);
-
-operation_state state(allocator);
-multiply_inspect(policy, state, A, B, C, D); // optional
-multiply_symbolic_compute(policy, state, A, B, C, D);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays and put in C (possibly both structures
-// and values or just structure arrays at this point)
-multiply_symbolic_fill(policy, state, A, B, C, D);
-// C structure is ready to be used
-
-// allocate, if necessary, value arrays and place them in C
-multiply_numeric_compute(policy, state, A, B, C, D);
-multiply_numeric_fill(policy, state, A, B, C, D);
-// C structure and values are now able to be used
-\end{minted}
-
-
-
-Because we do not specify at which phase the output matrix is prepared internally, the \textit{compute phase} (e.g. \texttt{multiply\_numeric\_compute}) and the \textit{fill phase} (e.g. \texttt{sparse\_multiply\_numeric\_fill}) should be regarded as a pair and for repeated execution, both phases should be called.  It is up to implementations to detect on repeated calls which internal data in the \texttt{multiply\_state\_t} object is reusable and what must be recomputed.
-
-We want to provide some examples for the use of this API. 
-\begin{enumerate}
-    \item Single use:
-\begin{minted}{c++}
-
-operation_state state(allocator);
-multiply_inspect(policy, state, A, B, C, D); // optional
-multiply_compute(policy, state, A, B, C, D);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays 
-multiply_fill(policy, state, A, B, C, D);
-// C structure is now able to be used
-\end{minted}
-\item 
-Repeated invocation of the functionality with numerically differing matrices:
-\begin{minted}{c++}
-operation_state state(allocator);
-multiply_inspect(policy, state, A, B, C, D); // optional
-for (i=0 i<n; i++) {
-  // may do nothing if nnz is already computed
-  // and information is stored in the state
-  multiply_compute(policy, state, A, B, C, D);
-  index_t nnz = state.get_result_nnz();
-  if (i == 0 }{
-    // allocate C arrays 
-  }
-  multiply_fill(policy, state, A, B, C, D);
-  // C structure is now able to be used
-}
-\end{minted}
-\item 
-Using the split into numeric and symbolic phases for repeated invocation of the functionality with numerically differing matrices:
-\begin{minted}{c++}
-
-operation_state state(allocator);
-multiply_inspect(policy, state, A, B, C, D); // optional
-multiply_symbolic_compute(policy, state, A, B, C, D);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays 
-multiply_symbolic_fill(policy, state, A, B, C, D);
-for (i=0 i<n; i++) {
-  // only numeric computations inside the loop
-  multiply_numeric_compute(policy, state, A, B, C, D);
-  multiply_numeric_fill(policy, state, A, B, C, D);
-  // C structure is now able to be used
-}
-\end{minted}
-\end{enumerate}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=.9\columnwidth]{graphics/different_spgemm.png}
-    \caption{Different workflows for the CSR-based SPGEMM.}
-    \label{fig:spgemm_workflows}
-\end{figure}
-
-\fi
-
-
-Up to now, we provided motivation and details for the design of the API for the sparse matrix - sparse matrix multiply operation, but the same two-stage interface applies also to other functionality with nonzero structure unknown a-priori.
-
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-auto A = std::mdspan(raw_x.data(), m, k);
-csr_wrapper<float> B(m, n);
-
-operation_state state(allocator);
-convert_inspect(policy, state, A, B);
-convert_compute(policy, state, A, B);
-index_t nnz = state.get_result_nnz();
-// allocate the memory for B and put them in B
-convert_fill(policy, state, A, B); 
-\end{minted}
-\caption{Sparse Matrix Format Conversion, $B = \text{sparse}(A)$. Note that this will not remove explicit zeros except for conversion from dense. The above convert\_* functions might accept the predicate function additionally to remove some entries during conversion, which can give some performance benefit without creating a matrix two times.}
-\end{listing}
-
-
-%\linesep
-
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
-// ... likewise for B
-csr_wrapper<float> C(m, n);
-// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
-
-operation_state state(allocator);
-multiply_elementwise_inspect(policy, state, A, B, C); // optional
-multiply_elementwise_compute(policy, state, A, B, C);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays and put in C
-multiply_elementwise_fill(policy, state, A, B, C);
-// C structure and values are now able to be used
-\end{minted}
-\caption{Element-wise Multiplication, $C = A~.*B$.}
-\end{listing}
-
-%\linesep
-
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
-// ... likewise for B
-csr_wrapper<float> C(m, n);
-// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
-
-operation_state state(allocator);
-add_inspect(policy, state, A, B, C); // optional
-add_compute(policy, state, A, B, C);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays and put in C
-add_fill(policy, state, A, B, C);
-// C structure and values are now able to be used
-\end{minted}
-\caption{Sparse Matrix -- Sparse Matrix Addition, $C = A + B$.}
-\end{listing}
-
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-csr_wrapper<float> A_view(values, rowptr, colind, shape, nnz);
-csr_wrapper<float> B(values, rowptr, colind, shape, nnz);
-
-auto pred = [](auto i, auto j, auto v) {
-              return v > 0;
-            };
-
-auto pred = [](auto i, auto j, auto v) {
-              return (i < 10 ) && (j < 10);
-            };
-
-operation_state state(allocator);
-           
-// matrix_opt is opaque and may contain vendor optimization details
-matrix_opt A(A_view, allocator);
-filter_compute(policy, state, A, B, pred);
-index_t nnz = state.get_result_nnz();
-// the user can allocate the arrays for the output structure
-// finally, the output structure can be filled
-filter_fill(policy, state, A, B, pred); 
-\end{minted}
-\caption{Predicate Selection, $B = A.*(A>0)$.}
-\end{listing}
-%\todo[inline]{How is the predicate to be represented?}
-
-
-
-%For the other functionality listed in \Cref{tab:scope}, we list the API proposal in~\Cref{sec:appendix_api_eg} in the appendix of this paper.
-
+Up to now, we provided motivation and details for the design of the API for the sparse matrix matrix multiplication, but the same two-stage interface applies also to other functionality with nonzero structure unknown a-priori, we provide a comprehensive list in the appendix.
 
 
 \newpage
@@ -1383,16 +1088,6 @@ fill_numeric
 
 // state clearly that numeric zeros are stored
 \end{comment}
-
-
-
-
-%Section \ref{sec:api-design} discusses the idea of defining a transparent, non-data-owning API that does not allocate data internally, but instead uses multiple stages to perform computation.
-\iffalse
-\fb{We need to rewrite this section after the discussion in 7.3} For the optimization of functionality in repeated invocation, we consider a two-stage model in which the operation is split into an \textit{inspect} stage and an \textit{execute} stage, with the \textit{inspect} stage returning an \texttt{info} object. For operations such as the multiplication of two sparse matrices (SpGEMM) where the size of the output may be non-trivial, users will rely on the \texttt{info} object to determine the sizes of any output buffers they must allocate. This object may additionally contain opaque, vendor-specific optimization data, similar to the internal optimization data stored in sparse matrix handles and descriptors which are part of existing vendor APIs. Section \ref{sec:spmvReview} shows the various matrix handles and descriptors appearing in SpMV \textit{execute} calls of vendor libraries.
-
-We acknowledge that the API should also define a set of generic hints that users can provide about what optimizations might be appropriate. While they would not modify the semantic meaning of the computation, these generic hints could be optionally used by vendors to trigger performance optimizations.
-\fi
 
 
 
@@ -1491,102 +1186,6 @@ Some libraries provide a mechanism for the user to select which of one or more i
 %More details and specific recommendations for the asynchronous execution model may be provided at a future time.
 
 
-\iffalse
-\section{Execution Model (Full Version)}
-\label{sec:async_api}
-
-The world of high-performance computing is expanding into heterogeneous computing with computations potentially being performed on CPUs, GPUs, and other accelerators. To handle this, computing languages and libraries have evolved from supporting only synchronous execution models, where a kernel/ function is submitted, enqueued, and executed before returning and moving on to the next kernel/ function to supporting asynchronous execution, where the ``kernel submission'' and the ``moving on to next kernel function'' parts may be separate from the ``execution'' of said kernel. This separation between kernel submission and its execution has proved beneficial for enabling performance and hiding the runtime overhead that can come from data movement, kernel preparation, and mapping onto the accelerator.
-
-\subsection{Asynchronous Execution Model}
-
-In the subsequent sections, we will make use of the terminology of the SYCL 2020 language specification~\cite{SYCL2020Specification} to describe the asynchronous API design, though similar concepts show up in CUDA, in ROCm, and other languages that support an asynchronous execution model. We assume there is a \textit{host} machine (typically a CPU) where the program is being executed and which may have one or more attached \textit{devices} (CPU/GPU/FPGA/etc, possibly including the host machine itself) on which the kernels may be enqueued and executed. The main host thread proceeds in a standard synchronous manner and kernels are submitted to one or more \textit{queue}s, each of which maps to a particular \textit{device} where they will be executed. Once the kernel is submitted, the main host thread continues on and does not need to wait for the kernel to complete, much less even start execution, unless an explicit wait command is enqueued. 
-
-An \textit{in-order queue} will asynchronously execute any submitted \textit{commands} (asynchronous host tasks, memory operations, device kernels, barriers, etc) submitted to the queue one after another based on submission order and provides sufficient flexibility for many, if not most, applications and algorithms. CUDA and ROCm \textit{streams} are commonly used similarly to in-order queues, though there exist workarounds to enable out-of-order execution as well. 
-
-\todo[inline]{add graph view of asynchronous in-order queue execution here}
-
-When an algorithm requires more flexibility, the \textit{out-of-order queue} is also provided and allows developers to explicitly construct a \textit{directed a-cyclic graph} (DAG) of commands (possibly between one or more queues/devices) using an \textit{event} object associated with each command submitted and which can be added as input dependencies for subsequent command submissions that should depend on that command being completed before executing itself. The \textit{event} can also be used to explicitly track the status of a command or to explicitly add synchronization to the host thread. 
-
-In the SYCL language extension, a \textit{queue} (with associated \textit{device}) is always required to specify where the operation will be performed. Any memory arrays on a device or host that are used in a kernel should be accessible from the \textit{device} that the kernel is submitted to. From a library design perspective, this means that the data arrays for a matrix or right-hand side or solution vectors are themselves tied to a particular \textit{device} where they will be used, and it is the users' responsibility to ensure that the \textit{queue} and data are compatible. 
-
-\subsection{Language Extension Arguments in API}
-
-For synchronous APIs or asynchronous in-order APIs in SYCL, the \textit{queue} is the only extra argument required in the API beyond the standard inputs related to the sparse operation. In CUDA and ROCm, a \textit{stream} would be the required argument, though existing performance library implementations of Sparse BLAS in these language extensions place the \textit{stream} in a global opaque pointer object (often called a \textit{handle}) that is initialized before any other operations and may include global state or memory pools in addition to the \textit{stream}.
-
-We propose to differentiate between synchronous and asynchronous API and their behavior through the addition of the \verb|_async| moniker to the end of the API names:
-\begin{lstlistings}
-void func(/*args*/);       // blocking or synchronous API
-void func_async(/*args*/); // non-blocking or asynchronous API
-\end{lstlistings}
-In the asynchronous case, the function may return, and the main thread can continue execution before the function's operations have been executed. 
-
-
-Seeing as most algorithms using Sparse BLAS APIs naturally support the \textit{in-order asynchronous} execution model, we will focus on it and leave possible extensions to support the \textit{out-of-order asynchronous} execution model for future work. We simply note that there are additional arguments that would be required to keep track of the input and output \textit{events} or set of \textit{events} along with the \textit{queue}/ \textit{stream} object that allows constructing the directed acyclic graph of commands to be executed.
-
-There are three main possibilities for how to handle the design of in-order synchronous/asynchronous APIs in Sparse BLAS:
-\begin{enumerate}
-    \item Exposing the language extension arguments in the API directly, 
-    \item Wrapping any language extension arguments in a global opaque pointer handle for the Sparse BLAS APIs or 
-    \item Adding custom execution policies that could wrap any language extensions and using execution policies 
-\end{enumerate}
-The \textbf{first design} option is to allow the necessary language extensions to be exposed in the API directly.
-\begin{lstlistings}
-// Design 1: Any language extensions are exposed in API after
-//           the specified sparse BLAS arguments.
-void func1(/* sparse blas args */,
-           /*language specific args*/ sycl::queue &q);
-void func1_async(/* sparse blas args */, 
-                 /*language specific args*/ sycl::queue &q);
-\end{lstlistings}
-This option has the advantage of allowing users to write natively in the language extension they are using and when no language extension is being used, nothing extra is required. Some may argue that this is not a portable solution between language extensions, but there is a direct mapping between language extension objects/directives and when no language extension is being used, such arguments can be found and removed readily. This approach seems to have the most natural extensions to out-of-order asynchronous execution models, as additional arguments would just be added.
-
-The \textbf{second design} option is to introduce a global opaque handle as described previously that houses any extra arguments necessary for the different language extensions.
-\begin{lstlistings}
-// Design 2: language extension objects are hidden in a
-//           global opaque handle
-void func2(/* sparse blas args */, spblas_handle_t handle);
-void func2_async(/* sparse blas args */, spblas_handle_t handle);
-\end{lstlistings}
-This has the advantage of matching many existing implementations, but has the disadvantage that the handle might not be necessary for all implementations, but would still be required in all cases.
-
-The \textbf{third design} option is the most \cplusplus-like
-and introduces the concept of an execution policy into our proposed Sparse BLAS APIs. When necessary for a language extension, custom execution policies could be defined that take in relevant language extension arguments and provide them to the implementation.
-\begin{lstlistings}
-// Design 3: An execution policy is provided in API and any language 
-//           extension objects can be enclosed in custom defined 
-//           execution policies for that purpose
-template<typename ExecPolicy>
-void func3(ExecPolicy &&, /* sparse blas args */);
-
-template<typename ExecPolicy>
-void func3_async(ExecPolicy &&, /* sparse blas args */);
-\end{lstlistings}
-This approach has the advantage of using design patterns already
-familiar to existing \cplusplus users and naturally bridges the gap
-between implementations that require extra language extensions and those that do not. For \textit{in-order asynchronous} execution, this appears to be a solid solution.  However, for \textit{out-of-order asynchronous} execution models this third option as well as the second option will require more consideration as there must be some way to provide input events and retrieve output events to build the appropriate graph of commands.
-
-
-
-
-Overall, the use of execution policies (\textbf{option 3} seems to be the best solution for synchronous or \textit{in-order asynchronous} execution models.  However, for the future design of \textit{out-of-order asynchronous} execution models, we leave open the possibility for combining this with allowing additional arguments (\textbf{option 1}) to handle input and output events to build the graph.
-
-
-\subsection{Handling Asynchronous $\alpha$/$\beta$ Scalars}
-
-Suppose that for SpMV operation $y=\alpha op(A)x + \beta y$, that the $\alpha$ and/or $\beta$ parameters are computed as part of the higher level algorithm, (e.g. as part of a conjugate gradient iteration) and hence may also be asynchronously defined on the device.  We should provide a method of supporting such use cases in our designs.  A simple approach is to switch from a $DataType \alpha$ argument to a $DataType * p\_alpha$ argument.  
-
-Each extension language provides a method of determining where such a pointer lives (must be device accessible) and our APIs should internally query this, we should assume it is dynamically being set and only de-reference the value once all dependencies are satisfied, ie during the kernel execution itself. 
-
-Using the \verb|scaled(alpha, matrix_view)| approach for setting scalar factors on a matrix or other object, we may choose to have overloads for a constant scalar or asynchronous pointers to a scalar which should be handled appropriately internally.  In the out-of-order asynchronous approach, the user has the responsibility to ensure any events related to the setting of alpha value asynchronously should be provided as input to the function call.  For in-order asynchronous cases, there are no additional requirements on the user's side.  In all cases, the library has the responsibility to ensure that the pointer to alpha is only de-referenced in the asynchronous kernel.
-
-\subsection{Limitations in Existing Asynchronous Language Extensions}
-
-While many asynchronous execution language extensions (e.g. CUDA, ROCm, OpenCL, SYCL, etc) support asynchronous allocations, they all assume that the size is static and synchronously known.  In sparse matrix times sparse matrix multiplication, $C = A \cdot B$, the size (number of non-zeros) of the output sparse matrix, $C$, is discovered as part of an analysis stage. Hence it is dynamic and asynchronously known.  If we choose this analysis step to be asynchronous, then under existing languages, we must currently place a synchronization point after the analysis stage but before reading the number of non-zeros for allocation of the $C$ matrix in some sparse format. These arrays should then be passed back into the next stage of computation to be filled. This synchronization point negates the benefits of asynchrony in this particular use case.
-
-To the authors' best understanding, there are no existing language APIs for asynchronous allocation where the size is dynamic and asynchronously set. If there were such dynamic asynchronous support, more consideration on how to provide them in a matrix view or into the subsequent stages of computation would be required.
-
-Note that dynamic asynchronous allocation could be emulated in SYCL using an asynchronous \verb|host_task| and \verb|T **| types for output arrays and \verb|int *| for input sizes where the size is de-referenced and \verb|T*| is allocated asynchronously. However, under SYCL 2020 specification, allocating memory within a \verb|host_task| is an undefined behavior, though it may appear to be safe in some implementations. Such management of pointers to asynchronously defined objects is reminiscent of the \verb|std::future| objects and, when necessary, should follow a similar design.
-\fi
 
 \section{Numerical considerations}
 

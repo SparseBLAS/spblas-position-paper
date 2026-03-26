@@ -1,0 +1,97 @@
+
+\iffalse
+\section{Execution Model (Full Version)}
+\label{sec:async_api}
+
+The world of high-performance computing is expanding into heterogeneous computing with computations potentially being performed on CPUs, GPUs, and other accelerators. To handle this, computing languages and libraries have evolved from supporting only synchronous execution models, where a kernel/ function is submitted, enqueued, and executed before returning and moving on to the next kernel/ function to supporting asynchronous execution, where the ``kernel submission'' and the ``moving on to next kernel function'' parts may be separate from the ``execution'' of said kernel. This separation between kernel submission and its execution has proved beneficial for enabling performance and hiding the runtime overhead that can come from data movement, kernel preparation, and mapping onto the accelerator.
+
+\subsection{Asynchronous Execution Model}
+
+In the subsequent sections, we will make use of the terminology of the SYCL 2020 language specification~\cite{SYCL2020Specification} to describe the asynchronous API design, though similar concepts show up in CUDA, in ROCm, and other languages that support an asynchronous execution model. We assume there is a \textit{host} machine (typically a CPU) where the program is being executed and which may have one or more attached \textit{devices} (CPU/GPU/FPGA/etc, possibly including the host machine itself) on which the kernels may be enqueued and executed. The main host thread proceeds in a standard synchronous manner and kernels are submitted to one or more \textit{queue}s, each of which maps to a particular \textit{device} where they will be executed. Once the kernel is submitted, the main host thread continues on and does not need to wait for the kernel to complete, much less even start execution, unless an explicit wait command is enqueued. 
+
+An \textit{in-order queue} will asynchronously execute any submitted \textit{commands} (asynchronous host tasks, memory operations, device kernels, barriers, etc) submitted to the queue one after another based on submission order and provides sufficient flexibility for many, if not most, applications and algorithms. CUDA and ROCm \textit{streams} are commonly used similarly to in-order queues, though there exist workarounds to enable out-of-order execution as well. 
+
+\todo[inline]{add graph view of asynchronous in-order queue execution here}
+
+When an algorithm requires more flexibility, the \textit{out-of-order queue} is also provided and allows developers to explicitly construct a \textit{directed a-cyclic graph} (DAG) of commands (possibly between one or more queues/devices) using an \textit{event} object associated with each command submitted and which can be added as input dependencies for subsequent command submissions that should depend on that command being completed before executing itself. The \textit{event} can also be used to explicitly track the status of a command or to explicitly add synchronization to the host thread. 
+
+In the SYCL language extension, a \textit{queue} (with associated \textit{device}) is always required to specify where the operation will be performed. Any memory arrays on a device or host that are used in a kernel should be accessible from the \textit{device} that the kernel is submitted to. From a library design perspective, this means that the data arrays for a matrix or right-hand side or solution vectors are themselves tied to a particular \textit{device} where they will be used, and it is the users' responsibility to ensure that the \textit{queue} and data are compatible. 
+
+\subsection{Language Extension Arguments in API}
+
+For synchronous APIs or asynchronous in-order APIs in SYCL, the \textit{queue} is the only extra argument required in the API beyond the standard inputs related to the sparse operation. In CUDA and ROCm, a \textit{stream} would be the required argument, though existing performance library implementations of Sparse BLAS in these language extensions place the \textit{stream} in a global opaque pointer object (often called a \textit{handle}) that is initialized before any other operations and may include global state or memory pools in addition to the \textit{stream}.
+
+We propose to differentiate between synchronous and asynchronous API and their behavior through the addition of the \verb|_async| moniker to the end of the API names:
+\begin{lstlistings}
+void func(/*args*/);       // blocking or synchronous API
+void func_async(/*args*/); // non-blocking or asynchronous API
+\end{lstlistings}
+In the asynchronous case, the function may return, and the main thread can continue execution before the function's operations have been executed. 
+
+
+Seeing as most algorithms using Sparse BLAS APIs naturally support the \textit{in-order asynchronous} execution model, we will focus on it and leave possible extensions to support the \textit{out-of-order asynchronous} execution model for future work. We simply note that there are additional arguments that would be required to keep track of the input and output \textit{events} or set of \textit{events} along with the \textit{queue}/ \textit{stream} object that allows constructing the directed acyclic graph of commands to be executed.
+
+There are three main possibilities for how to handle the design of in-order synchronous/asynchronous APIs in Sparse BLAS:
+\begin{enumerate}
+    \item Exposing the language extension arguments in the API directly, 
+    \item Wrapping any language extension arguments in a global opaque pointer handle for the Sparse BLAS APIs or 
+    \item Adding custom execution policies that could wrap any language extensions and using execution policies 
+\end{enumerate}
+The \textbf{first design} option is to allow the necessary language extensions to be exposed in the API directly.
+\begin{lstlistings}
+// Design 1: Any language extensions are exposed in API after
+//           the specified sparse BLAS arguments.
+void func1(/* sparse blas args */,
+           /*language specific args*/ sycl::queue &q);
+void func1_async(/* sparse blas args */, 
+                 /*language specific args*/ sycl::queue &q);
+\end{lstlistings}
+This option has the advantage of allowing users to write natively in the language extension they are using and when no language extension is being used, nothing extra is required. Some may argue that this is not a portable solution between language extensions, but there is a direct mapping between language extension objects/directives and when no language extension is being used, such arguments can be found and removed readily. This approach seems to have the most natural extensions to out-of-order asynchronous execution models, as additional arguments would just be added.
+
+The \textbf{second design} option is to introduce a global opaque handle as described previously that houses any extra arguments necessary for the different language extensions.
+\begin{lstlistings}
+// Design 2: language extension objects are hidden in a
+//           global opaque handle
+void func2(/* sparse blas args */, spblas_handle_t handle);
+void func2_async(/* sparse blas args */, spblas_handle_t handle);
+\end{lstlistings}
+This has the advantage of matching many existing implementations, but has the disadvantage that the handle might not be necessary for all implementations, but would still be required in all cases.
+
+The \textbf{third design} option is the most \cplusplus-like
+and introduces the concept of an execution policy into our proposed Sparse BLAS APIs. When necessary for a language extension, custom execution policies could be defined that take in relevant language extension arguments and provide them to the implementation.
+\begin{lstlistings}
+// Design 3: An execution policy is provided in API and any language 
+//           extension objects can be enclosed in custom defined 
+//           execution policies for that purpose
+template<typename ExecPolicy>
+void func3(ExecPolicy &&, /* sparse blas args */);
+
+template<typename ExecPolicy>
+void func3_async(ExecPolicy &&, /* sparse blas args */);
+\end{lstlistings}
+This approach has the advantage of using design patterns already
+familiar to existing \cplusplus users and naturally bridges the gap
+between implementations that require extra language extensions and those that do not. For \textit{in-order asynchronous} execution, this appears to be a solid solution.  However, for \textit{out-of-order asynchronous} execution models this third option as well as the second option will require more consideration as there must be some way to provide input events and retrieve output events to build the appropriate graph of commands.
+
+
+
+
+Overall, the use of execution policies (\textbf{option 3} seems to be the best solution for synchronous or \textit{in-order asynchronous} execution models.  However, for the future design of \textit{out-of-order asynchronous} execution models, we leave open the possibility for combining this with allowing additional arguments (\textbf{option 1}) to handle input and output events to build the graph.
+
+
+\subsection{Handling Asynchronous $\alpha$/$\beta$ Scalars}
+
+Suppose that for SpMV operation $y=\alpha op(A)x + \beta y$, that the $\alpha$ and/or $\beta$ parameters are computed as part of the higher level algorithm, (e.g. as part of a conjugate gradient iteration) and hence may also be asynchronously defined on the device.  We should provide a method of supporting such use cases in our designs.  A simple approach is to switch from a $DataType \alpha$ argument to a $DataType * p\_alpha$ argument.  
+
+Each extension language provides a method of determining where such a pointer lives (must be device accessible) and our APIs should internally query this, we should assume it is dynamically being set and only de-reference the value once all dependencies are satisfied, ie during the kernel execution itself. 
+
+Using the \verb|scaled(alpha, matrix_view)| approach for setting scalar factors on a matrix or other object, we may choose to have overloads for a constant scalar or asynchronous pointers to a scalar which should be handled appropriately internally.  In the out-of-order asynchronous approach, the user has the responsibility to ensure any events related to the setting of alpha value asynchronously should be provided as input to the function call.  For in-order asynchronous cases, there are no additional requirements on the user's side.  In all cases, the library has the responsibility to ensure that the pointer to alpha is only de-referenced in the asynchronous kernel.
+
+\subsection{Limitations in Existing Asynchronous Language Extensions}
+
+While many asynchronous execution language extensions (e.g. CUDA, ROCm, OpenCL, SYCL, etc) support asynchronous allocations, they all assume that the size is static and synchronously known.  In sparse matrix times sparse matrix multiplication, $C = A \cdot B$, the size (number of non-zeros) of the output sparse matrix, $C$, is discovered as part of an analysis stage. Hence it is dynamic and asynchronously known.  If we choose this analysis step to be asynchronous, then under existing languages, we must currently place a synchronization point after the analysis stage but before reading the number of non-zeros for allocation of the $C$ matrix in some sparse format. These arrays should then be passed back into the next stage of computation to be filled. This synchronization point negates the benefits of asynchrony in this particular use case.
+
+To the authors' best understanding, there are no existing language APIs for asynchronous allocation where the size is dynamic and asynchronously set. If there were such dynamic asynchronous support, more consideration on how to provide them in a matrix view or into the subsequent stages of computation would be required.
+
+Note that dynamic asynchronous allocation could be emulated in SYCL using an asynchronous \verb|host_task| and \verb|T **| types for output arrays and \verb|int *| for input sizes where the size is de-referenced and \verb|T*| is allocated asynchronously. However, under SYCL 2020 specification, allocating memory within a \verb|host_task| is an undefined behavior, though it may appear to be safe in some implementations. Such management of pointers to asynchronously defined objects is reminiscent of the \verb|std::future| objects and, when necessary, should follow a similar design.
+\fi

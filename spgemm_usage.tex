@@ -1,0 +1,88 @@
+
+\iffalse
+
+Some scenarios additionally benefit from splitting the multiplication of sparse matrices and other routines operating on sparse data structures into a symbolic and a numeric stage. This, for example, can allow for additional optimization in the repeated multiplication of matrices, changing only the numeric values but preserving the sparsity pattern. Hence, we propose a variant of the above interface, splitting the routines
+\texttt{multiply\_compute} and
+\texttt{multiply\_fill} into two:
+
+\begin{minted}{c++}
+using namespace spblas;
+// csr_wrapper<float> A,B,D filled elsewhere
+// csr_wrapper<float> C(c_nrows, c_ncols);
+
+operation_state state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+multiply_symbolic_compute(policy, state, A, B, C, D);
+index_t nnz = state.get_result_nnz();
+// allocate C arrays and put in C (possibly both structures
+// and values or just structure arrays at this point)
+multiply_symbolic_fill(policy, state, A, B, C, D);
+// C structure is ready to be used
+
+// allocate, if necessary, value arrays and place them in C
+multiply_numeric_compute(policy, state, A, B, C, D);
+multiply_numeric_fill(policy, state, A, B, C, D);
+// C structure and values are now able to be used
+\end{minted}
+
+
+
+Because we do not specify at which phase the output matrix is prepared internally, the \textit{compute phase} (e.g. \texttt{multiply\_numeric\_compute}) and the \textit{fill phase} (e.g. \texttt{sparse\_multiply\_numeric\_fill}) should be regarded as a pair and for repeated execution, both phases should be called.  It is up to implementations to detect on repeated calls which internal data in the \texttt{multiply\_state\_t} object is reusable and what must be recomputed.
+
+We want to provide some examples for the use of this API. 
+\begin{enumerate}
+    \item Single use:
+\begin{minted}{c++}
+
+operation_state state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+multiply_compute(policy, state, A, B, C, D);
+index_t nnz = state.get_result_nnz();
+// allocate C arrays 
+multiply_fill(policy, state, A, B, C, D);
+// C structure is now able to be used
+\end{minted}
+\item 
+Repeated invocation of the functionality with numerically differing matrices:
+\begin{minted}{c++}
+operation_state state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+for (i=0 i<n; i++) {
+  // may do nothing if nnz is already computed
+  // and information is stored in the state
+  multiply_compute(policy, state, A, B, C, D);
+  index_t nnz = state.get_result_nnz();
+  if (i == 0 }{
+    // allocate C arrays 
+  }
+  multiply_fill(policy, state, A, B, C, D);
+  // C structure is now able to be used
+}
+\end{minted}
+\item 
+Using the split into numeric and symbolic phases for repeated invocation of the functionality with numerically differing matrices:
+\begin{minted}{c++}
+
+operation_state state(allocator);
+multiply_inspect(policy, state, A, B, C, D); // optional
+multiply_symbolic_compute(policy, state, A, B, C, D);
+index_t nnz = state.get_result_nnz();
+// allocate C arrays 
+multiply_symbolic_fill(policy, state, A, B, C, D);
+for (i=0 i<n; i++) {
+  // only numeric computations inside the loop
+  multiply_numeric_compute(policy, state, A, B, C, D);
+  multiply_numeric_fill(policy, state, A, B, C, D);
+  // C structure is now able to be used
+}
+\end{minted}
+\end{enumerate}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=.9\columnwidth]{graphics/different_spgemm.png}
+    \caption{Different workflows for the CSR-based SPGEMM.}
+    \label{fig:spgemm_workflows}
+\end{figure}
+
+\fi
