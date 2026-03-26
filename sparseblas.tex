@@ -807,6 +807,7 @@ csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 auto x = std::mdspan(raw_x.data(), 100);
 auto y = std::mdspan(raw_y.data(), 100);
+auto z = std::mdspan(raw_y.data(), 100);
 
 // matrix_opt is opaque and may contain 
 // vendor optimization details
@@ -817,30 +818,27 @@ operation_state state(allocator);
 
 // optional inspect phase can add information 
 // to the matrix opt
-multiply_inspect(policy, state, A_opt, x, y);
+multiply_inspect(policy, state, alpha, A_opt, x, [ beta, z, ] y); 
 
 // actual multiplication y = A * x
-multiply(policy, state, A_opt, x, y); 
+multiply(policy, state, alpha, A_opt, x, [ beta, z, ] y); 
 
-// alternatively, the multiplication can use the plain views
-// limiting the optimization opportunities
-multiply(policy, state, A, x, y); 
 \end{minted}
-\caption{Sparse matrix vector product $y = A \cdot x$.}
+\caption{Sparse matrix vector product $y = \alpha \cdot A \cdot x\  [ + \beta \cdot z]$.}
 \end{listing}
+
 
 %\linesep
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-float alpha = ..., beta = ...;
 
-auto X = std::mdspan(raw_x.data(), 100, 100);
-auto Y = std::mdspan(raw_y.data(), 100, 100);
+probs = spblas::property::sorted;
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz [, props] );
 
-// matrix_opt is opaque and may contain
-// vendor optimization details
+auto x = std::mdspan(raw_x.data(), 100);
+auto b = std::mdspan(raw_y.data(), 100);
+
 auto A_opt = matrix_opt(A, allocator);
 
 // create a state for the optimization of the routine
@@ -848,96 +846,19 @@ operation_state state(allocator);
 
 // optional inspect phase can add information
 // to the matrix handle
-multiply_inspect(policy, state, scaled(alpha, A_opt), X, scaled(beta, Y), Y);
+triangular_solve_inspect(policy, state, triangle( A_opt, uplo::upper), [ alpha, ] b, x);
 
-// actual multiplication Y = alpha * A * X + beta * Y
-multiply(policy, state, scaled(alpha, A_opt), X, scaled(beta, Y), Y); 
-
-// alternatively, the multiplication can use the plain views
-// limiting the optimization opportunities
-multiply(policy, state, scaled(alpha, A), X, scaled(beta, Y), Y); 
-\end{minted}
-\caption{Sparse matrix dense matrix product, $Y = \alpha \cdot A \cdot X + \beta \cdot Y$, with $X$ and $Y$ being dense matrices.}
-\end{listing}
-
-
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-// Matrix T data is already in lower or upper triangular form
-// physically in the matrix arrays for the triangular
-// solve
-csr_wrapper<float> T(values, rowptr, colind, shape, nnz);
-
-auto x = std::mdspan(raw_x.data(), 100);
-auto b = std::mdspan(raw_y.data(), 100);
-
-// matrix_opt is opaque and may contain
-// vendor optimization details
-auto T_handle = matrix_opt(T, allocator);
-
-// create a state for the optimization of the routine
-operation_state state(allocator);
-
-// optional inspect phase can add information
-// to the matrix handle
-triangular_solve_inspect(policy, state, T_handle, b, x);
-
-// actual triangular solver x = T \ b
-triangular_solve(policy, state, T_handle, b, x); 
-
-// alternatively, the triangular solver can use the plain views
-// limiting the optimization opportunities
-triangular_solve(policy, state, T, b, x); 
-\end{minted}
-\caption{Triangular solve: solve $T\cdot x = b$ for x.}
-\end{listing}
-
-
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-auto X = std::mdspan(raw_x.data(), m, k);
-auto Y = std::mdspan(raw_b.data(), k, n);
-// sample mask is the pattern of CSR matrix output
-csr_wrapper<float> C(values, rowptr, colind, shape, nnz);
-
-operation_state state(allocator);
-sampled_multiply_inspect(policy, state, X, Y, C);
-
-// C = C.*( X * Y ): vendor optimizations in state for reuse
-sampled_multiply(policy, state, X, Y, C); 
+// actual triangular solver x = alpha A^-1 * b
+triangular_solve(policy, state, triangle( A_opt, uplo::upper), [ alpha, ] b, x);
 
 \end{minted}
-\caption{Sampled dense dense matrix multiplication (SDDMM), $C\langle \text{mask} \rangle = X\cdot Y$, where the $C$ sparsity pattern encodes the mask}
+\caption{Triangular solve: solve $x=\alpha A^{-1} b$.}
 \end{listing}
 
 
 
-%\linesep
-\iffalse
-\begin{listing}[H]
-\begin{minted}{c++}
-using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
-// auto A = matrix_opt(csr_wrapper<float>(...), allocator);
-// ... likewise for B
-csr_wrapper<float> C(m, n);
-// auto C = matrix_opt(csr_wrapper<float>(...), allocator);
 
-operation_state state(allocator);
-multiply_elementwise_inspect(policy, state, A, B, C); // optional
-multiply_elementwise_compute(policy, state, A, B, C);
-index_t nnz = state.get_result_nnz();
-// allocate C arrays and put in C
-multiply_elementwise_fill(policy, state, A, B, C);
-// C structure and values are now able to be used
-\end{minted}
-\caption{Element-wise Multiplication, $C = A~.*B$}
-\end{listing}
-\fi
+
 
 \subsubsection{Multi-Stage API for Operations with unknown Output}
 

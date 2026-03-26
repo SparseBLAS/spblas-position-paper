@@ -1,6 +1,38 @@
 \subsection*{One-Stage Sparse BLAS Functionality}
 
 
+
+%\linesep
+\begin{listing}[H]
+\begin{minted}{c++}
+using namespace spblas;
+csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
+float alpha = ..., beta = ...;
+
+auto X = std::mdspan(raw_x.data(), 100, 100);
+auto Y = std::mdspan(raw_y.data(), 100, 100);
+auto Z = std::mdspan(raw_y.data(), 100, 100);
+
+// matrix_opt is opaque and may contain
+// vendor optimization details
+auto A_opt = matrix_opt(A, allocator);
+
+// create a state for the optimization of the routine
+operation_state state(allocator);
+
+// optional inspect phase can add information
+// to the matrix handle
+multiply_inspect(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
+
+// actual multiplication Y = alpha * A * X + beta * Z
+multiply(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
+
+\end{minted}
+\caption{Sparse matrix dense matrix product, $Y = \alpha \cdot A \cdot X  [+ \beta \cdot Z]$, with $X$, $Y$, and $Z$ being dense matrices.}
+\end{listing}
+
+
+
 %\linesep
 
 \begin{listing}[H]
@@ -54,6 +86,25 @@ auto frob_nrm = matrix_frob_norm(state, A);
 \caption{Frobenius Matrix Norm, $\alpha = \|A\|_F$}
 \end{listing}
 
+
+%\linesep
+\begin{listing}[H]
+\begin{minted}{c++}
+using namespace spblas;
+auto X = std::mdspan(raw_x.data(), m, k);
+auto Y = std::mdspan(raw_b.data(), k, n);
+// sample mask is the pattern of CSR matrix output
+csr_wrapper<float> C(values, rowptr, colind, shape, nnz);
+
+operation_state state(allocator);
+sampled_multiply_inspect(policy, state, X, Y, C);
+
+// C = C.*( X * Y ): vendor optimizations in state for reuse
+sampled_multiply(policy, state, X, Y, C); 
+
+\end{minted}
+\caption{Sampled dense dense matrix multiplication (SDDMM), $C\langle \text{mask} \rangle = X\cdot Y$, where the $C$ sparsity pattern encodes the mask}
+\end{listing}
 
 
 %################################################################
