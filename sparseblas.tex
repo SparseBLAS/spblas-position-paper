@@ -766,7 +766,7 @@ GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
 y += beta*A*x
 GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64. GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
 \end{lstlisting}
-\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
+\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimized by nonblocking execution)
 \begin{lstlisting}
 grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
     grb::identities::zero, grb::identities::one > plusTimes;
@@ -1091,7 +1091,7 @@ can be realized using the following sequence of steps:
 \todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> A,B,D filled elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
 // auto A_obj = matrix_opt(A, allocator);
 // auto B_obj = matrix_opt(B, allocator);
@@ -1124,7 +1124,7 @@ Inspecting the pre-conditions and post-conditions listed above, we note that the
 \todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> A,B,D filled elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
 // auto A_obj = matrix_opt(A, allocator);
 // auto B_obj = matrix_opt(B, allocator);
@@ -1575,7 +1575,7 @@ Overall, the use of execution policies (\textbf{option 3} seems to be the best s
 
 Suppose that for SpMV operation $y=\alpha op(A)x + \beta y$, that the $\alpha$ and/or $\beta$ parameters are computed as part of the higher level algorithm, (e.g. as part of a conjugate gradient iteration) and hence may also be asynchronously defined on the device.  We should provide a method of supporting such use cases in our designs.  A simple approach is to switch from a $DataType \alpha$ argument to a $DataType * p\_alpha$ argument.  
 
-Each extension language provides a method of determining where such a pointer lives (must be device accessible) and our APIs should internally query this, we should assume it is dynamically being set and only de-reference the value once all dependencies are satisfied, ie during the kernel execution itself. 
+Each extension language provides a method of determining where such a pointer lives (must be device accessible) and our APIs should internally query this, we should assume it is dynamically being set and only de-reference the value once all dependencies are satisfied, i.e. during the kernel execution itself.
 
 Using the \verb|scaled(alpha, matrix_view)| approach for setting scalar factors on a matrix or other object, we may choose to have overloads for a constant scalar or asynchronous pointers to a scalar which should be handled appropriately internally.  In the out-of-order asynchronous approach, the user has the responsibility to ensure any events related to the setting of alpha value asynchronously should be provided as input to the function call.  For in-order asynchronous cases, there are no additional requirements on the user's side.  In all cases, the library has the responsibility to ensure that the pointer to alpha is only de-referenced in the asynchronous kernel.
 
