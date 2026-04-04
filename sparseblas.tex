@@ -80,6 +80,7 @@ Interface for Sparse Linear Algebra Operations}
 \author[1,2]{Hartwig Anzt\footnote{Coordinator of the Sparse BLAS effort.}}
 \author[3]{Willow Ahrens}
 \author[4]{Chris Armstrong}
+\author[2]{Daniel Berry}
 \author[5]{Benjamin Brock}
 \author[7]{Ayd\i n Buluç}
 \author[7]{Federico Busato}
@@ -93,6 +94,7 @@ Interface for Sparse Linear Algebra Operations}
 \author[7]{Azzam Haider}
 \author[12]{Toshiyuki Imamura}
 \author[13]{Pedro Valero Lara}
+\author[20]{Julien Langou}
 \author[14]{Sherry Li}
 \author[11]{Kim Liegeois}
 \author[3,2]{Piotr Luszczek}
@@ -130,6 +132,7 @@ Interface for Sparse Linear Algebra Operations}
 \affil[17]{Intel Corporation, USA}
 \affil[18]{The Math Works Inc, USA}
 \affil[19]{Cornell University, USA}
+\affil[20]{University of Colorado Denver, USA}
 \date{\today}
 
 \begin{document}
@@ -345,7 +348,7 @@ Furthermore, we acknowledge in this proposal that for repeated application of a 
 
 \subsection{Review of existing API designs for the SpMV operation}
 \label{sec:spmvReview}
-While none of the sparse BLAS standards discussed in~\Cref{existingsparseblas} has been adopted as a universial standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
+While none of the sparse BLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
 Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
 Thus, we consider it beneficial to the reader to list existing C and
 \cplusplus library APIs for the sparse matrix-vector (SpMV) operation multiplying a sparse matrix with a dense vector.
@@ -441,7 +444,7 @@ Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an o
 
 
 \section{Sparse BLAS Design}
-\label{sec:sparseblas}
+\label{sec:api-design}
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
 This requires to consider a wide range of design aspects, ranging from storage formats over ownership and opaqueness of objects to functionality scope, multi-stage functions and execution policies. 
 In the following sections, we address these intertwined aspects individually. 
@@ -767,9 +770,11 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 
 \subsection{Single- and multi-stage operations}
+\label{sec:sparseblasimpl}
+
 From a high-level point of view, there exist two classes of sparse BLAS operations:
 \begin{enumerate}
-    \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. 
+    \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. In our archetype classification, both the SpMV and the SpTRSV fall into that category.
     \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
     For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class operate on format\_wrapper structures and are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
 \end{enumerate} 
