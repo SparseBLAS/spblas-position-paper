@@ -272,7 +272,7 @@ Finally, there are currently no vendor-provided implementations of GraphBLAS, wi
 Nevertheless, we anticipate that the proposed standard and GraphBLAS will overlap for a subset of functionalities, and the Sparse BLAS API will be capable of efficiently expressing them. Several GraphBLAS innovations we may explore utilizing in this iteration of the Sparse BLAS standard include: (1) operations between two sparse objects, (2) masking, and (3) non-blocking or asynchronous execution.
 
 \subsection{Existing Sparse BLAS standards}
-
+\label{sec:existingsparseblas}
 The first mention of a Sparse BLAS standard was in 1985, with Dodson et
 al.~\cite{10.1145/1057935.1057938} calling for Sparse extensions to the BLAS standard, recognizing the growing importance of sparse
 solvers and preconditioners in research and industry. At the time, the proposed
@@ -341,61 +341,127 @@ hardware.
 %modern Sparse BLAS standard must support this mode of execution natively. 
 Furthermore, we acknowledge in this proposal that for repeated application of a sparse operator, the initial investment in optimization -- analyzing sparsity patterns and characteristics, and fine-tuning format and execution policies -- can quickly be amortized by faster execution. We thus propose interfaces also allowing for an optimization phase prior to repeated execution of functionality.
 
-\section{The Three Archetypes for the Sparse BLAS Design}
-\label{sec:archetype}
-While there exists a long list of sparse linear algebra functionality, for the design of an interface standard, it is useful to identify groups of functionality sharing the same properties. We identified three distinct archetypes based on their computational complexity, memory requirements, and parallelization strategies. 
-
-The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), which is defined by the multiplication of a sparse matrix by a dense vector to produce a dense output vector. It is generally considered the most predictable operation because the output size is known beforehand, allowing for straightforward memory allocation. While the design of an interface should support various input formats (e.g., by accepting an abstract matrix operator), the operation is typically memory-bandwidth limited and trivial to parallelize by partitioning the matrix rows among different execution units. 
 
 
-In contrast, \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM) represents a much more complex archetype due to the unknown output sparsity pattern. Because the number of non-zero entries in the resulting matrix cannot be determined a priori, a multi-stage design is needed. This process begins with an inspection or symbolic phase to compute the sparsity pattern, followed by memory allocation, and finally a numeric phase to calculate the actual values. Because the workload can be highly unbalanced, the parallelization strategies for SpGEMM can range from row-parallel and column-parallel to sub-matrix parallel and element-parallel.
+\subsection{Review of existing API designs for the SpMV operation}
+\label{sec:spmvReview}
+While none of the sparse BLAS standards discussed in~\Cref{existingsparseblas} has been adopted as a universial standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
+Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
+Thus, we consider it beneficial to the reader to list existing C and
+\cplusplus library APIs for the sparse matrix-vector (SpMV) operation multiplying a sparse matrix with a dense vector.
+Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
 
-The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), involves solving systems where the sparse matrix is triangular or only a triangular part of the matrix is considered. For this reason, the design relies heavily on property tags to inform the solver whether the matrix stored is lower or upper triangular or if it possesses symmetry that can be exploited for faster execution. Although the output size is as predictable as that of SpMV, the operation is inherently sequential because each element of the output vector may depend on previously computed values. To extract parallelism, the library must often construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix. 
+\newpage
+\noindent\textbf{SpMV API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (SpMV) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*}
+\begin{enumerate}[label=(\arabic*)]
+\item Arm Performance Libraries C API (has an optional hint/optimize stage)
+\begin{lstlisting}
+// comm
+/* comm */
+info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
+\end{lstlisting}
+\item oneMKL C API (has an optional hint/optimize stage)
+\begin{lstlisting}
+status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
+            alpha, csrA, descrA, x, beta, y);
+\end{lstlisting}
+\item AOCL-sparse C API (has an optional hint/optimize stage)
+\begin{lstlisting}
+status = aoclsparse_dmv(aoclsparse_operation_none,
+            p_alpha, A, descr_a, y, p_beta, x);
+\end{lstlisting}
+\item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
+\begin{lstlisting}
+// y = alpha*y
+GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
+y += beta*A*x
+GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64. GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
+\end{lstlisting}
+\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
+\begin{lstlisting}
+grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
+    grb::identities::zero, grb::identities::one > plusTimes;
+grb::Monoid< grb::operators::mul< double >, grb::identities::one > mul;
+status = grb::foldr( beta / alpha, y, mul );
+status = status ? status : grb::mxv< op >( y, A, x, plusTimes );
+status = status ? status : grb::foldr( alpha, y, mul );
+\end{lstlisting}
+\item cuSPARSE CUDA C, generic API (has multiple required stages)
+\begin{lstlisting}
+status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+            p_alpha, matA, vecX, p_beta, vecY,
+            CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT,
+            externalBuffer);
+\end{lstlisting}
+\item rocSPARSE ROCm C, generic API (has multiple required stages)
+\begin{lstlisting}
+status = rocsparse_spmv(handle, rocsparse_operation_none,
+            p_alpha, matA, vecX, p_beta, vecY,
+            rocsparse_datatype_f64_r,
+            rocsparse_spmv_alg_csr_adaptive,
+            rocsparse_spmv_stage_compute,
+            p_buffer_size, temp_buffer);
+\end{lstlisting}
+\item hipSPARSE ROCm/CUDA C API
+\begin{lstlisting}
+status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE,
+            m, n, nnz, p_alpha, descrA,
+            valA, rowptrA, colindA, x, p_beta, y);
+\end{lstlisting}
+\item oneMKL SYCL \cplusplus API with an out-of-order queue (has an optional optimize stage)
+\begin{lstlisting}
+ev_gemv = oneapi::mkl::sparse::gemv(
+            queue, oneapi::mkl::transpose::nontrans,
+            alpha, csrA, x, beta, y, {ev_opt});
+\end{lstlisting}
+\item oneMKL SYCL \cplusplus API with an in-order queue (has an optional optimize stage)
+\begin{lstlisting}
+oneapi::mkl::sparse::gemv(
+            queue, oneapi::mkl::transpose::nontrans,
+            alpha, csrA, x, beta, y);
+\end{lstlisting}
+\item Kokkos-kernel \cplusplus API (can set algorithm in \textit{controls} argument)
+\begin{lstlisting}
+KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
+            alpha, A, x, beta, y);
+\end{lstlisting}
+\item Ginkgo \cplusplus API
+\begin{lstlisting}
+// cuda/rocm stream or sycl::queue is attached to A previously
+// (through an ``Executor'' object)
+// matrix::Csr *A;              // sparse matrix
+// matrix::Dense *y, *x;        // vectors tall and skinny matrices
+// matrix::Dense *alpha, *beta; // scalars of dimension 1x1
+A->apply(alpha, x, beta, y);
+\end{lstlisting}
+
+\end{enumerate}
+
+Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their Sparse BLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
 
 
-
-\section{Functionality Scope of the Sparse BLAS}
-
+\section{Sparse BLAS Design}
+\label{sec:sparseblas}
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
+This requires to consider a wide range of design aspects, ranging from storage formats over ownership and opaqueness of objects to functionality scope, multi-stage functions and execution policies. 
+In the following sections, we address these intertwined aspects individually. 
+
 To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, eigensolvers, and preconditioners. Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
+The functionality we consider in scope of this paper is listed in~\Cref{sec:functionality}. Instead of discussing the the characteristics of the distinct sparse BLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before identifying archetypes and listing sparse BLAS functionality, the question of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
 
-Our scope entails \textit{sparse storage format standardization} as well as \textit{conversion between formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a Sparse Matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{lll}%{Functionality|Matlab description}
-    \toprule
-    \textbf{Operation} & \textbf{Notation} & \textbf{API Type}\\ 
-    \midrule
-       Scaling                                            & $A := \alpha A$ & Single-stage \\
-       Transpose and Conjugate Transpose                  & $A := A^T$, $A := A^H$ & Multi-stage\\
-       Infinity Matrix Norm                               & $\alpha := \|A\|_\text{inf}$ & Single-stage \\
-       Frobenius Matrix Norm                              & $\alpha := \|A\|_F$  & Single-stage \\
-       Element-wise Multiplication                        & $C := A~.*B$  & Multi-stage\\
-       Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & Multi-stage\\
-       Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & Multi-stage\\
-       Sparse Matrix -- Dense Matrix Multiplication       & $Y^\prime := \alpha A \cdot X + \beta Y$  & Single-stage \\
-       Sparse Matrix -- Dense Vector Multiplication       & $y^\prime := \alpha A \cdot x + \beta y$  & Single-stage \\
-       Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & Single-stage \\
-%       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
-%       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
-       Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & Multi-stage\\
-       Predicate Selection                                &  $B = A( \text{predicate} )$ & Multi-stage \\
-       Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & Single-stage\\
-    \bottomrule
-    \end{tabular}
-    \caption{List of the Sparse BLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
-    \label{tab:scope}
-\end{table}
 
-\section{Supported Sparse Matrix Storage Formats}
+\subsection{Supported Sparse Matrix Storage Formats}
 \label{sec:sparse-formats}
 
 % Mandatory formats
 % Other formats considered
 % Information required for mandatory formats - table?
+The fundamental distinction between dense and sparse linear algebra lies in the strategic move away from contiguous data storage toward more resource-efficient formats. In dense linear algebra, matrices are represented as exhaustive arrays where every entry occupies a memory slot. If sparse matrices were stored in this same manner, the need for a specialized sparse BLAS API would vanish, as the functionality would be identical to existing dense routines. However, the defining characteristic of a sparse matrix—the overwhelming prevalence of zero entries—renders such an approach prohibitively expensive for large-scale applications.
+
+By adopting specialized data structures that omit the majority of these zeros, we unlock significant savings in memory footprint, memory access volume, and overall computational cost. Rather than wasting cycles and bandwidth on redundant operations—such as multiplying by zero or loading null values from RAM—sparse routines focus exclusively on the non-zero elements. While these formats introduce greater complexity in how we index and access data, the resulting gains in performance and scalability are indispensable. This necessity motivates the entire ecosystem of sparse data structures and the specialized routines designed to navigate them, transforming what would be computationally impossible into a manageable task.
+
 Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS)}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
 These formats are well-supported in existing libraries and widely used
 for storage and exchange. We will consider these as input formats for
@@ -561,15 +627,62 @@ We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support 
     \label{tab:dense_param}
 \end{table}
 
-%\input{batch_computation}
 
-\section{API Design}
-\label{sec:api-design}
 
-The sparse BLAS interface design has to consider a wide range of aspects, ranging from opaqueness to memory allocation for sparse outputs and data ownership to multi-stage APIs and object- and function- specific execution policies and hints for optimization. 
-In the following sections, we address these intertwined aspects individually. 
+\subsection{The Three Archetypes for the Sparse BLAS Design}
+\label{sec:archetype}
+Before listing functionality we consider in scope of an API standard, we identify groups of functionality sharing the same characteristics in terms of computational complexity, memory requirements, and parallelization strategies. 
+
+The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), forming the product of a sparse matrix and a dense vector. The size of the dense output vector is known upfront, making the memory allocation easy and allowing the functionality to be implemented as a single kernel. The interface for the SpMV routine should ideally support various input formats for the sparse matrix, e.g., by accepting an abstract matrix operator. The SpMV routine is trivial to parallelize by partitioning the input matrix rows among different execution units. More sophisticated parallelization schemes are possible and may be favored for workload balance, however typically require atomic access to the output vector to avoid write conflicts.
+
+
+In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM) forming the product of two sparse matrices represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as multi-stage routine. This process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\Cref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides.
+
+The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix, and the SpTRSV is required to extract the triangular part during kernel execution. This, oppose to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information stroed in the property tags we discuss in~\Cref{sec:views}.  Like for the SpMV routine, the size of the output vector is known a priori, and the routine can be realized in a single kernel. On the other hand, conversely to the SpMV, the parallelization of the SpTRSV kernel is significantly more challenging, as the operation is inherently sequential because each element of the output vector may depend on previously computed values. To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix. In~\Cref{sec:sparseblasimpl} we discuss the addition of an ``inspect'' routine that accompanies all sparse BLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
+
+
+
+
+\subsection{Functionality Scope of the Sparse BLAS}
+\label{sec:functionality}
+
+
+Our scope entails \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a Sparse Matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
+
+
+\begin{table}[h]
+    \centering
+    \footnotesize
+    \begin{tabular}{lll}%{Functionality|Matlab description}
+    \toprule
+    \textbf{Operation} & \textbf{Notation} & \textbf{API Type}\\ 
+    \midrule
+       Scaling                                            & $A := \alpha A$ & Single-stage \\
+       Transpose and Conjugate Transpose                  & $A := A^T$, $A := A^H$ & Multi-stage\\
+       Infinity Matrix Norm                               & $\alpha := \|A\|_\text{inf}$ & Single-stage \\
+       Frobenius Matrix Norm                              & $\alpha := \|A\|_F$  & Single-stage \\
+       Element-wise Multiplication                        & $C := A~.*B$  & Multi-stage\\
+       Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & Multi-stage\\
+       Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & Multi-stage\\
+       Sparse Matrix -- Dense Matrix Multiplication       & $Y := \alpha A \cdot X + \beta Z$  & Single-stage \\
+       Sparse Matrix -- Dense Vector Multiplication       & $y := \alpha A \cdot x + \beta z$  & Single-stage \\
+       Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & Single-stage \\
+%       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
+%       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
+       Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & Multi-stage\\
+       Predicate Selection                                &  $B = A( \text{predicate} )$ & Multi-stage \\
+       Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & Single-stage\\
+    \bottomrule
+    \end{tabular}
+    \caption{List of the Sparse BLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
+    \label{tab:scope}
+\end{table}
+
+
+
 
 \subsection{Ownership and Opaqueness}
+\label{sec:ownership}
 
 There exist different strategies for handling the ownership of data in sparse linear algebra operations. 
 \begin{itemize}
@@ -617,7 +730,8 @@ auto A_opt = matrix_opt(A, allocator);
 If the user applies changes to the arguments wrapped in the \texttt{csr\_wrapper}, an already created \texttt{matrix\_opt} will not reflect these changes. To propagate any changes in the user-owned data, an \texttt{update\_matrix} function has to be invoked.
 Generally speaking, any sparse BLAS functionality takes \texttt{matrix\_opt}s as the input arguments and only modifies the user-owned data only if explicitly detailed in the functionality description. If sparse BLAS routine creates a sparse matrix as output, this output argument needs to be a \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
-\subsection{Views on Matrix Data}
+\subsection{Views on Matrix Data and Property Tags}
+\label{sec:views}
 In some situations, a sparse matrix object is not used in its original form, but in a modified form, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, modifying the user-owned data in the \texttt{xyz\_wrapper} would conflict with the non-mutability of the user-owned data. Creating an explicit copy on the other hand would introduce a significant overhead. We resolve the situation by introducing the \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
 
 \begin{table}[h]
@@ -673,103 +787,8 @@ BLAS, the \cplusplus standard officially adopted the
 strategy and build upon an interface in \cplusplus. At the same time,
 we acknowledge that many users and application developers depend on Fortran, C, or Python interfaces as their application codes are using the respective language. Designing an interface to sparse BLAS functionality in C or Fortran without the use of static and dynamic polymorphism is almost impossible due to the explosion in variants, which would result in a prohibitively long parameter list and a plethora of function variants. In response, we will select the most common use cases and provide bindings in C, Fortran, and Python to a subset of the sparse BLAS functionality.
 
-\subsection{Review of existing API designs SpMV }
-\label{sec:spmvReview}
-While the community has not followed a synchronized approach towards an API for sparse linear algebra functionality, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. While the interfaces differ, they are all designed to accommodate functionality- and hardware-specific needs. Most of the currently supported APIs follow the transparent, non-data-owning design. 
-Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
-Thus, in the subsequent, we provide a comparison of existing C and
-\cplusplus library APIs for sparse matrix-vector (SpMV) operations.
-Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
 
-\newpage
-\noindent\textbf{SpMV API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (SpMV) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*}
-\begin{enumerate}[label=(\arabic*)]
-\item Arm Performance Libraries C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-// comm
-/* comm */
-info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
-\end{lstlisting}
-\item oneMKL C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
-            alpha, csrA, descrA, x, beta, y);
-\end{lstlisting}
-\item AOCL-sparse C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-status = aoclsparse_dmv(aoclsparse_operation_none,
-            p_alpha, A, descr_a, y, p_beta, x);
-\end{lstlisting}
-\item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
-\begin{lstlisting}
-// y = alpha*y
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-y += beta*A*x
-GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64. GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
-\end{lstlisting}
-\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
-\begin{lstlisting}
-grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
-    grb::identities::zero, grb::identities::one > plusTimes;
-grb::Monoid< grb::operators::mul< double >, grb::identities::one > mul;
-status = grb::foldr( beta / alpha, y, mul );
-status = status ? status : grb::mxv< op >( y, A, x, plusTimes );
-status = status ? status : grb::foldr( alpha, y, mul );
-\end{lstlisting}
-\item cuSPARSE CUDA C, generic API (has multiple required stages)
-\begin{lstlisting}
-status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-            p_alpha, matA, vecX, p_beta, vecY,
-            CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT,
-            externalBuffer);
-\end{lstlisting}
-\item rocSPARSE ROCm C, generic API (has multiple required stages)
-\begin{lstlisting}
-status = rocsparse_spmv(handle, rocsparse_operation_none,
-            p_alpha, matA, vecX, p_beta, vecY,
-            rocsparse_datatype_f64_r,
-            rocsparse_spmv_alg_csr_adaptive,
-            rocsparse_spmv_stage_compute,
-            p_buffer_size, temp_buffer);
-\end{lstlisting}
-\item hipSPARSE ROCm/CUDA C API
-\begin{lstlisting}
-status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE,
-            m, n, nnz, p_alpha, descrA,
-            valA, rowptrA, colindA, x, p_beta, y);
-\end{lstlisting}
-\item oneMKL SYCL \cplusplus API with an out-of-order queue (has an optional optimize stage)
-\begin{lstlisting}
-ev_gemv = oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y, {ev_opt});
-\end{lstlisting}
-\item oneMKL SYCL \cplusplus API with an in-order queue (has an optional optimize stage)
-\begin{lstlisting}
-oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y);
-\end{lstlisting}
-\item Kokkos-kernel \cplusplus API (can set algorithm in \textit{controls} argument)
-\begin{lstlisting}
-KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
-            alpha, A, x, beta, y);
-\end{lstlisting}
-\item Ginkgo \cplusplus API
-\begin{lstlisting}
-// cuda/rocm stream or sycl::queue is attached to A previously
-// (through an ``Executor'' object)
-// matrix::Csr *A;              // sparse matrix
-// matrix::Dense *y, *x;        // vectors tall and skinny matrices
-// matrix::Dense *alpha, *beta; // scalars of dimension 1x1
-A->apply(alpha, x, beta, y);
-\end{lstlisting}
-
-\end{enumerate}
-
-Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their Sparse BLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
-
-\subsection{API Design Considerations}
+\subsection{Single- and multi-stage operations}
 From a high-level point of view, there exist two classes of sparse BLAS operations:
 \begin{enumerate}
     \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. 
@@ -898,7 +917,7 @@ C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) + \beta \cdot D
 \end{equation}
 
 can be realized using the following sequence of steps:
-\todo[inline]{C is not an obj, but the CSR view}
+%\todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
 // csr_wrapper<float> A,B,D filled elsewhwere
