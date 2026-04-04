@@ -765,28 +765,6 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 
 
-\subsection{Horizontal and Vertical Interoperability}
-
-The interface and functionality standardization we propose must allow for horizontal and vertical interoperability. 
-\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a sparse BLAS standard. We assess upward interoperability by using the sparse BLAS functionality inside mini apps. 
-Downward interoperability refers to the possibility of wrapping already existing sparse BLAS functionality developed by hardware vendors into the sparse BLAS interface. The intention for the downward interoperability is not to create yet another layer of interfaces, but to ensure that design decisions taken by the vendors in the kernel implementations do not hinder the adoption of a new interface in future kernel 
-development.
-\textit{Horizontal interoperability} refers to compatibility with dense
-BLAS functionality and the possibility to use the functionality in other
-programming languages. The latter takes on a new significance in the
-context of Sparse BLAS, as we aim to focus on building a high-level
-\cplusplus API, as opposed to the Fortran-based interface used in the
-dense BLAS to allow for ABI compatibility. Instead, our goal is to ensure that basic functionality is accessible from a wide range of languages, including Fortran, C, Julia, Python, and others. The strategy we envision is to create C-bindings for the most central functionality.
-
-Most vendors implement linear algebra functionality using the
-\cplusplus programming language. Likewise, most already implemented
-sparse BLAS functionality, e.g. in NVIDIA's, Arm's, Intel's, and AMD's
-vendor libraries, are often designed in \cplusplus. Also, for dense
-BLAS, the \cplusplus standard officially adopted the
-\texttt{std::linalg} API~\cite{cpplinalg:p1673r13}. We adopt this
-strategy and build upon an interface in \cplusplus. At the same time,
-we acknowledge that many users and application developers depend on Fortran, C, or Python interfaces as their application codes are using the respective language. Designing an interface to sparse BLAS functionality in C or Fortran without the use of static and dynamic polymorphism is almost impossible due to the explosion in variants, which would result in a prohibitively long parameter list and a plethora of function variants. In response, we will select the most common use cases and provide bindings in C, Fortran, and Python to a subset of the sparse BLAS functionality.
-
 
 \subsection{Single- and multi-stage operations}
 From a high-level point of view, there exist two classes of sparse BLAS operations:
@@ -902,21 +880,14 @@ As mentioned above, a fundamental difference to dense BLAS functionality is that
 
 An important design question for functionality producing sparse output is whether the memory allocation is done by the user or the library. While there exist strong arguments on both sides, and passing a memory allocator to the library poses an elegant way to resolve memory location and ownership, we initially propose an interface that requires the library user to allocate the memory for the sparse output data after providing the memory requirement information. 
 
-
-So far, we have discussed exclusively the multiplication of sparse matrices (typically called SpGEMM in literature), the considerations and design aspects also hold for other basic functionality producing output with a sparsity pattern unknown prior to the computation. 
-
-
-
-In Table~\ref{tab:scope} we list several: sparse matrix -- sparse matrix multiplication, matrix sparse format conversion, filter operations removing elements below a pre-defined threshold, and the addition of sparse matrices with generally differing sparsity patterns.
- 
 Acknowledging the previously motivated \textit{inspect} phase, the multiplication of two sparse matrices 
 
 \begin{equation}
 \label{eq:spgemm}
-C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) + \beta \cdot D
+C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D]
 \end{equation}
 
-can be realized using the following sequence of steps:
+with the addition of the sparse matrix $d$ being optional, can be realized using the following sequence of steps:
 %\todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
@@ -978,6 +949,8 @@ Also this interface gives some freedom how implementations arrange the different
 
 
 Up to now, we provided motivation and details for the design of the API for the sparse matrix matrix multiplication, but the same two-stage interface applies also to other functionality with nonzero structure unknown a-priori, we provide a comprehensive list in the appendix.
+
+
 
 
 \newpage
@@ -1103,6 +1076,30 @@ A number of new types have been introduced in the preceding sections. Table \ref
     \caption{Summary of types introduced by the standard.} 
     \label{tab:newtypes}
 \end{table}
+
+
+\subsection{Horizontal and Vertical Interoperability}
+
+The interface and functionality standardization we propose must allow for horizontal and vertical interoperability. 
+\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a sparse BLAS standard. We assess upward interoperability by using the sparse BLAS functionality inside mini apps. 
+Downward interoperability refers to the possibility of wrapping already existing sparse BLAS functionality developed by hardware vendors into the sparse BLAS interface. The intention for the downward interoperability is not to create yet another layer of interfaces, but to ensure that design decisions taken by the vendors in the kernel implementations do not hinder the adoption of a new interface in future kernel 
+development.
+\textit{Horizontal interoperability} refers to compatibility with dense
+BLAS functionality and the possibility to use the functionality in other
+programming languages. The latter takes on a new significance in the
+context of Sparse BLAS, as we aim to focus on building a high-level
+\cplusplus API, as opposed to the Fortran-based interface used in the
+dense BLAS to allow for ABI compatibility. Instead, our goal is to ensure that basic functionality is accessible from a wide range of languages, including Fortran, C, Julia, Python, and others. The strategy we envision is to create C-bindings for the most central functionality.
+
+Most vendors implement linear algebra functionality using the
+\cplusplus programming language. Likewise, most already implemented
+sparse BLAS functionality, e.g. in NVIDIA's, Arm's, Intel's, and AMD's
+vendor libraries, are often designed in \cplusplus. Also, for dense
+BLAS, the \cplusplus standard officially adopted the
+\texttt{std::linalg} API~\cite{cpplinalg:p1673r13}. We adopt this
+strategy and build upon an interface in \cplusplus. At the same time,
+we acknowledge that many users and application developers depend on Fortran, C, or Python interfaces as their application codes are using the respective language. Designing an interface to sparse BLAS functionality in C or Fortran without the use of static and dynamic polymorphism is almost impossible due to the explosion in variants, which would result in a prohibitively long parameter list and a plethora of function variants. In response, we will select the most common use cases and provide bindings in C, Fortran, and Python to a subset of the sparse BLAS functionality.
+
 
 
 %\subsection{Functionality Generating Sparse Output Data}
