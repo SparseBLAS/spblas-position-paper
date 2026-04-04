@@ -959,7 +959,12 @@ Up to now, we provided motivation and details for the design of the API for the 
 
 
 \newpage
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{graphics/different_spgemm.png}
+    \caption{Different realizations of the CSR-SpGEMM routine. Top: Splitting into three routines: symbolic analysis, (memory allocation by user), symbolic fill, numeric computation. Bottom: Splitting into two routines: symbolic analysis, (memory allocation by user), computations and filling of output structure.}
+    \label{fig:spgemm_workflows}
+\end{figure}
 \newpage
 
 
