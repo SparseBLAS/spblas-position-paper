@@ -77,7 +77,7 @@ fontadjust=true%
 \title{%Toward a
 Interface for Sparse Linear Algebra Operations}
 
-\author[1,2]{Hartwig Anzt}
+\author[1,2]{Hartwig Anzt\footnote{Coordinator of the Sparse BLAS effort.}}
 \author[3]{Willow Ahrens}
 \author[4]{Chris Armstrong}
 \author[5]{Benjamin Brock}
@@ -138,10 +138,10 @@ Interface for Sparse Linear Algebra Operations}
 
 
 \section*{Abstract}
-The standardization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
+The formalization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
 Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own sparse BLAS interface.
-At the same time, there exists a demand for standardization that would improve interoperability, and sustainability, and allow for easier integration of building blocks.
-In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent two years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
+At the same time, there exists a demand for standardization that would improve interoperability and sustainability, and allow for easier integration of building blocks.
+In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent three years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
 \newpage
 \tableofcontents
 
@@ -603,7 +603,7 @@ In \Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz, tags);
 
 // matrix_opt is opaque and may contain 
@@ -833,7 +833,7 @@ multiply(policy, state, alpha, A_opt, x, [ beta, z, ] y);
 \begin{minted}{c++}
 using namespace spblas;
 
-probs = spblas::property::sorted;
+spblas::property_list props(spblas::property::sorted);
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz [, props] );
 
 auto x = std::mdspan(raw_x.data(), 100);
@@ -1173,7 +1173,7 @@ should test a proposed SparseBLAS implementation, given
 the design considerations above.
 \end{enumerate}
 
-\subsection{Choices of numerical formats}
+\subsection{Choices of numerical formats}\label{sec:ChoicesNumericalFormats}
 
 We begin by listing the wide and growing variety of
 numerical formats that are available or will be soon.
@@ -1184,10 +1184,13 @@ traditional 32 and 64-bit floating point formats \cite{IEEE754}. We note that th
 
 Industry and academia have introduced several low-precision data types in recent years, including TensorFloat32~\cite{ampere}, 4-bit, 8-bit and 16-bit floating point~\cite{micikevicius2022fp8}, Bfloat16~\cite{wang2019bfloat16}, micro-scaling (MX) variants~\cite{rouhani2023microscaling}, which are variations
 on classical block floating point \cite{Wilkinson63},
-and posits, which have variable precision \cite{Posits,GoodBadUgly}.
-Also, a new IEEE committee has recently convened to try to
-standardize 8-bit floating point, since several companies
-have been building their own separate, incompatible versions \footnote{https://github.com/P3109/Public}.
+and posits and takums, which have variable precision \cite{Posits,GoodBadUgly,hunh24}.
+Also, motivated in part by several incompatible attempts by companies to devise their own 8-bit (and other short) floating point formats to accelerate
+machine learning
+\cite{ocp23a,ocp23b,njjm22,lzwl24,tesla,zdvz22},
+a new IEEE committee (P3109) has recently convened to try to
+standardize these short formats \cite{P3109}.
+% \footnote{https://github.com/P3109/Public}.
 Vendors are currently prioritizing the acceleration of specific operations, notably general matrix multiplication (GEMM) utilizing low- and mixed-precision cores that are now available on newer hardware, including NVIDIA's Tensor Cores~\cite{ampere}, 
 AMD's Matrix Cores~\cite{amd}, IBM's MMA~\cite{starke2021ibm},
 and Arm's SME~\cite{sme}, among other specialized architectures~\cite{NorriePYKLLYJP21,cerebras}.
@@ -1203,7 +1206,7 @@ is stored in a contiguous set of bits, and those where a
 separate scaling factor is needed for a block of numbers.
 The former includes the most commonly used floating point formats,
 and the latter includes the traditional block floating point, 
-micro-scaling variants, and the possible new 8-bit IEEE standard
+micro-scaling variants, and the possible new P3109 IEEE standard
 mentioned above. Having separate scaling factors,
 that may apply to different subsets of the input
 and output arguments,
@@ -1219,8 +1222,7 @@ In the Sparse BLAS API, we do not specify the internal precision, but anticipate
 We encourage the implementation of functionality variants,
 as long as also these are well-documented (including their numerical properties).
 
-\subsection{Error bounds to be satisfied}
-\label{Error_Bounds}
+\subsection{Error bounds to be satisfied}\label{Error_Bounds}
 
 % \ignore{
 With the emergence of various arithmetic formats, and using mixed precision,
@@ -1319,7 +1321,7 @@ n \cdot \epsilon \cdot \max_{1 \leq i \leq n} |\hat{x}_i| \cdot \max_{1 \leq i \
 Other approaches to avoiding overflow, with different error bounds,
 are imaginable. 
 
-In the case of posits, where the precision $\epsilon$
+In the case of variable precision formats like posits and takums, where the precision $\epsilon$
 depends on the magnitude
 of the numbers (numbers closer to 1 are more accurate than much
 larger or smaller numbers), we refer to \cite{GoodBadUgly} and \cite{Demmel87}, the latter of which discusses an older proposed
@@ -1330,7 +1332,7 @@ We also note that the designers of posits propose including a
 Long accumulators for
 exact dot products with standard floating point
 arguments have also been proposed
-\cite{ExactDotProduct}.
+\cite{ExactDotProduct,KulischMiranker1981}.
 
 Finally, the last error term, $|\hat{z} - \hat{\hat{z}}|$ bounds the
 error when converting the final result from the internal format $\hat{z}$ to
@@ -1450,6 +1452,7 @@ Finally, for the more complicated case of solving a triangular
 system of equations, see \cite{Proposed_BLAS_LAPACK_exception_handling}
 for a discussion of the dense case.
 
+
 \subsection{Bit-wise reproducibility from run to run} \label{sec:BitwiseReproducibility}
 
 \begin{comment}
@@ -1460,7 +1463,19 @@ outline:
 4. API to require reproducibility (question: can algorithm choice overrule reproducibility setting ?  or should an exception be thrown if non-reproducible alg is selected while global reproducibility it turned on ?)
 \end{comment}
 
-There are times where getting exactly the same result (bitwise identical output) from multiple runs of a math routine is important, for instance in finance, scientific research, cryptography, code debugging, and many others.  However, it is also well known that in floating point arithmetic, addition and multiplication are not always associative, so that the order in which array elements are multiplied and/or added together affects the truncation and rounding and ultimately the final result, so bitwise identical results are often not guaranteed.  The concept of ``conditional numerical reproducibility (CNR)'' has been introduced in some performance math libraries to address this desire to have algorithms or functions with clear conditions for consistently obtaining reproducible floating point results.  Note that the choice to enable conditional numerical reproducibility may come with a sacrifice of performance. Those conditions under which reproducibility is guaranteed have converged to four common scenarios, each with more stringent level of care required in the algorithm design:
+There are times where getting exactly the same result (bitwise identical output) from multiple runs of a math routine is important, for instance in finance, scientific research, cryptography, code debugging, and many others.  However, it is also well known that in floating point arithmetic, addition and multiplication are not always associative, so that the order in which array elements are multiplied and/or added together affects the truncation and rounding and ultimately the final result, so bitwise identical results are often not guaranteed.  The concept of ``conditional numerical reproducibility (CNR)'' has been introduced in some performance math libraries to address this desire to have algorithms or functions with clear conditions for consistently obtaining reproducible floating point results, by guaranteeing
+deterministic summation order under the assumption
+that the number of threads does not change.
+To support a more general but somewhat more expensive approach, the 2019 IEEE 754 Floating Point Standard \cite[Sec. 9.5]{IEEE754} introduced a new
+recommended instruction intended to
+accelerate an algorithm 
+\cite{ADN:2020:ReproBLAS}
+that guarantees reproducible
+floating point summation independent 
+of the summation order. The most expensive and
+accurate approach would be to guarantee a
+correctly rounded answer \cite{KulischMiranker1981,ExactDotProduct}.
+Note that the choice to enable conditional numerical reproducibility may come with a sacrifice of performance. Those conditions under which reproducibility is guaranteed have converged to four common scenarios, each with more stringent level of care required in the algorithm design:
 \begin{description}
 \item [Default (no reproducibility property).] Some run to run variation in output results may occur based on potentially different orders of floating point arithmetic operations within the algorithm.  These are often the most performant algorithms.
 \item [CNR property.] Reproducible results when calls occur within the same executable where the number of computational threads the library uses remains constant through the run. Can be less performant than the default case.
@@ -1517,7 +1532,10 @@ just that one of the arguments is propagated
 
 \fi
 
-Finally, we note that this notion of conditional numerical reproducibility is  orthogonal to the notion of consistent exception handling discussed previously. Both can be set or not set independently. There is a small intersection, but   The combination of ``permissive`` and ``cnr`` would mean that you always get an Inf or a NaN in the same output location from run-to-run, but it may not be ``consistent`` in the sense that we cannot guarantee which NaN payload is propagated in an operation like NaN+NaN, just that one of the arguments is propagated (see sec. 6.2.3 of the IEEE 754 standard).
+Finally, we note that this notion of conditional numerical reproducibility is  orthogonal to the notion of consistent exception handling discussed previously. Both can be set or not set independently. There is a small intersection, but 
+\JimD{Should the following "The" just be "the"? The resulting sentence seems a
+bit too long.}
+The combination of ``permissive`` and ``cnr`` would mean that you always get an Inf or a NaN in the same output location from run-to-run, but it may not be ``consistent`` in the sense that we cannot guarantee which NaN payload is propagated in an operation like NaN+NaN, just that one of the arguments is propagated (see sec. 6.2.3 of the IEEE 754 standard).
 
 \subsection{Test Suites}
 Non-associativity of floating-point arithmetic complicates the process of testing numerical code.
@@ -1528,7 +1546,18 @@ The test suite for reference BLAS is available at www.netlib.org/lapack as part
 of the LAPACK release,
 % uses error bounds from [XXXX], 
 and if these tests are not satisfied by an individual test, then the test is deemed 
-a failure.
+a failure. We note that these tests
+are quite weak, for example only testing
+quite small matrices. Combined with the
+many new algorithms mentioned in
+sections~\ref{sec:ChoicesNumericalFormats},
+and \ref{Error_Bounds},
+there is an ongoing effort to ``grade the
+BLAS'', i.e. automatically decide which error
+bound a particular implementation might satisfy.
+This is complicated, since for example a library
+might use a different algorithm for different
+problem sizes.
 
 For the Sparse BLAS effort, we will deploy a unit test framework that compares the accuracy of functionality implementations against a reference implementation, typically a sequential CPU code relying on the CSR matrix format. The test suite will then compose of a set of sparse matrices covering a wide range of sparsity structures and numerical properties.
 

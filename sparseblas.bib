@@ -463,6 +463,98 @@ month = {Mar},
 year = {2019},
 note = {doi:10.1145/3316279.3316285}}
 
+@Misc{P3109,
+  title = {{Interim Report on Binary Floating-point Formats for Machine Learning}},
+  year = 2025,
+  month = nov,
+  note = "Version 3.2.1",
+  author ="{P3109 Working Group}",
+  url = "https://github.com/P3109/Public/blob/main/IEEE\%20WG\%20P3109\%20Interim\%20Report\%20v3.2.1.pdf"
+  }
+
+@misc{ocp23a,
+  author = "Paulius Micikevicius and Stuart Oberman and Pradeep Dubey and Marius Cornea and Andres Rodriguez and Ian Bratt and Richard Grisenthwaite and Norm Jouppi and Chiachen Chou and Amber Huffman and Michael Schulte and Ralph Wittig and Dharmesh Jani and Summer Deng",
+  title = {{OCP} 8-bit Floating Point Specification ({OFP8})},
+  url = {https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-0-2023-12-01-pdf-1},
+  note = "Version 1.0",
+  pages = 16,
+  month = Jun,
+  year = 2023
+  }
+
+@misc{ocp23b,
+  author = "Bita Darvish Rouhani and Nitin Garegrat and Tom Savell and Ankit More and Kyung-Nam Han and Ritchie Zhao and Mathew Hall and Jasmine Klar and Eric Chung and Yuan Yu and Michael Schulte and Ralph Wittig and Ian Bratt and Nigel Stephens and Jelena Milanovic and John Brothers and Pradeep Dubey and Marius Cornea and Alexander Heinecke and Andres Rodriguez and Martin Langhammer and Summer Deng and Maxim Naumov and Paulius Micikevicius and Michael Siu and Colin Verrilli",
+  title = {{OCP} Microscaling Formats ({MX}) Specification},
+  url = "https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf",
+  note = "Version 1.0",
+  pages = 16,
+  month = sep,
+  year = 2023
+  }
+
+@article{njjm22,
+  title        = {8-bit Numerical Formats for Deep Neural Networks},
+  author       = {Noune, Badreddine and Jones, Philip and Justus, Daniel and Masters, Dominic and Luschi, Carlo},
+  journal      = {arXiv preprint arXiv:2206.02915},
+  year         = {2022},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.LG},
+  url={https://arxiv.org/abs/2206.02915},
+  doi          = {10.48550/arXiv.2206.02915},
+}
+
+@article{lzwl24,
+  title        = {Ascend {HiFloat8} Format for Deep Learning},
+  author       = {Luo, Yuanyong and Zhang, Zhongxing and Wu, Richard and Liu, Hu
+                  and Jin, Ying and Zheng, Kai and Wang, Minmin and He, Zhanying
+                  and Hu, Guipeng and Chen, Luyao and Hu, Tianchi and Wang, Junsong
+                  and Chen, Minqi and Dmitry, Mikhaylov and Vladimir, Korviakov
+                  and Maxim, Bobrin and Hu, Yuhao and Chen, Guanfu and Huang, Zeyi},
+  journal      = {arXiv preprint arXiv:2409.16626},
+  year         = {2024},
+  archivePrefix= {arXiv},
+  eprint       = {2409.16626},
+  primaryClass = {cs.LG},
+  url={https://arxiv.org/abs/2409.16626}, 
+  doi          = {10.48550/arXiv.2409.16626}
+}
+
+@Misc{tesla,
+  author = "{Tesla Dojo Technology}",
+  title = {A Guide to {Tesla}'s Configurable Floating Point Formats \& Arithmetic},
+  url = "https://digitalassets.tesla.com/tesla-contents/image/upload/tesla-dojo-technology.pdf"
+  }
+
+@Article{zdvz22,
+  author={Zhao, Jiawei and Dai, Steve and Venkatesan, Rangharajan and Zimmer, Brian and Ali, Mustafa and Liu, Ming-Yu and Khailany, Brucek and Dally, William J. and Anandkumar, Anima},
+  journal= j-IEEE-C, 
+  title={{LNS-Madam}: Low-Precision Training in Logarithmic Number System Using Multiplicative Weight Update}, 
+  year={2022},
+  volume={71},
+  number={12},
+  pages={3179-3190},
+  keywords={Training;Quantization (signal);Hardware;Arithmetic;Table lookup;Costs;Neural networks;Machine learning;hardware acceleration;optimization},
+  doi={10.1109/TC.2022.3202747}
+  }
+
+@book{KulischMiranker1981,
+   author = {Kulisch, U. and Miranker, W.},
+   title = {Computer Arithmetic in Theory and Practice},
+   publisher = {Academic Press, New York},
+   year = {1981}}
+
+@inproceedings{hunh24,
+  author    = {Hunhold, Laslo},
+  title     = {Beating Posits at Their Own Game: {Takum} Arithmetic},
+  booktitle = {Next Generation Arithmetic (CoNGA 2024)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {14666},
+  pages     = {1--51},
+  publisher = {Springer},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-72709-2_1},
+  url       = {https://link.springer.com/chapter/10.1007/978-3-031-72709-2_1}
+}
 
 @article{10.1145/2331130.2331131,
 author = {Filippone, Salvatore and Buttari, Alfredo},
@@ -550,7 +642,7 @@ url = {https://doi.org/10.1145/3389360},
 doi = {10.1145/3389360},
 abstract = {We define “reproducibility” as getting bitwise identical results from multiple runs of the same program, perhaps with different hardware resources or other changes that should not affect the answer. Many users depend on reproducibility for debugging or correctness. However, dynamic scheduling of parallel computing resources, combined with nonassociative floating point addition, makes reproducibility challenging even for summation, or operations like the BLAS. We describe a “reproducible accumulator” data structure (the “binned number”) and associated algorithms to reproducibly sum binary floating point numbers, independent of summation order. We use a subset of the IEEE Floating Point Standard 754-2008 and bitwise operations on the standard representations in memory. Our approach requires only one read-only pass over the data, and one reduction in parallel, using a 6-word reproducible accumulator (more words can be used for higher accuracy), enabling standard tiling optimization techniques. Summing n words with a 6-word reproducible accumulator requires approximately 9n floating point operations (arithmetic, comparison, and absolute value) and approximately 3n bitwise operations. The final error bound with a 6-word reproducible accumulator and our default settings can be up to 229 times smaller than the error bound for conventional (recursive) summation on ill-conditioned double-precision inputs.},
 journal = {ACM Trans. Math. Softw.},
-month = {jul},
+month = {Jul},
 articleno = {22},
 numpages = {49},
 keywords = {summation, reproducibility, parallel, floating point summation, floating point number, computer arithmetic, binned summation, binned number, Reproducible summation}
@@ -584,9 +676,10 @@ month = {Dec},
 year = {1984}}
 
 @misc{Proposed_BLAS_LAPACK_exception_handling,
-      title={Proposed Consistent Exception Handling for the BLAS and LAPACK}, 
+      title={Proposed Consistent Exception Handling for the {BLAS} and {LAPACK}}, 
       author={James Demmel and Jack Dongarra and Mark Gates and Greg Henry and Julien Langou and Xiaoye Li and Piotr Luszczek and Weslley Pereira and Jason Riedy and Cindy Rubio-González},
       year={2022},
+      howpublished = {arXiv:2207.09281},
       eprint={2207.09281},
       archivePrefix={arXiv},
       primaryClass={cs.MS}
