@@ -446,11 +446,12 @@ Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an o
 \section{Sparse BLAS Design}
 \label{sec:api-design}
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
-This requires to consider a wide range of design aspects, ranging from storage formats over ownership and opaqueness of objects to functionality scope, multi-stage functions and execution policies. 
+This requires to consider a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions, execution policies. 
 In the following sections, we address these intertwined aspects individually. 
 
-To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, eigensolvers, and preconditioners. Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
-The functionality we consider in scope of this paper is listed in~\Cref{sec:functionality}. Instead of discussing the the characteristics of the distinct sparse BLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before identifying archetypes and listing sparse BLAS functionality, the question of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
+To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, eigensolvers, and preconditioners. 
+%Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
+The functionality we consider in scope of this effort is listed in~\Cref{sec:functionality}. Instead of discussing the characteristics of the distinct sparse BLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
 
 
 
