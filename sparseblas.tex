@@ -781,7 +781,7 @@ triangular_solve_inspect(policy, state, triangle( A_opt, uplo::upper), [ alpha, 
 triangular_solve(policy, state, triangle( A_opt, uplo::upper), [ alpha, ] b, x);
 
 \end{minted}
-\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is 1.}
+\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is 1.a}
 \end{listing}
 
 
@@ -1599,6 +1599,10 @@ Some of these (e.g., weaker error bounds satisfied by Strassen-like algorithms) 
 \section{Future extensions}
 As hinted at in Section~\ref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and it's several variants and many others found in literature and existing sparse BLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the sparse BLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how they will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
 
+In this first edition, we propose a non-owning non-opaque API. As discussed, a opaque, owning API allows the libraries to perform additional optimization, such as lazy evaluation of routines. We postpone the design of such an API to the future. 
+
+Furthermore, to reduce complexity, in this proposal we exclusively discussed the interface to shared memory routines, no MPI-parallel implementations, which will also be future work.
+
 Functionality-wise, we plan to expand the sparse triangular solves to also accept dense matrices and sparse vectors, and extend the scope to more complex algorithms like solvers and graph algorithms.
 
 We also recognize the increasing use of tensors, which are higher-dimensional analogs of matrices, in computing. 
@@ -1612,7 +1616,7 @@ Our current design is not optimal for representing and computing on tensors, eve
 
 %\appendix
 %\input appendix
-
+\input{appendix_interface}
 \end{document}
 https://www.overleaf.com/project/654d2ac9836ece70d4a5bab8
 
