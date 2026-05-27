@@ -1,0 +1,31 @@
+
+\iffalse
+Parameters for BSR are given in Table \ref{tab:bsr_param}. 
+
+\begin{table}[htbp]
+\scriptsize
+\begin{center}
+     \begin{tabular}{l l l}
+         \toprule
+         \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
+         \midrule
+         \texttt{index\_type} & \texttt{bsize} & The block size \\
+         \texttt{storage\_type} & \texttt{bstorage} & The block storage: row-oriented or column-oriented \\
+         \texttt{index\_type} & \texttt{nrowb} & Number of row blocks of the matrix \\
+         \texttt{index\_type} & \texttt{ncolb} & Number of column blocks of the matrix \\
+         \texttt{offset\_type} & \texttt{nnzb} & Structural number of non-zero blocks of the matrix \\
+         \texttt{offset\_type} array & \texttt{rowptr} & Row block pointer array (length: \texttt{nrowb+1}) \\
+         \texttt{index\_type} array & \texttt{colindx} & Column block indices array (length: \texttt{nnzb}) \\
+         \texttt{scalar\_type} array & \texttt{values} & Structural block values (length: $\texttt{nnzb} \times \texttt{bsize}^2$) \\
+         \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
+         \bottomrule
+     \end{tabular}
+\end{center}
+     \caption{BSR input parameters}
+    \label{tab:bsr_param}
+\end{table}
+
+Some characteristics of a sparse matrix stored with a BSR format can be easily calculated. Hence, the number of rows and the number of columns are the number of row blocks multiplied by the block size, $\texttt{nrowb} \times \texttt{bsize}$, and the number of column blocks multiplied by the block size, $\texttt{ncolb} \times \texttt{bsize}$, respectively. The total number of non-zeros is the number of non-zero blocks multiplied by the square of the block size, $\texttt{nnzb} \times \texttt{bsize}^2$. The row index and the column index of the first scalar element of a given block are the row block index multiplied by the block size \texttt{bsize} and the column block index, obtained with the array \texttt{colindx}, multiplied by the block size \texttt{bsize}, respectively.
+\newline 
+\newline
+\fi
