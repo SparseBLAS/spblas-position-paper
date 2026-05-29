@@ -689,9 +689,11 @@ we focus on the second option, the non-owning API for functionality. However, as
 In this non-owning API, the user owns the data, and a light-weight construct is used to expose the data structures to the library operations, very similar to C++ views~\cite{cpplinalg:p1673r13}, as we will discuss next.
 
 
-\subsection{Matrix Wrappers and Matrix Objects}
+\subsection{Matrix Wrappers, Matrix Objects and Property tags}
 
-The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view.'' For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by SparseBLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which contradicts the C++ view concept. 
+The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. \textbf{Property tags} can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format as is represented by the data structures provided in the wrapper itself. As the property tags reflect the user provided data arrays, we attach them to the wrapper.  There should be ways provided for a user or library to query and/or update the properties in an \texttt{xyz\_wrapper}.
+
+We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not perfectly fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view''. For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which blurs the C++ view concept.
 
 As discussed, this non-owning approach limits the optimization potential for the libraries.
 
@@ -705,7 +707,7 @@ In \Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz, tags);
+csr_wrapper<int, int, float> A(values, rowptr, colind, shape, nnz, property_tags);
 
 // matrix_opt is opaque and may contain 
 // vendor optimization details
@@ -1022,9 +1024,9 @@ multiply(A, scaled(alpha, x), y);
 \noindent
 
 
-\subsection{Views on Matrix Data and Property Tags}
+\subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix is accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an \mathcal{O}(1) operation, but through the use of internal caching, can be fast after the first time it is computed.
 
 \begin{table}[h]
     \centering
@@ -1057,8 +1059,7 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 
 
-
-\subsection{Functionality Scope of the SparseBLAS}
+\subsection{Functionality Scope of the Sparse BLAS}
 \label{sec:functionality}
 
 
