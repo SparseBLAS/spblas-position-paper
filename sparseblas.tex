@@ -153,7 +153,7 @@ In an inclusive, cross-institutional effort involving numerous academic institut
 
 Despite the fact that Sparse matrix computations are at the heart of many science and engineering applications the Sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, and anticipated neither the rise of GPU architectures, nor heavy performance optimization.
 
-In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee when integrating the functionality into \texttt{std::linalg} when integrating the functionality into the \cplusplus-26 standard library.
+In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee when integrating the functionality into \texttt{std::linalg} when integrating the functionality into the \cppstd{26} standard library.
 
 Learning from these previous and ongoing efforts and building on top of the \cplusplus committee's recent work, we propose a new \cplusplus-based Sparse BLAS standard. Our main objectives are to enable portability across vendors, and to provide high-performance, flexible and extensible interfaces for sparse linear algebra functionality. Our API is designed to run on accelerators as well as traditional CPUs alike. This is especially important given the pervasiveness of accelerators in computing and the challenges in achieving high performance from such hardware, which further increases the value of Sparse BLAS.
 %We also consider less dominant platforms such as heterogeneous and distributed computing.
@@ -169,20 +169,20 @@ Concerning interfaces, we currently focus on the \cplusplus interface as the key
 \subsection{The (dense) BLAS standard}
 The origins of the BLAS standard can be
 traced back to 1973 when Hanson, Krogh, and Lawson wrote an article in the
-SIGNUM Newsletter (Vol. 8, no. 4, p. 16) describes the advantages of adopting
-a set of basic routines for problems in linear algebra. This led to the
-development of the original BLAS~\cite{Lawson1979l1blas}, which indeed turned out to be
+SIGNUM Newsletter (Vol. 8, no. 4, p. 16) \cite{HansonKroghLawson1973SINUM_newsletter} describes the advantages of adopting
+a set of basic routines for problems in linear algebra. In 1979, this led to the
+development of the original BLAS~\cite{Lawson1979l1blas} for scalar-vector operations, which indeed turned out to be
 advantageous and very successful. It was adopted as a standard and used in a
-wide range of numerical software, including LINPACK~\cite{Dongara:1979:linpack}. An extended, Level 2 BLAS, was proposed for matrix-vector operations~\cite{dongarra1988a,dongarra1988b}.
+wide range of numerical software, including LINPACK~\cite{Dongara:1979:linpack}. In 1988, an extended, Level 2 BLAS, was proposed for matrix-vector operations~\cite{dongarra1988a,dongarra1988b}.
 At the time, these two levels were appropriate for vector processors and
 vector register chaining, respectively.
 Later in the 90s with the appearance of cache-based machines, a strong need to restructure existing algorithms to benefit from reusing data from cache emerged.
 The idea was to express algorithms in terms of blocks that fit into cache memory,
 decreasing data movement by providing a surface-to-volume effect for
 the ratio of $O(n^2)$ data movement to $O(n^3)$ operations.
-Therefore, the Level 3 BLAS were proposed~\cite{dongarra1990a,dongarra1990b},
+Therefore, in 1990, the Level 3 BLAS~\cite{dongarra1990a,dongarra1990b} were proposed,
 covering matrix-matrix operations, and LINPACK was redesigned
-into LAPACK~\cite{anderson1999} to use the new Level 3 BLAS where possible.
+into LAPACK~\cite{anderson1999} to use the new Level 2 and Level 3 BLAS where possible for faster cache-aware computation.
 With multi-core and GPU-accelerated architectures, the BLAS have continued to
 be a valuable paradigm, including in parallel task-based libraries such
 as PLASMA~\cite{agullo2009numerical}.
