@@ -142,7 +142,7 @@ Interface for Sparse Linear Algebra Operations}
 
 \section*{Abstract}
 The formalization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
-Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own sparse BLAS interface.
+Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that as opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own sparse BLAS interface.
 At the same time, there exists a demand for standardization that would improve interoperability and sustainability, and allow for easier integration of building blocks.
 In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent three years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
 \newpage
@@ -369,13 +369,13 @@ status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
 \item AOCL-sparse C API (has an optional hint/optimize stage)
 \begin{lstlisting}
 status = aoclsparse_dmv(aoclsparse_operation_none,
-            p_alpha, A, descr_a, y, p_beta, x);
+            p_alpha, A, descr_a, x, p_beta, y);
 \end{lstlisting}
 \item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
 \begin{lstlisting}
 // y = alpha*y
 GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-y += beta*A*x
+//y += beta*A*x
 GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64. GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
 \end{lstlisting}
 \item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
