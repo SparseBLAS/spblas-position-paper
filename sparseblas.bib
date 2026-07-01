@@ -23,6 +23,55 @@ pages = {16},
 numpages = {1}
 }
 
+@article{doi:10.1137/030601818,
+author = {Ogita, Takeshi and Rump, Siegfried M. and Oishi, Shin'ichi},
+title = {Accurate Sum and Dot Product},
+journal = {SIAM Journal on Scientific Computing},
+volume = {26},
+number = {6},
+pages = {1955-1988},
+year = {2005},
+doi = {10.1137/030601818},
+
+URL = { 
+        https://doi.org/10.1137/030601818
+},
+eprint = {
+        https://doi.org/10.1137/030601818
+}
+,
+    abstract = { Algorithms for summation and dot product of floating-point numbers are presented which are fast in terms of measured computing time. We show that the computed results are as accurate as if computed in twice or K-fold working precision, \$K\ge 3\$. For twice the working precision our algorithms for summation and dot product are some 40\% faster than the corresponding XBLAS routines while sharing similar error estimates. Our algorithms are widely applicable because they require only addition, subtraction, and multiplication of floating-point numbers in the same working precision as the given data. Higher precision is unnecessary, algorithms are straight loops without branch, and no access to mantissa or exponent is necessary. }
+}
+
+@article{https://doi.org/10.1002/spe.3041,
+author = {Grützmacher, Thomas and Anzt, Hartwig and Quintana-Ortí, Enrique S.},
+title = {Using Ginkgo's memory accessor for improving the accuracy of memory-bound low precision BLAS},
+journal = {Software: Practice and Experience},
+volume = {53},
+number = {1},
+pages = {81-98},
+keywords = {accessor, floating-point formats, high performance, memory-bound algorithms, mixed precision, roofline model},
+doi = {https://doi.org/10.1002/spe.3041},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/spe.3041},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/spe.3041},
+abstract = {Abstract The roofline model not only provides a powerful tool to relate an application's performance with the specific constraints imposed by the target hardware but also offers a graphic representation of the balance between memory access cost and compute throughput. In this work, we present a strategy to break up the tight coupling between the precision format used for arithmetic operations and the storage format employed for memory operations. (At a high level, this idea is equivalent to compressing/decompressing the data in registers before/after invoking store/load memory operations.) In practice, we demonstrate that a “memory accessor” that hides the data compression behind the memory access, can virtually push the bandwidth-induced roofline, yielding higher performance for memory-bound applications using high precision arithmetic that can handle the numerical effects associated with lossy compression. We also demonstrate that memory-bound applications operating on low precision data can increase the accuracy by relying on the memory accessor to perform all arithmetic operations in high precision. In particular, we demonstrate that memory-bound BLAS operations (including the sparse matrix-vector product) can be re-engineered with the memory accessor and that the resulting accessor-enabled BLAS routines achieve lower rounding errors while delivering the same performance as the fast low precision BLAS.},
+year = {2023}
+}
+
+@InProceedings{10.1007/978-3-031-61763-8_13,
+  author="Solc{\`a}, Raffaele and Simberg, Mikael and Meli, Rocco and Invernizzi, Alberto and Reverdell, Auriane and Biddiscombe, John",
+  editor="Diehl, Patrick and Schuchart, Joseph and Valero-Lara, Pedro and Bosilca, George",
+  title="DLA-Future: A Task-Based Linear Algebra Library Which Provides a GPU-Enabled Distributed Eigensolver",
+  booktitle="Asynchronous Many-Task Systems and Applications",
+  year="2024",
+  publisher="Springer Nature Switzerland",
+  address="Cham",
+  pages="135--141",
+  isbn="978-3-031-61763-8"
+}
+
+@incollection{chameleon, title={Lessons Learned from the Chameleon Testbed}, author={Kate Keahey and Jason Anderson and Zhuo Zhen and Pierre Riteau and Paul Ruth and Dan Stanzione and Mert Cevik and Jacob Colleran and Haryadi S. Gunawi and Cody Hammock and Joe Mambretti and Alexander Barnes and Fran\c{c}ois Halbach and Alex Rocha and Joe Stubbs}, booktitle={Proceedings of the 2020 USENIX Annual Technical Conference (USENIX ATC '20)}, publisher={USENIX Association}, month={July}, year={2020}}
+
 @article{Lawson1979l1blas,
   title={Basic {Linear} {Algebra} {Subprograms} for {FORTRAN} usage},
   author={C. L. Lawson and R. J. Hanson and D. Kincaid and F. T. Krogh},

@@ -153,7 +153,7 @@ In an inclusive, cross-institutional effort involving numerous academic institut
 
 Despite the fact that sparse matrix computations are at the heart of many science and engineering applications the sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, and anticipated neither the rise of GPU architectures, nor heavy performance optimization.
 
-In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee when integrating the functionality into \texttt{std::linalg} when integrating the functionality into the \cppstd{26} standard library.
+In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee as when integrating the functionality into \texttt{std::linalg} as part of the \cppstd{26} standard library.
 
 Learning from these previous and ongoing efforts and building on top of the \cplusplus committee's recent work, we propose a new \cplusplus-based Sparse BLAS standard. Our main objectives are to enable portability across vendors, and to provide high-performance, flexible and extensible interfaces for sparse linear algebra functionality. Our API is designed to run on accelerators as well as traditional CPUs alike. This is especially important given the pervasiveness of accelerators in computing and the challenges in achieving high performance from such hardware, which further increases the value of Sparse BLAS.
 %We also consider less dominant platforms such as heterogeneous and distributed computing.
@@ -169,7 +169,7 @@ Concerning interfaces, we currently focus on the \cplusplus interface as the key
 \subsection{The (dense) BLAS standard}
 The origins of the BLAS standard can be
 traced back to 1973 when Hanson, Krogh, and Lawson wrote an article in the
-SIGNUM Newsletter (Vol. 8, no. 4, p. 16) \cite{HansonKroghLawson1973SINUM_newsletter} describes the advantages of adopting
+SIGNUM Newsletter (Vol. 8, no. 4, p. 16) \cite{HansonKroghLawson1973SINUM_newsletter} describing the advantages of adopting
 a set of basic routines for problems in linear algebra. In 1979, this led to the
 development of the original BLAS~\cite{Lawson1979l1blas} for scalar-vector operations, which indeed turned out to be
 advantageous and very successful. It was adopted as a standard and used in a
@@ -185,7 +185,7 @@ covering matrix-matrix operations, and LINPACK was redesigned
 into LAPACK~\cite{anderson1999} to use the new Level 2 and Level 3 BLAS where possible for faster cache-aware computation.
 With multi-core and GPU-accelerated architectures, the BLAS have continued to
 be a valuable paradigm, including in parallel task-based libraries such
-as PLASMA~\cite{agullo2009numerical}.
+as PLASMA~\cite{agullo2009numerical}, Chameleon~\cite{chameleon}, or DLA-future~\cite{10.1007/978-3-031-61763-8_13}.
 
 Several \cplusplus interfaces have been proposed for the BLAS,
 ranging from lightweight wrappers~\cite{gates2017cpp} to
@@ -271,7 +271,7 @@ Finally, there are currently no vendor-provided implementations of GraphBLAS, wi
 
 \end{enumerate}
 
-Nevertheless, we anticipate that the proposed standard and GraphBLAS will overlap for a subset of functionalities, and the Sparse BLAS API will be capable of efficiently expressing them. Several GraphBLAS innovations we may explore utilizing in this iteration of the Sparse BLAS standard include: (1) operations between two sparse objects, (2) masking, and (3) non-blocking or asynchronous execution.
+Nevertheless, we anticipate that the proposed standard and GraphBLAS will overlap for a subset of functionalities, and the Sparse BLAS API will be capable of efficiently expressing them. GraphBLAS innovations we adopt in this iteration of the Sparse BLAS standard include: (1) operations between two sparse objects, (2) masking, and (3) non-blocking or asynchronous execution.
 
 \subsection{Existing Sparse BLAS standards}
 \label{sec:existingsparseblas}
@@ -337,7 +337,7 @@ the same time, we extend the scope by, e.g., introducing an interface for
 the more complex sparse-matrix times sparse-matrix product deemed
 complicated in the previous iterations. The hardware evolution, namely GPUs,
 requires us to also introduce a new set of functionality, user-provided allocators, as memory
-management can be critical for these complex operations on such complex
+management can be critical for these complex operations on such multifaceted
 hardware. 
 %Owing to the asynchronous mode of execution of such hardware, a
 %modern Sparse BLAS standard must support this mode of execution natively. 
@@ -350,11 +350,11 @@ Furthermore, we acknowledge in this proposal that for repeated application of a 
 While none of the sparse BLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
 Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
 Thus, we consider it beneficial to the reader to list existing C and
-\cplusplus library APIs for the sparse matrix-vector (SpMV) operation multiplying a sparse matrix with a dense vector.
+\cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
 Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
 
 \newpage
-\noindent\textbf{SpMV API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (SpMV) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*}
+\noindent\textbf{\texttt{SpMV} API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*}
 \begin{enumerate}[label=(\arabic*)]
 \item Arm Performance Libraries C API (has an optional hint/optimize stage)
 \begin{lstlisting}
@@ -430,7 +430,7 @@ KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
 \item Ginkgo \cplusplus API
 \begin{lstlisting}
 // cuda/rocm stream or sycl::queue is attached to A previously
-// (through an ``Executor'' object)
+// (through an ''Executor'' object)
 // matrix::Csr *A;              // sparse matrix
 // matrix::Dense *y, *x;        // vectors tall and skinny matrices
 // matrix::Dense *alpha, *beta; // scalars of dimension 1x1
@@ -448,7 +448,7 @@ The goal of this effort is to define a common understanding of how to access a s
 This requires to consider a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions execution policies. 
 In the following sections, we address these intertwined aspects individually. 
 
-To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, eigensolvers, and preconditioners. 
+To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, direct solvers, eigensolvers, and preconditioners. 
 %Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
 The functionality we consider in scope of this effort is listed in~\Cref{sec:functionality}. Instead of discussing the characteristics of the distinct sparse BLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
 
@@ -638,7 +638,7 @@ Before listing functionality we consider in scope of an API standard, we identif
 
         
 The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), forming the product of a sparse matrix and a dense vector. The size of the dense output vector is known upfront, making the memory allocation easy and allowing the functionality to be implemented as a single kernel. The interface for the SpMV routine should ideally support various input formats for the sparse matrix, e.g., by accepting an abstract matrix operator. 
-For sparse formats that are row oriented, like CSR, the SpMV routine is often trivial to parallelize by partitioning the input matrix rows among different execution units.  For other sparse formats like COO or CSC, more sophisticated parallelization schemes are required, either requiring large temporary workspaces for execution units, or atomic access to the output object to avoid write conflicts.  The enabling of parallelism in the traversal of the sparse matrix and the need for only a single stage often characterizes the kernels in this class of operations which encompasses operations that involve at least one sparse matrix and a known output shape/size object like 
+For sparse formats that are row oriented, like CSR, the SpMV routine is often trivial to parallelize by partitioning the input matrix rows among different execution units.  For other sparse formats like COO or CSC, more sophisticated parallelization schemes are required, either requiring large temporary workspaces for execution units, or atomic access to the output object to avoid write conflicts.  The enabling of parallelism in the traversal of the sparse matrix and their potential to be expressed as single stage routine often characterizes the kernels in this class of operations which encompasses operations that involve at least one sparse matrix and a known output shape/size object like 
 \begin{itemize}
 \item SpMV(sparse matrix  * dense vector -> dense vector), 
 \item SpMM(sparse matrix * dense matrix -> dense matrix or   dense matrix * sparse matrix -> dense matrix), 
@@ -651,7 +651,7 @@ For sparse formats that are row oriented, like CSR, the SpMV routine is often tr
         
 
 
-In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} (SpGEMM, computing the product of two sparse matrices) represents teh second archetype, a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\Cref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGeMM include
+In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} archetype (SpGEMM, computing the product of two sparse matrices) represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as a multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\Cref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGeMM include
 \begin{itemize}
 \item SpGEMM (  sparse matrix * sparse matrix -> sparse matrix)
 \item SpGEAM or SpADD ( sparse matrix + sparse matrix -> sparse matrix)
@@ -720,7 +720,7 @@ Generally speaking, any sparse BLAS functionality takes \texttt{matrix\_opt}s as
 \label{sec:sparseblasimpl}
 Aside from the archetype categorization, an orthogonal classification distinguishes between: 
 \begin{enumerate}
-    \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. In our archetype classification, both the SpMV and the SpTRSV fall into that category.
+    \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled / masked multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. In our archetype classification, both the SpMV and the SpTRSV fall into that category.
     \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
     For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class take \texttt{matrix\_opt} structures as input and produce an \texttt{xyz\_wrapper} as output. The data structures underlying the \texttt{xyz\_wrapper} are allocated and owned by the user, and the routines are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
 \end{enumerate} 
@@ -896,7 +896,7 @@ multiply_fill(policy, state,
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
 
-Also this interface gives some freedom how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \Cref{fig:spgemm_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
+Also this interface gives some freedom on how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \Cref{fig:spgemm_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
 
 
 
@@ -1111,7 +1111,7 @@ While the most fundamental part of the standardization effort is to design an in
 \subsection{Horizontal and Vertical Interoperability}
 
 Any interface and functionality standardization must allow for horizontal and vertical interoperability. In the context of the sparse BLAS API,
-\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a sparse BLAS standard. We assess upward interoperability by using the sparse BLAS functionality inside mini apps. 
+\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, direct solvers preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a sparse BLAS standard. We assess upward interoperability by using the sparse BLAS functionality inside mini apps. 
 Downward interoperability refers to the possibility of wrapping already existing sparse BLAS functionality developed by hardware vendors into the sparse BLAS interface. The intention for the downward interoperability is not to create yet another layer of interfaces, but to ensure that design decisions taken by the vendors in the kernel implementations do not hinder the adoption of a new interface in future kernel 
 development.
 \textit{Horizontal interoperability} refers to compatibility with dense
@@ -1350,7 +1350,7 @@ then one can replace $n$ by $m$ in these bounds.
 We also note that there is a large literature
 on using instructions like fused-multiply-add, and floating-point
 tricks like two-sum, to compute dot products with arbitrarily higher
-accuracy. These could possibly be of interest in using low-precision
+accuracy, see e.g.,~\cite{doi:10.1137/030601818,https://doi.org/10.1002/spe.3041}. These could possibly be of interest in using low-precision
 floating point to simulate higher precision.
 
 If the dot product is computed with block floating point using
@@ -1449,11 +1449,11 @@ to store one column index for such a segment instead of multiple indices
 (e.g. blocked CSR, or BCSR), saving memory and reducing memory access time.
 
 One example of a user's input data structure that can contain explicit masked zeros is ELLPACK, 
-in which the nonzeros of an m x n sparse matrix are stored in an m x k matrix A , and row i of A
-contains the nonzeros in row i of the sparse matrix, where k is the maximum number of 
-nonzeros in any row. This means row i of A is padded with additional explicit zeros if it contains
-fewer than k nonzeros. There is also an m x k Col matrix containing the column indices of the
-matrix entries stored in A, with an index of -1 to mask out any padded zeros.
+in which the nonzeros of an $m \times n$ sparse matrix are stored in an $m \times k$ matrix $A$ , and row $i$ of $A$
+contains the nonzeros in row $i$ of the sparse matrix, where $k$ is the maximum number of 
+nonzeros in any row. This means row $i$ of $A$ is padded with additional explicit zeros if it contains
+fewer than $k$ nonzeros. There is also an $m \times k$ Col matrix containing the column indices of the
+matrix entries stored in $A$, with an index of $-1$ to mask out any padded zeros.
 
 \iffalse
 Another example of explicit masked zeros is the BCSR format described above, augmented
@@ -1473,7 +1473,7 @@ propagate to the output.
 % Explicit masked zeros can either be in the user's input
 % data structure, or created by the system as an optimization.
 
-So far we have discussed the SpMV operation defined as $y=A \cdot x$. 
+So far we have discussed the \texttt{SpMV} operation defined as $y=A \cdot x$. 
 If it were defined as $y = \alpha \cdot A \cdot x + \beta \cdot y$, as in the dense BLAS,
 then we need to consider the cases $\alpha = 0$ and $\beta = 0$. In the dense BLAS,
 $\beta = 0$ is defined to mean that the requested operation is $y = \alpha \cdot A \cdot x$,
@@ -1482,7 +1482,7 @@ irrelevant, and should not propagate. Similarly, $\alpha = 0$ is defined to mean
 $y = \beta \cdot y$, so Infs and NaNs in $A$ or $x$ are irrelevant, and never accessed.
 And if $\alpha = \beta = 0$, the vector $y$ is simply initialized to 0.
 
-We note that we are not trying define all the cases in which an entry of $y$
+We note that we are not trying to define all the cases in which an entry of $y$
 must be an Inf or a NaN. To see why, suppose the result
 is the sum of four numbers: $[z, z, -z, -z]$ where $z$ is a finite number greater than
 half the overflow threshold. Then depending on the order of summation, the result
