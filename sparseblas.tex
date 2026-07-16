@@ -77,7 +77,7 @@ fontadjust=true%
 \title{%Toward a
 Interface for Sparse Linear Algebra Operations}
 
-\author[1,2]{Hartwig Anzt\footnote{Coordinator of the Sparse BLAS effort.}}
+\author[1,2]{Hartwig Anzt\footnote{Coordinator of the SparseBLAS effort.}}
 \author[3]{Willow Ahrens}
 \author[4]{Chris Armstrong}
 \author[2]{Daniel Berry}
@@ -143,7 +143,7 @@ Interface for Sparse Linear Algebra Operations}
 
 \section*{Abstract}
 The formalization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
-Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that as opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own sparse BLAS interface.
+Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that as opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own SparseBLAS interface.
 At the same time, there exists a demand for standardization that would improve interoperability and sustainability, and allow for easier integration of building blocks.
 In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent three years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
 \newpage
@@ -151,14 +151,14 @@ In an inclusive, cross-institutional effort involving numerous academic institut
 
 \section{Introduction and Motivation}
 
-Despite the fact that sparse matrix computations are at the heart of many science and engineering applications the sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, and anticipated neither the rise of GPU architectures, nor heavy performance optimization.
+Despite the fact that sparse matrix computations are at the heart of many science and engineering applications the SparseBLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, and anticipated neither the rise of GPU architectures, nor heavy performance optimization.
 
 In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee as when integrating the functionality into \texttt{std::linalg} as part of the \cppstd{26} standard library.
 
-Learning from these previous and ongoing efforts and building on top of the \cplusplus committee's recent work, we propose a new \cplusplus-based Sparse BLAS standard. Our main objectives are to enable portability across vendors, and to provide high-performance, flexible and extensible interfaces for sparse linear algebra functionality. Our API is designed to run on accelerators as well as traditional CPUs alike. This is especially important given the pervasiveness of accelerators in computing and the challenges in achieving high performance from such hardware, which further increases the value of Sparse BLAS.
+Learning from these previous and ongoing efforts and building on top of the \cplusplus committee's recent work, we propose a new \cplusplus-based SparseBLAS standard. Our main objectives are to enable portability across vendors, and to provide high-performance, flexible and extensible interfaces for sparse linear algebra functionality. Our API is designed to run on accelerators as well as traditional CPUs alike. This is especially important given the pervasiveness of accelerators in computing and the challenges in achieving high performance from such hardware, which further increases the value of SparseBLAS.
 %We also consider less dominant platforms such as heterogeneous and distributed computing.
 
-We recognize that linear algebra is a fundamental topic beyond classical mathematical disciplines and physical sciences. Over the past decade, sparsity has emerged as an important element of computation in AI. We argue that a Sparse BLAS standard would provide a useful set of tools for modern AI frameworks, potentially expanding to standardize new functionality such as low- and mixed-precision computation and batch processing, and easing integration with high-level deep learning frameworks.
+We recognize that linear algebra is a fundamental topic beyond classical mathematical disciplines and physical sciences. Over the past decade, sparsity has emerged as an important element of computation in AI. We argue that a SparseBLAS standard would provide a useful set of tools for modern AI frameworks, potentially expanding to standardize new functionality such as low- and mixed-precision computation and batch processing, and easing integration with high-level deep learning frameworks.
 
 While we may include more high-level routines in the future, such as solvers, we initially restrict ourselves to basic functionality and also retain the familiar name BLAS (Basic Linear Algebra Subroutines). Given the breadth and scope of Sparse functionality (numerous matrix formats, complex algorithms, ...), we expect the standardization effort to be an iterative process. We focus in the current iteration on functionalities for which we found there is sufficient interest and which are achievable for a first version of this standard. Therefore, the list of features, kernels, and options may expand in future. The current API design proposal is the fruit of an open, collegial collaboration between industry and university experts. To suggest functionality for inclusion, or to get involved in the project, feel free to contact the coordinator of the effort as identified in the author list.
 
@@ -194,7 +194,7 @@ function calls with arithmetic expressions (\verb+C = A*B+).
 Recently, the \verb+std::linalg+ interface~\cite{hoemmen2023linalg}
 was adopted as part of the
 \cppstd{26} standard, and has served as an inspiration
-for this Sparse BLAS proposal.
+for this SparseBLAS proposal.
 \texttt{linalg} is a templated, free-function interface that leverages
 \texttt{mdspan} as an
 abstraction for dense matrices and tensors.
@@ -214,7 +214,7 @@ a mechanism for parallelization and GPU acceleration.
 
 Many graph algorithms can be expressed in the language of linear algebra, often with no loss of performance. Expressing graph algorithms using linear algebra exposes natural parallelism, allowing users to capitalize on optimized sparse linear algebra routines for multi-threaded, GPU, and multi-node execution. This, together with the fact that most large graphs are sparse, positions sparse matrix algebra as a viable abstraction for graph computations~\cite{kepner2011graph, bulucc2011combinatorial}. 
 
-The GraphBLAS API, which provides generalized sparse linear algebra primitives for implementing graph algorithms, capitalizes on the duality between sparse matrices and graphs~\cite{brock2021graphblas}. The GraphBLAS interface introduces several generalizations to traditional linear algebra, including semirings, which allow operations to be performed using different sets of operators than the plus and times used in traditional arithmetic semiring.  Different semirings are necessary for different algorithms: for example, an implementation of single-source shortest path (SSSP) might use a matrix-vector multiply with the plus-min semiring, using plus to add the edge length to the current shortest path, followed by min to update the path to the destination only if a shorter path has been found.  Semirings allow the same algorithm implementations to be used with many different graph algorithms.  GraphBLAS also provides a few other features necessary for graph computation, such as masked operations, permutations, and element-wise operations.
+The GraphBLAS API, which provides generalized sparse linear algebra primitives for implementing graph algorithms, capitalizes on the duality between sparse matrices and graphs~\cite{brock2021graphblas}. The GraphBLAS interface introduces several generalizations to traditional linear algebra, including semirings, which allow operations to be performed using different sets of operators than the plus and times used in traditional arithmetic semirings.  Different semirings are necessary for different algorithms: for example, an implementation of single-source shortest path (SSSP) might use a matrix-vector multiplication with the plus-min semiring, using plus to add the edge length to the current shortest path, followed by min to update the path to the destination only if a shorter path has been found.  Semirings allow the same algorithm implementations to be used with many different graph algorithms.  GraphBLAS also provides a few other features necessary for graph computation, such as masked operations, permutations, and element-wise operations.
 
 The GraphBLAS C API Specification~\cite{brock2021graphblas} defines a
 set of opaque containers such as matrices and vectors along with
@@ -230,9 +230,9 @@ user-defined types through templates as well as taking advantage of
 \cplusplus concepts and views to simplify the
 interface~\cite{9150467,graphblascppspec}.
 
-While GraphBLAS provides much of the functionality necessary needed in a Sparse
-BLAS interface, there are several issues that make it suboptimal for adoption
-as a Sparse BLAS standard:
+While GraphBLAS provides a much larger set of functionality than what a Sparse
+BLAS interface aims for, there are several issues that make it suboptimal for adoption
+as a SparseBLAS standard:
 
 \begin{enumerate}
 \item While GraphBLAS' opaque objects
@@ -248,10 +248,10 @@ Specification, however.
 
 \item GraphBLAS provides some complex functionality, such as
 masked operations and extract and assign routines, that are not needed by
-Sparse BLAS, and that vendors may be unlikely to implement.
+SparseBLAS, and that vendors may be unlikely to implement.
 The GraphBLAS C API allows an unimplemented method to return an error code to
 indicate that it is not implemented, so this issue could be resolved by
-creating a well-defined Sparse BLAS subset of GraphBLAS.
+creating a well-defined SparseBLAS subset of GraphBLAS.
 
 \item Sparse
 BLAS has a few key routines, such as triangular solve, that are not needed or
@@ -267,11 +267,14 @@ execution should be a first-class consideration for a SparseBLAS
 specification.
 
 \item
-Finally, there are currently no vendor-provided implementations of GraphBLAS, with vendors deferring to support open-source implementations where necessary due to the breadth of the API.  This Sparse BLAS effort includes math library developers from many vendors (Intel, NVIDIA, AMD, Arm), and we anticipate working with vendors to ensure the interface is suitable for them to produce high-performance implementations.
+Finally, there are currently no vendor-provided implementations of GraphBLAS, with vendors deferring to support open-source implementations where necessary due to the breadth of the API.  This SparseBLAS effort includes math library developers from many vendors (Intel, NVIDIA, AMD, Arm), and we anticipate working with vendors to ensure the interface is suitable for them to produce high-performance implementations.
 
 \end{enumerate}
 
-Nevertheless, we anticipate that the proposed standard and GraphBLAS will overlap for a subset of functionalities, and the Sparse BLAS API will be capable of efficiently expressing them. GraphBLAS innovations we adopt in this iteration of the Sparse BLAS standard include: (1) operations between two sparse objects, (2) masking, and (3) non-blocking or asynchronous execution.
+Nevertheless, we anticipate that the proposed standard and GraphBLAS will overlap for a subset of functionalities, and the SparseBLAS API will be capable of efficiently expressing them. GraphBLAS innovations we adopt in this iteration of the SparseBLAS standard include: (1) operations between two sparse objects, (2) masking, and (3) non-blocking or asynchronous execution. 
+In summary, the SparseBLAS standard has a smaller scope than GraphBLAS, but focuses on standardizing
+the interface and efficient parallel execution of the routines forming the main building blocks
+for numerical linear algebra on sparse matrices.
 
 \subsection{Existing Sparse BLAS standards}
 \label{sec:existingsparseblas}
@@ -280,7 +283,8 @@ al.~\cite{10.1145/1057935.1057938} calling for Sparse extensions to the BLAS sta
 solvers and preconditioners in research and industry. At the time, the proposed
 extensions primarily focused on level-1 operations (i.e., vector-vector
 operations) and the use of compressed vector storage format. Many important
-functions such as scatter, gather, and dot products are proposed with interfaces in
+functions such as \textt{scatter}, \textt{gather}, and \textt{dot}
+products are proposed with interfaces in
 this short paper. The original SIGNUM newsletter paper was extended in
 1991~\cite{10.1145/108556.108577} but the focus on vector operations was kept.
 
@@ -292,7 +296,7 @@ to convert between matrices and scale matrices, and 4) routines to permute the
 rows and columns of matrices. They also integrate workspace management into the
 interface with appropriate error handling due to workspace allocations being a
 necessity in several sparse-matrix operations. Thanks to Fortran 90, they also
-show how to implement generic interfaces (e.g., called multiply for matrix
+show how to implement generic interfaces (e.g., called \textt{multiply} for matrix
 products, with a \texttt{spmat} type representing sparse matrices) that is simpler
 to use compared to routines with letter codes and long argument lists.
 
@@ -308,31 +312,31 @@ a generic representation of a previously created sparse matrix object. This
 allows algorithms to be coded using Sparse BLAS primitives without disclosing
 the underlying matrix storage format. The authors do suggest a Fortran-style
 interface for accessing Sparse BLAS functionality from C and Fortran.  The
-proposed 2002 SparseBLAS standard does not support operations between two sparse
+proposed 2002 Sparse BLAS standard does not support operations between two sparse
 objects (matrices or vectors) due to perceived complexity, which we plan to
 address in this iteration.
 
-In parallel with the previous efforts, several libraries with Sparse BLAS
+In parallel with the previous efforts, several libraries with SparseBLAS
 functionality were developed. One such library that stands out is PSBLAS from
 Filippone et al.~\cite{10.1145/365723.365732}. The scope and breadth of the
 library make it akin to a Sparse standard proposal, as most operations are
 supported and careful attention is given to interface design. They also
 reuse the work of Duff et al.~\cite{10.1145/275323.275327}, e.g. use the same
-matrix storage type and rely on the serial Sparse BLAS of the previous
+matrix storage type and rely on the serial SparseBLAS of the previous
 proposals. Their focus is on proposing a parallel (node-distributed)
-implementation of the algorithms and implementing the library using
+Implementation of the algorithms and implementation of the library using
 multiple layers, with base functionality implemented in Fortran 77 and
 higher-level interfaces in Fortran 90. In 2012, Filippone et
 al.~\cite{10.1145/2331130.2331131} proposed an Object-Oriented, Fortran 2003,
 interface thanks to recent programming language innovation that greatly
-simplifies Sparse BLAS usage and standardization. This design enables the support
+simplifies SparseBLAS usage and standardization. This design enables the support
 of multiple formats through class inheritance while maintaining an abstract
 matrix handle type. This handle type allows for conversions and other optimizations while
 enabling simpler interfaces. Notably, the design also considers move versus copy
 semantics for matrix conversions and user data.
 
 We learn from and base our standard proposal upon the previous efforts to provide an
-increasingly simple-to-use yet expressive Sparse BLAS set of functionality. At
+increasingly simple-to-use yet expressive SparseBLAS set of functionality. At
 the same time, we extend the scope by, e.g., introducing an interface for
 the more complex sparse-matrix times sparse-matrix product deemed
 complicated in the previous iterations. The hardware evolution, namely GPUs,
@@ -340,14 +344,14 @@ requires us to also introduce a new set of functionality, user-provided allocato
 management can be critical for these complex operations on such multifaceted
 hardware. 
 %Owing to the asynchronous mode of execution of such hardware, a
-%modern Sparse BLAS standard must support this mode of execution natively. 
+%modern SparseBLAS standard must support this mode of execution natively. 
 Furthermore, we acknowledge in this proposal that for repeated application of a sparse operator, the initial investment in optimization -- analyzing sparsity patterns and characteristics, and fine-tuning format and execution policies -- can quickly be amortized by faster execution. We thus propose interfaces also allowing for an optimization phase prior to repeated execution of functionality.
 
 
 
 \subsection{Review of existing API designs for the SpMV operation}
 \label{sec:spmvReview}
-While none of the sparse BLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
+While none of the SparseBLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
 Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
 Thus, we consider it beneficial to the reader to list existing C and
 \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
@@ -439,18 +443,18 @@ A->apply(alpha, x, beta, y);
 
 \end{enumerate}
 
-Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their Sparse BLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
+Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their SparseBLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
 
 
-\section{Sparse BLAS Design}
+\section{SparseBLAS Design}
 \label{sec:api-design}
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
-This requires to consider a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions execution policies. 
+This requires considering a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions execution policies. 
 In the following sections, we address these intertwined aspects individually. 
 
 To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, direct solvers, eigensolvers, and preconditioners. 
-%Even so, the Sparse BLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
-The functionality we consider in scope of this effort is listed in~\Cref{sec:functionality}. Instead of discussing the characteristics of the distinct sparse BLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
+%Even so, the SparseBLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
+The functionality we consider in scope of this effort is listed in~\Cref{sec:functionality}. Instead of discussing the characteristics of the distinct SparseBLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
 
 
 
@@ -461,14 +465,14 @@ The functionality we consider in scope of this effort is listed in~\Cref{sec:fun
 % Mandatory formats
 % Other formats considered
 % Information required for mandatory formats - table?
-The fundamental distinction between dense and sparse linear algebra lies in the strategic move away from contiguous data storage toward more resource-efficient formats. In dense linear algebra, matrices are represented as exhaustive arrays where every entry occupies a memory slot. If sparse matrices were stored in this same manner, the need for a specialized sparse BLAS API would vanish, as the functionality would be identical to existing dense routines. However, the defining characteristic of a sparse matrix—the overwhelming prevalence of zero entries—renders such an approach prohibitively expensive for large-scale applications.
+The fundamental distinction between dense and sparse linear algebra lies in the strategic move away from contiguous data storage toward more resource-efficient formats. In dense linear algebra, matrices are represented as exhaustive arrays where every entry occupies a memory slot. If sparse matrices were stored in this same manner, the need for a specialized SparseBLAS API would vanish, as the functionality would be identical to existing dense routines. However, the defining characteristic of a sparse matrix—the overwhelming prevalence of zero entries—renders such an approach prohibitively expensive for large-scale applications.
 
 By adopting specialized data structures that omit the majority (or all) zeros, we can unlock significant savings in memory footprint, memory access volume, and computational cost. Rather than wasting cycles and bandwidth on arithmetic operations with zeros and reading zeros from RAM, sparse data structures explicitly store only nonzero entries (and maybe some explicit zeros), implying zeros for all non-explicitly stored values. Using sparse data structures usually increases the complexity in accessing nonzero matrix entries, and each sparse data format necessitate a tailored ecosystem of routines that can operate on that specific format.
 
 Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS)}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
 These formats are well-supported in existing libraries and widely used
 for storage and exchange. We will consider these as input formats for
-the standard, and each of these formats will be supported through a lightweight, non-owning view-like class defined by the Sparse BLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given in \Cref{tab:csr_param}--\Cref{tab:dense_param}. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
+the standard, and each of these formats will be supported through a lightweight, non-owning view-like class defined by the SparseBLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given in \Cref{tab:csr_param}--\Cref{tab:dense_param}. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
 
 
 
@@ -632,7 +636,7 @@ We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support 
 
 
 
-\subsection{The Three Archetypes for the Sparse BLAS Design}
+\subsection{The Three Archetypes for the SparseBLAS Design}
 \label{sec:archetype}
 Before listing functionality we consider in scope of an API standard, we identify groups of functionality sharing the same characteristics in terms of computational complexity, memory requirements, and parallelization strategies. 
 
@@ -661,7 +665,7 @@ In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication}
 \end{itemize}
 
 The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern. As the operation is inherently sequential: each element of the output vector may depend on previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in Section~\Cref{sec:views}).
-In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all sparse BLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
+In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all SparseBLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
 
 
 
@@ -687,7 +691,7 @@ In this non-owning API, the user owns the data, and a light-weight construct is 
 
 \subsection{Matrix Wrappers and Matrix Objects}
 
-The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view.'' For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which contradicts the C++ view concept. 
+The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view.'' For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by SparseBLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which contradicts the C++ view concept. 
 
 As discussed, this non-owning approach limits the optimization potential for the libraries.
 
@@ -712,7 +716,7 @@ auto A_opt = matrix_opt(A, allocator);
 \end{listing}
 
 If the user applies changes to the arguments wrapped in the \texttt{csr\_wrapper}, an already created \texttt{matrix\_opt} will not reflect these changes. To propagate any changes in the user-owned data, an \texttt{update\_matrix} function has to be invoked.
-Generally speaking, any sparse BLAS functionality takes \texttt{matrix\_opt}s as the input arguments and only modifies the user-owned data only if explicitly detailed in the functionality description. If sparse BLAS routine creates a sparse matrix as output, this output argument needs to be a \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
+Generally speaking, any SparseBLAS functionality takes \texttt{matrix\_opt}s as the input arguments and only modifies the user-owned data only if explicitly detailed in the functionality description. If SparseBLAS routine creates a sparse matrix as output, this output argument needs to be a \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
 
 
@@ -743,7 +747,7 @@ Note that all operations take \texttt{policy} and \texttt{state} objects as inpu
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for the two archetypes producing known output size: the sparse matrix vector multiplication and the sparse triangular solve. We list the interface to the other sparse BLAS functionality producing output of known size in the appendix.
+Operations with known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for the two archetypes producing known output size: the sparse matrix vector multiplication and the sparse triangular solve. We list the interface to the other SparseBLAS functionality producing output of known size in the appendix.
 
 
 
@@ -962,13 +966,13 @@ fill_numeric
 
 
 \iffalse % with info
-A vendor might implement the Sparse BLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase, attaching them to the generic \texttt{info} object returned from \textit{inspect}. Vendors could then implement the Sparse BLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{info} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{info} object's destructor is called.
+A vendor might implement the SparseBLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase, attaching them to the generic \texttt{info} object returned from \textit{inspect}. Vendors could then implement the SparseBLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{info} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{info} object's destructor is called.
 
 For example, here vendor optimization details may be captured in an opaque \texttt{info} object created by \texttt{multiply\_inspect}. This is bound to a matrix view during the execute call, where the optimizations can be put to use by calling into a vendor library:
 \fi
 \iffalse
 % with matrix_opt
-A vendor might implement the Sparse BLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase. We create the \textit{matrix\_opt} with a \texttt{format\_wrapper} such that the library can store the optimization specific to the matrix itself in the \textit{matrix\_opt}. Vendors could then implement the Sparse BLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{matrix\_opt} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{matrix\_opt} object's destructor is called.
+A vendor might implement the SparseBLAS \textit{inspect} and \textit{compute} phases by first initializing their own internal handle objects as part of their implementations of the \textit{inspect} phase. We create the \textit{matrix\_opt} with a \texttt{format\_wrapper} such that the library can store the optimization specific to the matrix itself in the \textit{matrix\_opt}. Vendors could then implement the SparseBLAS \textit{compute} functions by calling vendor-provided algorithms using the matrix handles stored inside the \texttt{matrix\_opt} object. Finally, the vendor library's internal handles would need to be deallocated when the \texttt{matrix\_opt} object's destructor is called.
 
 For example, here vendor optimization details may be captured in an opaque \texttt{matrix\_opt} object created by \texttt{multiply\_inspect}. This is bound to a matrix view during the execute call, where the optimizations can be put to use by calling into a vendor library:
 
@@ -1038,7 +1042,7 @@ In some situations, a sparse matrix object is not used in its original form, but
        \hline
     %\bottomrule
     \end{tabular}
-    \caption{Instances of the \texttt{view} wrapper in Sparse BLAS.} add 
+    \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} add 
     \label{tab:views}
 \end{table}
 
@@ -1047,7 +1051,7 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 
 
-\subsection{Functionality Scope of the Sparse BLAS}
+\subsection{Functionality Scope of the SparseBLAS}
 \label{sec:functionality}
 
 
@@ -1064,7 +1068,7 @@ In the preceding sections, we have introduced a number of new types. Table \ref{
     \midrule        
         \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments.\\
     \midrule        
-        \texttt{operation\_state} & Object storing state associated with a Sparse BLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
+        \texttt{operation\_state} & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
     \midrule        
         \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
     \midrule    
@@ -1075,7 +1079,7 @@ In the preceding sections, we have introduced a number of new types. Table \ref{
     \label{tab:newtypes}
 \end{table}
 
-While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive sparse BLAS implementation to include additional routines. Particularly, we understand the sparse BLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
+While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
 
 \begin{table}[h]
@@ -1102,7 +1106,7 @@ While the most fundamental part of the standardization effort is to design an in
        Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & SpMV-type & Single-stage\\
     \bottomrule
     \end{tabular}
-    \caption{List of the Sparse BLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
+    \caption{List of the SparseBLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
     \label{tab:scope}
 \end{table}
 
@@ -1110,25 +1114,25 @@ While the most fundamental part of the standardization effort is to design an in
 
 \subsection{Horizontal and Vertical Interoperability}
 
-Any interface and functionality standardization must allow for horizontal and vertical interoperability. In the context of the sparse BLAS API,
-\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, direct solvers preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a sparse BLAS standard. We assess upward interoperability by using the sparse BLAS functionality inside mini apps. 
-Downward interoperability refers to the possibility of wrapping already existing sparse BLAS functionality developed by hardware vendors into the sparse BLAS interface. The intention for the downward interoperability is not to create yet another layer of interfaces, but to ensure that design decisions taken by the vendors in the kernel implementations do not hinder the adoption of a new interface in future kernel 
+Any interface and functionality standardization must allow for horizontal and vertical interoperability. In the context of the SparseBLAS API,
+\textit{Vertical interoperability} includes both upward and downward interoperability. Upward interoperability refers to usability and productivity inside high-level algorithms like iterative solvers, direct solvers preconditioners, and sparse neural networks. Only interfaces and functionality decisions allowing for high productivity for high-level algorithms and applications justify the design of a SparseBLAS standard. We assess upward interoperability by using the SparseBLAS functionality inside mini apps. 
+Downward interoperability refers to the possibility of wrapping already existing SparseBLAS functionality developed by hardware vendors into the SparseBLAS interface. The intention for the downward interoperability is not to create yet another layer of interfaces, but to ensure that design decisions taken by the vendors in the kernel implementations do not hinder the adoption of a new interface in future kernel 
 development.
 \textit{Horizontal interoperability} refers to compatibility with dense
 BLAS functionality and the possibility to use the functionality in other
 programming languages. The latter takes on a new significance in the
-context of Sparse BLAS, as we aim to focus on building a high-level
+context of SparseBLAS, as we aim to focus on building a high-level
 \cplusplus API, as opposed to the Fortran-based interface used in the
 dense BLAS to allow for ABI compatibility. Instead, our goal is to ensure that basic functionality is accessible from a wide range of languages, including Fortran, C, Julia, Python, and others. The strategy we envision is to create C-bindings for the most central functionality.
 
 Most vendors implement linear algebra functionality using the
 \cplusplus programming language. Likewise, most already implemented
-sparse BLAS functionality, e.g. in NVIDIA's, Arm's, Intel's, and AMD's
+SparseBLAS functionality, e.g. in NVIDIA's, Arm's, Intel's, and AMD's
 vendor libraries, are often designed in \cplusplus. Also, for dense
 BLAS, the \cplusplus standard officially adopted the
 \texttt{std::linalg} API~\cite{cpplinalg:p1673r13}. We adopt this
 strategy and build upon an interface in \cplusplus. At the same time,
-we acknowledge that many users and application developers depend on Fortran, C, or Python interfaces as their application codes are using the respective language. Designing an interface to sparse BLAS functionality in C or Fortran without the use of static and dynamic polymorphism is almost impossible due to the explosion in variants, which would result in a prohibitively long parameter list and a plethora of function variants. In response, we will select the most common use cases and provide bindings in C, Fortran, and Python to a subset of the sparse BLAS functionality.
+we acknowledge that many users and application developers depend on Fortran, C, or Python interfaces as their application codes are using the respective language. Designing an interface to SparseBLAS functionality in C or Fortran without the use of static and dynamic polymorphism is almost impossible due to the explosion in variants, which would result in a prohibitively long parameter list and a plethora of function variants. In response, we will select the most common use cases and provide bindings in C, Fortran, and Python to a subset of the SparseBLAS functionality.
 
 
 
@@ -1140,15 +1144,15 @@ we acknowledge that many users and application developers depend on Fortran, C, 
 The world of high-performance computing has recently transformed from a CPU-centric model to a heterogeneous model in which computations must be performed on CPUs, GPUs, and other accelerators. To support these heterogeneous environments, computing languages and libraries have evolved from supporting only \textit{synchronous execution models}, where a kernel or function is submitted, enqueued, and executed immediately to \textit{asynchronous execution models}, where kernel submission is executed without waiting for completion. This separation between kernel submission and kernel execution has proved beneficial for enabling performance on heterogeneous systems by both avoiding unnecessary synchronization as well as allowing data movement, kernel launch, and other overheads associated with heterogeneous execution to be hidden.
 
 Standard \cplusplus is transitioning toward a
-standard model for asynchronous execution with \texttt{std::execution} (senders and receivers)~\cite{p2300r7,p3300r0}, serves as the glue for different libraries with asynchronous operations to interoperate with one another.  Given the increased performance and ease-of-use associated with using standard tools to handle asynchrony instead of disparate vendor APIs, we recognize the importance of using standard, interoperable tools for asynchrony. In the future, we anticipate adopting the \texttt{std::execution} model, with a collection of asynchronous methods that extend the standard Sparse BLAS API using \texttt{std::execution} concepts. However, given the early stage of \texttt{std::execution} implementations, this full specification will likely have to wait until the ecosystem is more mature.
+standard model for asynchronous execution with \texttt{std::execution} (senders and receivers)~\cite{p2300r7,p3300r0}, serves as the glue for different libraries with asynchronous operations to interoperate with one another.  Given the increased performance and ease-of-use associated with using standard tools to handle asynchrony instead of disparate vendor APIs, we recognize the importance of using standard, interoperable tools for asynchrony. In the future, we anticipate adopting the \texttt{std::execution} model, with a collection of asynchronous methods that extend the standard SparseBLAS API using \texttt{std::execution} concepts. However, given the early stage of \texttt{std::execution} implementations, this full specification will likely have to wait until the ecosystem is more mature.
 
 With the current state of vendor support for asynchronous C++ programming, we anticipate four guidelines at this stage for asynchronous support.
-First, any Sparse BLAS API that supports asynchronous execution should be included in the \verb|async| namespace ~\cite{p3300r0}, to clearly denote expected behavior for users. For example, \verb|spblas::async::multiply()|.
+First, any SparseBLAS API that supports asynchronous execution should be included in the \verb|async| namespace ~\cite{p3300r0}, to clearly denote expected behavior for users. For example, \verb|spblas::async::multiply()|.
 Second, all asynchronous and synchronous APIs that inspect or execute shall take an \textit{execution policy} as an argument and respect it with regards to the parallel execution. In addition to the standard execution policies defined by \cplusplus, vendors may define their own execution policies, which have implementation-defined behavior. Vendors should also provide APIs that do not require an execution policy. These execution policy--free APIs may perform execution in parallel so long as they do not violate the semantic requirements of their respective algorithms.
 Third, any implementation-defined objects that control asynchronous behavior (e.g. CUDA/ROCm \textit{stream}s or SYCL \textit{sycl::queue} and \textit{sycl::event} objects) can be provided to the algorithm through an implementation-defined execution policy.
-Fourth, we observe that scaling values in Sparse BLAS operations (e.g. $\alpha$ and $\beta$ in sparse matrix-vector multiplication, $y = \alpha A\cdot x + \beta y$) may be represented as either arguments provided on the host or as device-side scalars that will be dynamically computed by another asynchronous kernel. A high-quality implementation should support both sources of scaling values.
+Fourth, we observe that scaling values in SparseBLAS operations (e.g. $\alpha$ and $\beta$ in sparse matrix-vector multiplication, $y = \alpha A\cdot x + \beta y$) may be represented as either arguments provided on the host or as device-side scalars that will be dynamically computed by another asynchronous kernel. A high-quality implementation should support both sources of scaling values.
 
-Some libraries provide a mechanism for the user to select which of one or more internal algorithms they want to be used in a particular sparse BLAS operation. The default behavior is for the library to make such algorithmic choices, perhaps using information gained from analysis of the inputs in the optional ``inspect phase.'' However, in the case that the user would like to select a particular algorithm implementation, this should be supported by vendors via their own implementation-defined execution policies.
+Some libraries provide a mechanism for the user to select which of one or more internal algorithms they want to be used in a particular SparseBLAS operation. The default behavior is for the library to make such algorithmic choices, perhaps using information gained from analysis of the inputs in the optional ``inspect phase.'' However, in the case that the user would like to select a particular algorithm implementation, this should be supported by vendors via their own implementation-defined execution policies.
 
 %More details and specific recommendations for the asynchronous execution model may be provided at a future time.
 
@@ -1160,7 +1164,7 @@ Some libraries provide a mechanism for the user to select which of one or more i
 %\JimD{March 7-10 version}
 
 This section describes the design space impacting the
-numerical properties of the Sparse BLAS, outlines the
+numerical properties of the SparseBLAS, outlines the
 choices to be made, explains how these choices may tradeoff performance and ``consistency'' (to be defined below), 
 and proposes which options should be required, recommended, 
 or not recommended. 
@@ -1188,7 +1192,7 @@ The design space is defined by the following, often intertwined considerations:
     \item How should floating-point exceptions (Inf, NaN) be handled?
     Parts of this design consideration are covered by the 
     dense BLAS discussions \cite{Proposed_BLAS_LAPACK_exception_handling}. But other aspects are unique
-to the Sparse BLAS because of the impact of sparse data structures. For example, converting an implicit zero in
+to the SparseBLAS because of the impact of sparse data structures. For example, converting an implicit zero in
 a sparse matrix to an explicit zero (e.g., as part of a
 SIMD optimization) may change how exceptions are 
 propagated, i.e., whether an implicit $A(i,j)=0$ is
@@ -1259,12 +1263,12 @@ and output arguments,
 will require more complicated data structures, which
 requires further discussion to attain portability.
 
-For the Sparse BLAS API, we use template parameters for the input and output formats, 
+For the SparseBLAS API, we use template parameters for the input and output formats, 
 and anticipate the support for IEEE 754 32- and 64-bit formats, for both real and
 complex data. We acknowledge that the format used for the internal arithmetic operations
 might be different, i.e. of higher precision to reduce accumulation errors. In particular,
 some architecture units already implement a higher accumulation format in hardware. 
-In the Sparse BLAS API, we do not specify the internal precision, but anticipate it having at least the accuracy of the input/output format. We anticipate that any deviation from this concept is documented.
+In the SparseBLAS API, we do not specify the internal precision, but anticipate it having at least the accuracy of the input/output format. We anticipate that any deviation from this concept is documented.
 We encourage the implementation of functionality variants,
 as long as also these are well-documented (including their numerical properties).
 
@@ -1390,7 +1394,7 @@ $\epsilon$ and $UN$ are for the output format.
 \iffalse
 \subsection{Consistent exception handling and reproducibility}
 
-In this subsection, we describe a sequence of three design points for exception handling and reproducibility in Sparse BLAS, ranging from "permissive", i.e. no rules (so most performance optimizations are permitted) to bitwise reproducibility (which is the most restrictive and expensive). We note that the second and third design points
+In this subsection, we describe a sequence of three design points for exception handling and reproducibility in SparseBLAS, ranging from "permissive", i.e. no rules (so most performance optimizations are permitted) to bitwise reproducibility (which is the most restrictive and expensive). We note that the second and third design points
 below are independent of one another.
 
 %"Permissive" will be the default version, but we request feedback from readers as to which other design points should be recommended or required as options.
@@ -1404,8 +1408,8 @@ below are independent of one another.
 
     %\todo[inline]{[Jim D.] I added a new version of this discussion of consistency below.}
 %    \item Run-to-run bitwise-reproducibility (with a variety of possible meanings). While this would surely be of interest to many users, eg to aid debugging,
-%    we do not recommend it be included in a preliminary Sparse BLAS standard.
-    \item Run-to-run bitwise-reproducibility properties in Sparse BLAS routines are discussed in Section~\ref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
+%    we do not recommend it be included in a preliminary SparseBLAS standard.
+    \item Run-to-run bitwise-reproducibility properties in SparseBLAS routines are discussed in Section~\ref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
     \todo[inline]{ [Spencer] should reproducibility still be lumped in with permissive/consistency ?  it seems orthogonal now, so does not quite fit here. Maybe it should just be it's own subsection ?}
 \end{enumerate}
 We anticipate that the "permissive" policy will be the most common use case and developers might limit their scope to support this mode. The other modes come with sometimes significant performance overhead, but are important for various critical applications.
@@ -1527,9 +1531,9 @@ Note that the choice to enable conditional numerical reproducibility may come wi
 \item [Full Numerical Reproducibility.] Reproducible results when calls occur from different executables on the same machine or on separate machines including on separate computer architectures.  Can be less performant than Strict CNR property algorithms.
 \end{description}
 
-While the ``Full Numerical Reproducibility'' property might seem the most desirable, it can be extremely difficult to achieve on modern architectures and would likely sacrifice a great amount of performance, so is unlikely to be something supported by any Sparse BLAS library.  We will restrict the remaining discussions to the support of the CNR and strict CNR properties in Sparse BLAS, which means run to run reproducibility within a single executable and all things equal except possibly the number of computational threads.
+While the ``Full Numerical Reproducibility'' property might seem the most desirable, it can be extremely difficult to achieve on modern architectures and would likely sacrifice a great amount of performance, so is unlikely to be something supported by any SparseBLAS library.  We will restrict the remaining discussions to the support of the CNR and strict CNR properties in SparseBLAS, which means run to run reproducibility within a single executable and all things equal except possibly the number of computational threads.
 
-While it is common for some sparse formats and algorithms to be naturally reproducible due to the method of parallelizing the work (for instance using row-based parallelism for SpMV in CSR format where a single computation thread processes the multiply-adds with the dense vector across a sparse matrix row in the order that the column indices were stored in that row), there are other cases where reductions, atomic operations or general algorithms with multiple computational threads contributing to the floating point result that require more care in ensuring the order of floating point operations is maintained from run to run.  We leave it to the Sparse BLAS function implementer to come up with algorithmic ways to ensure such reproducible results can happen and will turn our attention now to how a user could signal to the function that such care is required.
+While it is common for some sparse formats and algorithms to be naturally reproducible due to the method of parallelizing the work (for instance using row-based parallelism for SpMV in CSR format where a single computation thread processes the multiply-adds with the dense vector across a sparse matrix row in the order that the column indices were stored in that row), there are other cases where reductions, atomic operations or general algorithms with multiple computational threads contributing to the floating point result that require more care in ensuring the order of floating point operations is maintained from run to run.  We leave it to the SparseBLAS function implementer to come up with algorithmic ways to ensure such reproducible results can happen and will turn our attention now to how a user could signal to the function that such care is required.
 
 We propose to introduce a global CNR property for the library that can be set via the following APIs. We also recommend that when algorithms are available for selection in an API, that library implementers denote in documentation the  algorithms which have the different CNR properties themselves.  This would allow a fine grained approach to be applied by users as well without the global switch being set. If the global property and the local algorithm selection do not align, the local algorithm selection will be preferred.
 
@@ -1550,7 +1554,7 @@ namespace spblas {
 
 }
 \end{minted}
-\caption{Conditional Numerical Reproducibility properties in Sparse BLAS}
+\caption{Conditional Numerical Reproducibility properties in SparseBLAS}
 \end{listing}
 
 \iffalse
@@ -1600,7 +1604,7 @@ This is complicated, since for example a library
 might use a different algorithm for different
 problem sizes.
 
-For the Sparse BLAS effort, we will deploy a unit test framework that compares the accuracy of functionality implementations against a reference implementation, typically a sequential CPU code relying on the CSR matrix format. The test suite will then compose of a set of sparse matrices covering a wide range of sparsity structures and numerical properties.
+For the SparseBLAS effort, we will deploy a unit test framework that compares the accuracy of functionality implementations against a reference implementation, typically a sequential CPU code relying on the CSR matrix format. The test suite will then compose of a set of sparse matrices covering a wide range of sparsity structures and numerical properties.
 
 \iffalse
 
@@ -1617,19 +1621,26 @@ Some of these (e.g., weaker error bounds satisfied by Strassen-like algorithms) 
 \fi
 
 \section{Future extensions}
-As hinted at in Section~\ref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing sparse BLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the sparse BLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how they will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
+As hinted at in Section~\ref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing SparseBLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the SparseBLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how it will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
 
-In this first edition, we propose a non-owning non-opaque API. As discussed, an opaque, owning API allows the libraries to perform additional optimization, such as lazy evaluation of routines. We postpone the design of such an API to the future. 
+In this first edition, we propose a non-owning non-opaque API. As discussed, an opaque owning API allows the libraries to perform additional optimization, such as lazy evaluation of routines. We postpone the design of such an API to the future. 
 
-Furthermore, to reduce complexity, in this proposal we exclusively discussed the interface to shared memory routines, no MPI-parallel implementations, which will also be future work.
+
+Furthermore, to reduce complexity, in this proposal, we exclusively discussed the interface to shared memory routines, no MPI-parallel implementations, which will also be future work.
+
+We here focused on the IEEE FP64 and IEEE FP32 precision formats. Support for low precision formats such as IEEE FP16 or BFloat16 may be added by the community as the demand arises, but the overhead of the indexing in sparse data structures will likely render only moderate performance improvements over high precision functionality.
 
 Functionality-wise, we plan to expand the sparse triangular solves to also accept dense matrices and sparse vectors, and extend the scope to more complex algorithms like solvers and graph algorithms.
 
 We also recognize the increasing use of tensors, which are higher-dimensional analogs of matrices, in computing. 
 
-Sparse tensor computations such as tensor decompositions and contractions present unique challenges ranging from sparse tensor formats and different functions such as sparse tensor times tensor multiplication and sparse matricized tensor times Khatri-Rao product (MTTKRP).
+Sparse tensor computations, such as tensor decompositions and contractions, present unique challenges ranging from sparse tensor formats and different functions, such as sparse tensor times tensor multiplication and sparse matricized tensor times Khatri-Rao product (MTTKRP).
 
 Our current design is not optimal for representing and computing on tensors, even when they are matricized, but we plan to provide extensions of our API for sparse tensor computations.
+
+Closely related, batched SparseBLAS handles the data-parallel processing of SparseBLAS functionality on many independent sparse objects. We anticipate the extension of SparseBLAS in the direction of batched functionality accounting for both homogeneous batches and inhomogeneous batches of sparse objects.
+
+More complex functionality, such as sparse matrix factorizations or algebraic multigrid methods, are outside the scope of the SparseBLAS standard, but we plan to address the standardization of these similar to the standardization of complex dense linear algebra functionality in LAPACK.
 
 \bibliographystyle{plain}
 \bibliography{sparseblas}
