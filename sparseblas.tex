@@ -449,7 +449,7 @@ Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an o
 \section{SparseBLAS Design}
 \label{sec:api-design}
 The goal of this effort is to define a common understanding of how to access a set of standard data structures representing sparse linear algebra objects and a common interface for basic functionality that operates on these objects.
-This requires considering a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions execution policies. 
+This requires considering a wide range of design aspects, including storage formats, ownership and opaqueness of objects, functionality scope, multi-stage functions and execution policies. 
 In the following sections, we address these intertwined aspects individually. 
 
 To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as iterative solvers, direct solvers, eigensolvers, and preconditioners. 
@@ -467,7 +467,7 @@ The functionality we consider in scope of this effort is listed in~\Cref{sec:fun
 % Information required for mandatory formats - table?
 The fundamental distinction between dense and sparse linear algebra lies in the strategic move away from contiguous data storage toward more resource-efficient formats. In dense linear algebra, matrices are represented as exhaustive arrays where every entry occupies a memory slot. If sparse matrices were stored in this same manner, the need for a specialized SparseBLAS API would vanish, as the functionality would be identical to existing dense routines. However, the defining characteristic of a sparse matrix—the overwhelming prevalence of zero entries—renders such an approach prohibitively expensive for large-scale applications.
 
-By adopting specialized data structures that omit the majority (or all) zeros, we can unlock significant savings in memory footprint, memory access volume, and computational cost. Rather than wasting cycles and bandwidth on arithmetic operations with zeros and reading zeros from RAM, sparse data structures explicitly store only nonzero entries (and maybe some explicit zeros), implying zeros for all non-explicitly stored values. Using sparse data structures usually increases the complexity in accessing nonzero matrix entries, and each sparse data format necessitate a tailored ecosystem of routines that can operate on that specific format.
+By adopting specialized data structures that omit the majority of (or all) zeros, we can unlock significant savings in memory footprint, memory access volume, and computational cost. Rather than wasting cycles and bandwidth on arithmetic operations with zeros and reading zeros from RAM, sparse data structures explicitly store only nonzero entries (and maybe some explicit zeros), implying zeros for all non-explicitly stored values. Using sparse data structures usually increases the complexity in accessing nonzero matrix entries, and each sparse data format necessitates a tailored ecosystem of routines that can operate on that specific format.
 
 Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS)}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
 These formats are well-supported in existing libraries and widely used
@@ -533,7 +533,7 @@ Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:
          \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
          \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
          \texttt{offset\_type} array & \texttt{colptr} & Column pointer array (length: \texttt{ncols+1}) \\
-         \texttt{index\_type} array & \texttt{rowindx} & Row index array (length: \texttt{nnz}) \\
+         \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
          \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
          \texttt{base\_type} & \texttt{index\_base} & Base indexing \\
          \bottomrule
@@ -556,8 +556,8 @@ Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:
          \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
          \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
          \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-         \texttt{index\_type} array & \texttt{rowindx} & Row index array (length: \texttt{nnz}) \\
-         \texttt{index\_type} array & \texttt{colindx} & Column index array (length: \texttt{nnz}) \\
+         \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
+         \texttt{index\_type} array & \texttt{colindx} & Column indices array (length: \texttt{nnz}) \\
          \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
          \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
          \bottomrule
@@ -678,8 +678,8 @@ In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine 
 
 There exist different strategies for handling the ownership of data in sparse linear algebra operations. 
 \begin{itemize}
-\item A fully owning, less transparent API based on opaque objects.
-\item A non-owning, fully transparent API based on the \cplusplus views concept.
+\item A \textbf{fully owning, less transparent} API based on opaque objects where the library allocates and owns the data.
+\item A \textbf{non-owning, fully transparent} API based on the \cplusplus views concept where the user allocates and owns the data, and the library accesses the data via views.
 \end{itemize}
 
 There are multiple reasons for having these two types of API. 1) transparent, non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), but on the other hand, owning matrix objects come with an initial usage cost and require copies; 2) non-owning types require multiple phases for their instantiation and allocation which must be explicitly exposed to the user, which can be especially complex and require several steps for more complex operations (e.g., Sparse-Matrix times Sparse-Matrix product -- SpGEMM); 3) with transparent, non-owning objects, the internal data can always be inspected and accessed at little cost, whereas accessors are required for opaque objects and can come with an extra cost.
@@ -716,7 +716,7 @@ auto A_opt = matrix_opt(A, allocator);
 \end{listing}
 
 If the user applies changes to the arguments wrapped in the \texttt{csr\_wrapper}, an already created \texttt{matrix\_opt} will not reflect these changes. To propagate any changes in the user-owned data, an \texttt{update\_matrix} function has to be invoked.
-Generally speaking, any SparseBLAS functionality takes \texttt{matrix\_opt}s as the input arguments and only modifies the user-owned data only if explicitly detailed in the functionality description. If SparseBLAS routine creates a sparse matrix as output, this output argument needs to be a \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
+Generally speaking, any SparseBLAS functionality takes \texttt{matrix\_opt}s as the input arguments and modifies the user-owned data only if explicitly detailed in the functionality description. If a SparseBLAS routine creates a sparse matrix as output, this output argument needs to be an \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
 
 
@@ -732,7 +732,7 @@ Aside from the archetype categorization, an orthogonal classification distinguis
 We note that for both single-stage and multi-stage operations that produce sparse output, the sparsity structure of the output is based on the symbolic operation, not on the numeric operations. In other words, a numeric calculation resulting in a numeric zero does not result in omitting this entry from the output sparsity pattern.
 
 
-While there exist strong arguments for unifying the interface for the different functionality to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of a known sparsity pattern, and a multi-stage API for functionality that produces output of an unknown sparsity pattern. 
+While there exist strong arguments for unifying the interface for the different functionalities to always require the same number of stages (conceptually, a matrix matrix multiplication is the same operation, agnostic to the non-zero structure and the storage format of the matrices), we decided to sacrifice consistency in favor of reduced complexity. In particular, we use a one-stage API for functionality that produces output of a known sparsity pattern, and a multi-stage API for functionality that produces output of an unknown sparsity pattern. 
 
 Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix object. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. 
 If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
@@ -741,13 +741,13 @@ This concept of an optional inspect phase is in line with the current design of 
 
 
 In the next sections, we will detail the single-stage API for functionality producing output with a-priori known sparsity pattern and the multi-stage API for functionality producing output with a-priori unknown sparsity pattern.
-Note that all operations take \texttt{policy} and \texttt{state} objects as inputs. The \texttt{policy} object is opaque to the user. It may contain any vendor-specific execution policies, similar to a \texttt{stream} or \texttt{queue}. The \texttt{state} object is opaque to the user and can be used to store any operation-specific data, e.g., a dependency graph in a triangular solve or data in an operation-specific library-internal representation, and is available to library implementation to share information or optimizations between stages of the operation (inspect to single stage call, or between multi-stage calls or for repeated calls).
+Note that all operations take \texttt{policy} and \texttt{state} objects as inputs. The \texttt{policy} object is opaque to the user. It may contain any vendor-specific execution policies, similar to a \texttt{stream} or \texttt{queue}. The \texttt{state} object is opaque to the user and can be used to store any operation-specific data, e.g., a dependency graph in a triangular solve or data in an operation-specific library-internal representation, and is available to the library implementations to share information or optimizations between stages of the operation (inspect to single stage call, or between multi-stage calls or for repeated calls).
 
 
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We here present the interface for the two archetypes producing known output size: the sparse matrix vector multiplication and the sparse triangular solve. We list the interface to the other SparseBLAS functionality producing output of known size in the appendix.
+Operations with a known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose, and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general, and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We present here the interface for the two archetypes producing known output size: the sparse matrix vector multiplication and the sparse triangular solve. We list the interfaces to the other SparseBLAS functionality producing output of known size in the appendix.
 
 
 
@@ -805,7 +805,7 @@ triangular_solve_inspect(policy, state, triangle( A_opt, uplo::upper), [ alpha, 
 triangular_solve(policy, state, triangle( A_opt, uplo::upper), [ alpha, ] b, x);
 
 \end{minted}
-\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is 1.a}
+\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is $1.0$.}
 \end{listing}
 
 
@@ -869,7 +869,7 @@ multiply_numeric(policy, state,
 % \fb{\texttt{A, B, C, D} are repeated in all functions}
 % \fb{\texttt{allocator} is not mentioned in the text}
 
-A standard way is to place the structural analysis in the \texttt{multiply\_compute} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
+A standard way is to place the structural analysis in the \texttt{multiply\_compute\_symbolic} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
 
 The only step that has to happen critically in the \texttt{multiply\_compute} routine is the computation of the number of nonzero entries in the output to be able to allocate the output data structure. The \texttt{multiply\_fill} routine is required to fill the user-provided arrays with the output data so that it is usable after \texttt{multiply\_fill} stage. These are the only requirements on the \texttt{multiply\_compute} and \texttt{multiply\_fill} stages, and thus the developers are left with a lot of freedom to realize the functionality. For example, developers can decide to already fill the CSR \texttt{rowptr} in the \texttt{multiply\_compute} routine. An approach allowing for more library-internal optimization may be to pack both the structural analysis and the multiplication into the \texttt{multiply\_compute} routine using an internal output data structure that is part of the \texttt{state} object. The \texttt{multiply\_fill} routine then only extracts the result into the output data structure allocated by the user. Any library-internal output data structures live in the state object and would be deleted when the state is destroyed. Such an implementation does not break the interface design.
 
@@ -1042,7 +1042,7 @@ In some situations, a sparse matrix object is not used in its original form, but
        \hline
     %\bottomrule
     \end{tabular}
-    \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} add 
+    \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} 
     \label{tab:views}
 \end{table}
 
@@ -1064,7 +1064,7 @@ In the preceding sections, we have introduced a number of new types. Table \ref{
     \toprule
     \textbf{Type} & \textbf{Definition} & \textbf{Notes}\\ 
     \midrule
-        \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{https://en.cppreference.com/w/cpp/ranges/view}. Operations take either views or matrix handles. \\
+        \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}}. Operations take either views or matrix handles. \\
     \midrule        
         \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments.\\
     \midrule        
@@ -1144,7 +1144,7 @@ we acknowledge that many users and application developers depend on Fortran, C, 
 The world of high-performance computing has recently transformed from a CPU-centric model to a heterogeneous model in which computations must be performed on CPUs, GPUs, and other accelerators. To support these heterogeneous environments, computing languages and libraries have evolved from supporting only \textit{synchronous execution models}, where a kernel or function is submitted, enqueued, and executed immediately to \textit{asynchronous execution models}, where kernel submission is executed without waiting for completion. This separation between kernel submission and kernel execution has proved beneficial for enabling performance on heterogeneous systems by both avoiding unnecessary synchronization as well as allowing data movement, kernel launch, and other overheads associated with heterogeneous execution to be hidden.
 
 Standard \cplusplus is transitioning toward a
-standard model for asynchronous execution with \texttt{std::execution} (senders and receivers)~\cite{p2300r7,p3300r0}, serves as the glue for different libraries with asynchronous operations to interoperate with one another.  Given the increased performance and ease-of-use associated with using standard tools to handle asynchrony instead of disparate vendor APIs, we recognize the importance of using standard, interoperable tools for asynchrony. In the future, we anticipate adopting the \texttt{std::execution} model, with a collection of asynchronous methods that extend the standard SparseBLAS API using \texttt{std::execution} concepts. However, given the early stage of \texttt{std::execution} implementations, this full specification will likely have to wait until the ecosystem is more mature.
+standard model for asynchronous execution where \texttt{std::execution} (senders and receivers)~\cite{p2300r7,p3300r0}, serves as the glue for different libraries with asynchronous operations to interoperate with one another.  Given the increased performance and ease-of-use associated with using standard tools to handle asynchrony instead of disparate vendor APIs, we recognize the importance of using standard, interoperable tools for asynchrony. In the future, we anticipate adopting the \texttt{std::execution} model, with a collection of asynchronous methods that extend the standard SparseBLAS API using \texttt{std::execution} concepts. However, given the early stage of \texttt{std::execution} implementations, this full specification will likely have to wait until the ecosystem is more mature.
 
 With the current state of vendor support for asynchronous C++ programming, we anticipate four guidelines at this stage for asynchronous support.
 First, any SparseBLAS API that supports asynchronous execution should be included in the \verb|async| namespace ~\cite{p3300r0}, to clearly denote expected behavior for users. For example, \verb|spblas::async::multiply()|.
