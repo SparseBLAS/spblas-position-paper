@@ -642,64 +642,6 @@ We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support 
 \end{table}
 
 
-\newpage
-
-\subsection{Four Archetypes for the SparseBLAS Design}
-
-
-\begin{table}[htbp]
-\centering
-\caption{2D Classification Grid for Sparse Matrix Operations based on Output Memory Management and Parallel Dependencies.}
-\label{tab:sparse_2d_classification}
-\vspace{0.5em}
-
-% Apply smaller base font size and optimized padding
-\footnotesize
-\setlength{\tabcolsep}{5pt}
-\renewcommand{\arraystretch}{1.3}
-
-\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{3.2cm} Y Y @{}}
-\toprule
-& \textbf{Parallelism Known \textit{a priori}} \newline \scriptsize(Independent Work Units)
-& \textbf{Parallelism Pattern-Dependent} \newline \scriptsize(Requires Runtime Dependency Graph) \\
-\midrule
-
-\textbf{Output Sparsity Known} \newline \scriptsize(Single-Stage API)
-& \textbf{SpMV / SpMM / Scaling} \newline
-  -- Output sparsity pattern known upfront. \newline
-  -- Rows/blocks can be processed independently without cross-thread dependencies.
-& \textbf{SpTRSV} \textit{(Sparse Triangular Solve)} \newline
-  -- Output vector size known upfront. \newline
-  -- Thread execution strictly ordered by dependency DAG / level-sets. \\
-
-\addlinespace[0.6em]
-
-\textbf{Output Sparsity Unknown} \newline \scriptsize(Multi-Stage API)
-& \textbf{SpGEMM / SpADD} \newline
-  -- Output sparsity pattern unknown upfront. \newline
-  -- Independent output rows (embarrassingly parallel; symbolic phase used for memory allocation).
-& \textbf{Sparse Factorizations} \textit{(LU, Cholesky, QR)} \newline
-  -- Output fill-in structure unknown upfront. \newline
-  -- Execution ordered by elimination tree / DAG (symbolic phase used for scheduling \& allocation). \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-
-To systematically organize the landscape of sparse matrix operations, algorithms can be classified along two orthogonal architectural axes: \textit{output sparsity predictability} (which dictates memory allocation and API staging) and \textit{data-dependency structure} (which governs parallel thread scheduling). This taxonomy gives rise to four primary archetypes that capture the distinct execution paradigms of sparse linear algebra:
-
-\begin{itemize}
-    \item {SpMV Archetype} (\textit{Known Sparsity, Static Parallelism}): Represents operations like Sparse Matrix-Vector multiplication, where output sizes are pre-allocated and threads process independent rows without data dependencies.
-    \item {SpTRSV Archetype} (\textit{Known Sparsity, Pattern-Dependent Parallelism}): Represents Sparse Triangular Solves, where the output vector size is known upfront, but thread execution requires level-set scheduling based on runtime dependency graphs.
-    \item {SpGEMM Archetype} (\textit{Unknown Sparsity, Static Parallelism}): Represents Sparse Matrix-Matrix multiplication, where output memory must be determined mid-flight via symbolic inspection, yet individual output rows remain embarrassingly parallel.
-    \item {Sparse Factorizations Archetype} (\textit{Unknown Sparsity, Pattern-Dependent Parallelism}): Represents direct solvers (LU, Cholesky, QR), which require symbolic phases for both dynamic memory allocation and graph-based elimination trees to resolve complex execution dependencies.
-\end{itemize}
-
-A visualization of this categorization is available in Table~\ref{tab:sparse_2d_classification}, where we map the sparse routines along these two dimensions to create operational taxonomy. Operations residing in the upper row (\textit{Output Sparsity Known}) can be executed using simple single-stage APIs, whereas those in the lower row (\textit{Output Sparsity Unknown}) necessitate multi-stage workflows to handle dynamic memory allocation. The columns delineate the thread-scheduling overhead: operations on the left feature statically known, embarrassingly parallel work units, while those on the right demand runtime graph inspection (such as level-set or elimination tree analysis) to resolve data dependencies before safe parallel execution can begin.
-
-
-\newpage
-add
 \subsection{The Three Archetypes for the SparseBLAS Design}
 \label{sec:archetype}
 Before listing functionality we consider in scope of an API standard, we identify groups of functionality sharing the same characteristics in terms of computational complexity, memory requirements, and parallelization strategies. 
