@@ -37,7 +37,7 @@ multiply(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
@@ -54,7 +54,7 @@ scale(policy, state, 2.3, A);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 // matrix_opt is opaque and may contain 
@@ -73,7 +73,7 @@ auto inf_nrm = matrix_inf_norm(policy, state, A);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace sparseblas;
+using namespace spblas
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
@@ -137,7 +137,7 @@ multiply_numeric(policy, state,
     alpha, A_obj, B_obj, [ beta, D_obj, ] C);
 // csr_wrapper C is now ready to be used
 \end{minted}
-\caption{Two-stage variant for the sparse matrix multiplication (SpGEMM) 
+\caption{Three-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) 
 $C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
 \end{listing}
 
@@ -161,7 +161,7 @@ multiply_fill(policy, state,
     alpha, A_obj, B_obj, [ beta, D_obj, ] C);
 // csr_wrapper C is now ready to be used
 \end{minted}
-\caption{Three-stage variant for the sparse matrix multiplication (SpGEMM) 
+\caption{Two-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) 
 $C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
 \end{listing}
 
