@@ -701,9 +701,11 @@ we focus on the second option, the non-owning API for functionality. However, as
 In this non-owning API, the user owns the data, and a light-weight construct is used to expose the data structures to the library operations, very similar to C++ views~\cite{cpplinalg:p1673r13}, as we will discuss next.
 
 
-\subsection{Matrix Wrappers and Matrix Objects}
+\subsection{Matrix Wrappers, Matrix Objects and Property tags}
 
-The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. Property tags can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format. We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view.'' For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by SparseBLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which contradicts the C++ view concept. 
+The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. \textbf{Property tags} can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format as is represented by the data structures provided in the wrapper itself. As the property tags reflect the user provided data arrays, we attach them to the wrapper.  There should be ways provided for a user or library to query and/or update the properties in an \texttt{xyz\_wrapper}.
+
+We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not perfectly fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view''. For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which blurs the C++ view concept.
 
 As discussed, this non-owning approach limits the optimization potential for the libraries.
 
@@ -717,7 +719,7 @@ In \Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix
 \begin{listing}[H]
 \begin{minted}{c++}
 using namespace spblas;
-csr_wrapper<float> A(values, rowptr, colind, shape, nnz, tags);
+csr_wrapper<int, int, float> A(values, rowptr, colind, shape, nnz, property_tags);
 
 // matrix_opt is opaque and may contain 
 // vendor optimization details
@@ -727,10 +729,17 @@ auto A_opt = matrix_opt(A, allocator);
 \caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
 \end{listing}
 
-If the user applies changes to the arguments wrapped in the \texttt{csr\_wrapper}, an already created \texttt{matrix\_opt} will not reflect these changes. To propagate any changes in the user-owned data, an \texttt{update\_matrix} function has to be invoked.
-Generally speaking, any SparseBLAS functionality takes \texttt{matrix\_opt}s as the input arguments and modifies the user-owned data only if explicitly detailed in the functionality description. If a SparseBLAS routine creates a sparse matrix as output, this output argument needs to be an \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
+As sparse matrix data is owned by users and "loaned" or provided to the library in different structures, we must come to an agreement about when data can be modified and how it should be done so.  The following conditions constitute an implicit library-user agreement about how to encapsulate and share the data:
 
+\begin{enumerate}
+    \item Changes to raw data wrapped in the \texttt{xyz\_wrapper} object class by users are immediately reflected in the \texttt{xyz\_wrapper} object class data and it is generally acceptable for data in an \texttt{xyz\_wrapper} to be modified by users at any time.  An \texttt{xyz\_wrapper} may also be only partially initialized and then further initialized or completed over time, as would be the case when creating a new sparse matrix as a product of others.
+    \item A completed matrix in an \texttt{xyz\_wrapper} may additionally be wrapped with a \texttt{matrix\_opt} object to allow the library to create, store and use additional optimization data relevant to the matrix in sparse BLAS routines.  Therefore, modifying underlying data in a \texttt{matrix\_opt} is more restricted than for an \texttt{xyz\_wrapper} only, as the library may have other optimized data stored which is based on the original user provided data and which would not automatically be updated.  To effect any changes to the user-owned data in a \texttt{matrix\_opt} object, a library function, \texttt{spblas::update\_matrix}, must be invoked on the \texttt{matrix\_opt} object with the changes which allows to keep all data in the \texttt{matrix\_opt} synchronized and consistent.
+    \item Generally speaking, all sparse BLAS functionality will take \texttt{matrix\_opt} objects as the matrix input arguments and if a sparse BLAS routine creates a sparse matrix as an output, the output argument shall be an \texttt{xyz\_wrapper}, as it is created and filled over time through the distinct stages of the functionality.
+    \item A sparse BLAS function shall only modify user-owned data, in a \texttt{matrix\_opt} or an \texttt{xyz\_wrapper}, if it is explicitly detailed in the functionality description that it will do so, like to sort the matrix or update provided data for the matrix, or to fill in resulting matrix data from a copy or transpose or other operation creating a new matrix.
+    \item Libraries or users are allowed to modify the properties (sorted, symmetric pattern, etc) in an \texttt{xyz\_wrapper} at any time as said property is discovered to be true or known to be true based on a particular algorithm whether the \texttt{xyz\_wrapper} is on it's own or in a \texttt{matrix\_opt}.
+\end{enumerate}
 
+If a SparseBLAS routine creates a sparse matrix as output, this output argument needs to be an \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
 \subsection{Single- and multi-stage operations}
 \label{sec:sparseblasimpl}
@@ -739,7 +748,7 @@ Already in the archetype categorization, we noticed to fundamentally different o
     \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled / masked multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. In our archetype classification, both the SpMV and the SpTRSV fall into that category.
     \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
     For these operations, it is impossible to execute them using a single kernel, as the memory requirement for the output is not known a priori, and the memory allocation can only happen after the number of nonzero elements has been computed. For this reason, operations of this class take \texttt{matrix\_opt} structures as input and produce an \texttt{xyz\_wrapper} as output. The data structures underlying the \texttt{xyz\_wrapper} are allocated and owned by the user, and the routines are typically implemented using the pattern \textit{compute}, \textit{allocate}, \textit{fill}~\cite{10.1145/275323.275327}.
-\end{enumerate} 
+\end{enumerate}
 
 We note that for both single-stage and multi-stage operations that produce sparse output, the sparsity structure of the output is based on the symbolic operation, not on the numeric operations. In other words, a numeric calculation resulting in a numeric zero does not result in omitting this entry from the output sparsity pattern.
 
@@ -1029,9 +1038,9 @@ multiply(A, scaled(alpha, x), y);
 \noindent
 
 
-\subsection{Views on Matrix Data and Property Tags}
+\subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix is accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an \mathcal{O}(1) operation, but through the use of internal caching, can be fast after the first time it is computed.
 
 \begin{table}[h]
     \centering
@@ -1064,8 +1073,7 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 
 
-
-\subsection{Functionality Scope of the SparseBLAS}
+\subsection{Functionality Scope of the Sparse BLAS}
 \label{sec:functionality}
 
 
