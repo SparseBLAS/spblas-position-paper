@@ -1039,7 +1039,9 @@ multiply(A, scaled(alpha, x), y);
 
 \subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an \mathcal{O}(1) operation, but through the use of internal caching, can be fast after the first time it is computed.
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
+$\mathcal{O}(1)$ operation, but through the use of internal caching, can
+be fast after the first time it is computed.
 
 \begin{table}[h]
     \centering
