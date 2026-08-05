@@ -1,6 +1,7 @@
-\PassOptionsToPackage{svgnames}{xcolor}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
 \documentclass{article}
 \usepackage{authblk}
+\usepackage{mathptmx}
 \usepackage[scaled=.89]{helvet}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{booktabs}
@@ -14,8 +15,6 @@
 \usepackage{comment}
 \usepackage{placeins}
 \usepackage{minted}
-\definecolor{MediumSlateBlue}{rgb}{0.48, 0.41, 0.93}
-\definecolor{BurntOrange}{RGB}{190,81,3}
 \usepackage{listings}
 \usepackage[colorlinks,linkcolor=MediumSlateBlue,citecolor=MediumSlateBlue,urlcolor=MediumSlateBlue]{hyperref}
 \usepackage{cleveref}
@@ -105,7 +104,7 @@ Interface for Sparse Linear Algebra Operations}
 \author[20]{Julien Langou}
 \author[14]{Sherry Li}
 \author[11]{Kim Liegeois}
-\author[3,2]{Piotr Luszczek}
+\author[,2,3]{Piotr Luszczek\footnote{Research was sponsored by the Department of the Air Force Artificial Intelligence Accelerator and was accomplished under Cooperative Agreement Number FA8750-19-2-1000. The views and conclusions contained in this document are those of the authors and should not be interpreted as representing the official policies, either expressed or implied, of the Department of the Air Force or the U.S.\ Government. The U.S.\ Government is authorized to reproduce and distribute reprints for Government purposes notwithstanding any copyright notation herein.}}
 \author[22]{Vincent Maillou}
 \author[2]{Max Melichenko}
 \author[11]{Yvan Mokwinski}
@@ -1040,7 +1039,9 @@ multiply(A, scaled(alpha, x), y);
 
 \subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an \mathcal{O}(1) operation, but through the use of internal caching, can be fast after the first time it is computed.
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
+$\mathcal{O}(1)$ operation, but through the use of internal caching, can
+be fast after the first time it is computed.
 
 \begin{table}[h]
     \centering
