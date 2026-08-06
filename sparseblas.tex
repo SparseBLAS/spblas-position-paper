@@ -140,7 +140,7 @@ Interface for Sparse Linear Algebra Operations}
 \affil[15]{IBM, USA}
 \affil[16]{Sandia National Labs, USA}
 \affil[17]{Intel Corporation, USA}
-\affil[18]{The Math Works Inc, USA}
+\affil[18]{The MathWorks Inc., USA}
 \affil[19]{Cornell University, USA}
 \affil[20]{University of Colorado Denver, USA}
 \affil[21]{Microsoft, USA}
@@ -251,7 +251,7 @@ provide a clean separation between what data is owned by the user and what data
 is owned by the implementation, this separation generally requires data to be
 copied in and out of GraphBLAS via its import/export API.  For users who only
 want to use a library to execute a few operations, this presents considerable
-overhead.  This issue can be resolved with the pack/unpack methods in
+overhead.  This issue can be resolved with the load/unload methods in
 SuiteSparse:GraphBLAS, which takes $O(1)$ time and does not allocate memory. 
 These methods require the library and GraphBLAS to share the same memory space
 and are extensions to GraphBLAS that are not in the GraphBLAS C API
@@ -392,7 +392,7 @@ status = aoclsparse_dmv(aoclsparse_operation_none,
 // y = alpha*y
 GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
 //y += beta*A*x
-GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64. GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
+GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
 \end{lstlisting}
 \item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
 \begin{lstlisting}
@@ -735,14 +735,14 @@ As sparse matrix data is owned by users and "loaned" or provided to the library 
     \item A completed matrix in an \texttt{xyz\_wrapper} may additionally be wrapped with a \texttt{matrix\_opt} object to allow the library to create, store and use additional optimization data relevant to the matrix in sparse BLAS routines.  Therefore, modifying underlying data in a \texttt{matrix\_opt} is more restricted than for an \texttt{xyz\_wrapper} only, as the library may have other optimized data stored which is based on the original user provided data and which would not automatically be updated.  To effect any changes to the user-owned data in a \texttt{matrix\_opt} object, a library function, \texttt{spblas::update\_matrix}, must be invoked on the \texttt{matrix\_opt} object with the changes which allows to keep all data in the \texttt{matrix\_opt} synchronized and consistent.
     \item Generally speaking, all sparse BLAS functionality will take \texttt{matrix\_opt} objects as the matrix input arguments and if a sparse BLAS routine creates a sparse matrix as an output, the output argument shall be an \texttt{xyz\_wrapper}, as it is created and filled over time through the distinct stages of the functionality.
     \item A sparse BLAS function shall only modify user-owned data, in a \texttt{matrix\_opt} or an \texttt{xyz\_wrapper}, if it is explicitly detailed in the functionality description that it will do so, like to sort the matrix or update provided data for the matrix, or to fill in resulting matrix data from a copy or transpose or other operation creating a new matrix.
-    \item Libraries or users are allowed to modify the properties (sorted, symmetric pattern, etc) in an \texttt{xyz\_wrapper} at any time as said property is discovered to be true or known to be true based on a particular algorithm whether the \texttt{xyz\_wrapper} is on it's own or in a \texttt{matrix\_opt}.
+    \item Libraries or users are allowed to modify the properties (sorted, symmetric pattern, etc) in an \texttt{xyz\_wrapper} at any time as said property is discovered to be true or known to be true based on a particular algorithm whether the \texttt{xyz\_wrapper} is on its own or in a \texttt{matrix\_opt}.
 \end{enumerate}
 
 If a SparseBLAS routine creates a sparse matrix as output, this output argument needs to be an \texttt{xyz\_wrapper} as it is created and filled by the distinct stages of the functionality.
 
 \subsection{Single- and multi-stage operations}
 \label{sec:sparseblasimpl}
-Already in the archetype categorization, we noticed to fundamentally different operation classes:
+Already in the archetype categorization, we noticed two fundamentally different operation classes:
 \begin{enumerate}
     \item Operations where the sparsity pattern of the output object is known a priori, e.g., the multiplication of a sparse matrix with a vector or a dense matrix, the sparse triangular solve, the scaling of a matrix, or the sampled / masked multiplication of two dense matrices producing a sparse output. These operations can be realized with a single kernel operating on pre-allocated output data. In our archetype classification, both the SpMV and the SpTRSV fall into that category.
     \item Operations where the sparsity pattern of the output object is not known a priori, e.g., the multiplication of two sparse matrices (SpGEMM), a filtering operation removing values below a pre-defined threshold, or the addition of two sparse matrices (with -- in general -- different sparsity patterns).
@@ -869,7 +869,7 @@ with the addition of the sparse matrix $\alpha \cdot D$ being optional, can be r
 %\todo[inline]{C is not an obj, but the CSR view}
 \begin{minted}{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> A,B,D filled elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
 // auto A_obj = matrix_opt(A, allocator);
 // auto B_obj = matrix_opt(B, allocator);
