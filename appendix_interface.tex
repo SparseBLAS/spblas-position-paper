@@ -37,7 +37,7 @@ multiply(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace spblas
+using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
@@ -54,7 +54,7 @@ scale(policy, state, 2.3, A);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace spblas
+using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
 // matrix_opt is opaque and may contain 
@@ -73,7 +73,7 @@ auto inf_nrm = matrix_inf_norm(policy, state, A);
 
 \begin{listing}[H]
 \begin{minted}{c++}
-using namespace spblas
+using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
 
@@ -235,11 +235,11 @@ using namespace spblas;
 csr_wrapper<float> A_view(values, rowptr, colind, shape, nnz);
 csr_wrapper<float> B(values, rowptr, colind, shape, nnz);
 
-auto pred = [](auto i, auto j, auto v) {
+auto pred1 = [](auto i, auto j, auto v) {
               return v > 0;
             };
 
-auto pred = [](auto i, auto j, auto v) {
+auto pred2 = [](auto i, auto j, auto v) {
               return (i < 10 ) && (j < 10);
             };
 
