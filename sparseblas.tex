@@ -481,7 +481,7 @@ The fundamental distinction between dense and sparse linear algebra lies in the 
 
 By adopting specialized data structures that omit the majority of (or all) zeros, we can unlock significant savings in memory footprint, memory access volume, and computational cost. Rather than wasting cycles and bandwidth on arithmetic operations with zeros and reading zeros from RAM, sparse data structures explicitly store only nonzero entries (and maybe some explicit zeros), implying zeros for all non-explicitly stored values. Using sparse data structures usually increases the complexity in accessing nonzero matrix entries, and each sparse data format necessitates a tailored ecosystem of routines that can operate on that specific format.
 
-Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS)}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
+Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS) with its column-major variant also known as CCS.}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
 These formats are well-supported in existing libraries and widely used
 for storage and exchange. We will consider these as input formats for
 the standard, and each of these formats will be supported through a lightweight, non-owning view-like class defined by the SparseBLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given in \Cref{tab:csr_param}--\Cref{tab:dense_param}. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
@@ -653,31 +653,32 @@ Before listing functionality we consider in scope of an API standard, we identif
 
         
 The first archetype is the \textbf{Sparse Matrix-Vector Product} (SpMV), forming the product of a sparse matrix and a dense vector. The size of the dense output vector is known upfront, making the memory allocation easy and allowing the functionality to be implemented as a single kernel. The interface for the SpMV routine should ideally support various input formats for the sparse matrix, e.g., by accepting an abstract matrix operator. 
-For sparse formats that are row oriented, like CSR, the SpMV routine is often trivial to parallelize by partitioning the input matrix rows among different execution units.  For other sparse formats like COO or CSC, more sophisticated parallelization schemes are required, either requiring large temporary workspaces for execution units, or atomic access to the output object to avoid write conflicts.  The enabling of parallelism in the traversal of the sparse matrix and their potential to be expressed as single stage routine often characterizes the kernels in this class of operations which encompasses operations that involve at least one sparse matrix and a known output shape/size object like 
+For sparse formats that are row oriented, like CSR, the SpMV routine is often trivial to parallelize by partitioning the input matrix rows among different execution units.  For other sparse formats like COO or CSC, more sophisticated parallelization schemes are required, either requiring large temporary workspaces for execution units, or atomic access to the output object to avoid write conflicts. Applications, for example those that result in matrices with high skews in row-degrees, may also require additional workspace for intra-row parallelization even when using standard CSR. Nevertheless, the straightforward exposure of parallelism and the option of expressing the kernel as single stage routine characterizes kernels that involve at least one sparse matrix and a known output shape/size object. Examples are
 \begin{itemize}
 \item SpMV(sparse matrix  * dense vector -> dense vector), 
 \item SpMM(sparse matrix * dense matrix -> dense matrix or   dense matrix * sparse matrix -> dense matrix), 
 \item SDDMM (dense matrix * dense matrix -> sparse matrix), 
 \item SpGEMMD (sparse matrix * sparse matrix  -> dense matrix), 
-\item Frobenius norm ( sparse matrix -> scalar ) 
-\item Matrix scaling ( sparse matrix -> sparse matrix)
+\item Frobenius norm ( sparse matrix -> scalar ), and
+\item Matrix scaling ( sparse matrix -> sparse matrix).
 \end{itemize}
-        
-        
 
 
-In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} archetype (SpGEMM, computing the product of two sparse matrices) represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as a multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\Cref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGEMM include
+In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} archetype (SpGEMM, computing the product of two sparse matrices) represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as a multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure.
+For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGEMM include
 \begin{itemize}
-\item SpGEMM (  sparse matrix * sparse matrix -> sparse matrix)
-\item SpGEAM or SpADD ( sparse matrix + sparse matrix -> sparse matrix)
-\item Elementwise Multiplication  (sparse matrix .* sparse matrix ->  sparse matrix)
-\item Format conversions:  sparse matrix -> sparse matrix)
-\item Transposition:  sparse matrix -> sparse matrix
+\item SpGEMM (  sparse matrix * sparse matrix -> sparse matrix),
+\item SpGEAM or SpADD ( sparse matrix + sparse matrix -> sparse matrix),
+\item Elementwise Multiplication  (sparse matrix .* sparse matrix ->  sparse matrix),
+\item Format conversions:  sparse matrix -> sparse matrix),
+\item Transposition:  sparse matrix -> sparse matrix.
 \end{itemize}
 
-The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern. As the operation is inherently sequential: each element of the output vector may depend on previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in Section~\Cref{sec:views}).
+The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern-- otherwise, it must execute sequentially as each element of the output vector may depend on all previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in Section~\Cref{sec:views}).
 In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all SparseBLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
 
+The following sections discuss ownership of the input and output data structures as well as optimization in more detail,
+but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information while sparse output matrices are expected to hold no such information.
 
 
 
@@ -706,13 +707,14 @@ The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xy
 
 We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not perfectly fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view''. For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which blurs the C++ view concept.
 
-As discussed, this non-owning approach limits the optimization potential for the libraries.
+This non-owning approach limits the optimization potential for the libraries.
+To nevertheless allow for optimization while,
+to a large degree,
+preserving the concept of light-weight views, we encapsulate the \texttt{xyz\_wrapper} in a \texttt{matrix\_opt} that contains both the wrapper around the user-owned raw data and a structure that can contain additional data for optimization. All the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory that is opaque to the user.
 
-With the intention of allowing for aggressive optimization while to a large degree preserving the concept of light-weight views, we suggest to encapsulate the \texttt{xyz\_wrapper} in a \texttt{matrix\_opt} that contains both the wrapper around the user-owned raw data and a structure that can contain additional data for optimization. It is important that all the optimization data is owned by the library, not by the user, and the data is stored in library-allocated memory and is generally opaque to the user.
+Some users want to keep control of all available memory, in particular, control where data structures are allocated by the library. For this reason, we propose the user passes an \texttt{allocator} to the library that the library uses to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
 
-Some users want to keep control of all available memory, in particular, control where data structures are allocated by the library. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
-
-In \Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
+Listing~\ref{fig:csrmatrixhandle} demonstrates how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
 
 
 \begin{listing}[H]
