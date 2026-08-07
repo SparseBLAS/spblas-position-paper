@@ -235,7 +235,9 @@ along with some support for GPU
 execution~\cite{davis2019algorithm,davis2023algorithm}. There are also
 several GraphBLAS-like libraries in other programming
 languages~\cite{erik_welch_2024_10631255, yzelman2020c++,
-yang2022graphblast}.  The GraphBLAS \cplusplus Specification provides
+yang2022graphblast},
+targeting nonblocking execution, distributed systems, and/or GPU accelerators.
+The GraphBLAS \cplusplus Specification provides
 a native \cplusplus interface, providing better support for
 user-defined types through templates as well as taking advantage of
 \cplusplus concepts and views to simplify the
@@ -253,6 +255,7 @@ copied in and out of GraphBLAS via its import/export API.  For users who only
 want to use a library to execute a few operations, this presents considerable
 overhead.  This issue can be resolved with the load/unload methods in
 SuiteSparse:GraphBLAS, which takes $O(1)$ time and does not allocate memory. 
+ALP/GraphBLAS provides similar wrappers and avoids unload through standard C++ features.
 These methods require the library and GraphBLAS to share the same memory space
 and are extensions to GraphBLAS that are not in the GraphBLAS C API
 Specification, however.
@@ -335,8 +338,9 @@ supported and careful attention is given to interface design. They also
 reuse the work of Duff et al.~\cite{10.1145/275323.275327}, e.g. use the same
 matrix storage type and rely on the serial SparseBLAS of the previous
 proposals. Their focus is on proposing a parallel (node-distributed)
-Implementation of the algorithms and implementation of the library using
-multiple layers, with base functionality implemented in Fortran 77 and
+implementation of the algorithms,
+and on implementation of the library using
+multiple layers. Base functionality is implemented in Fortran 77 and
 higher-level interfaces in Fortran 90. In 2012, Filippone et
 al.~\cite{10.1145/2331130.2331131} proposed an Object-Oriented, Fortran 2003,
 interface thanks to recent programming language innovation that greatly
