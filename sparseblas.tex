@@ -1140,7 +1140,8 @@ While the most fundamental part of the standardization effort is to design an in
        Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & SpMM-type & Multi-stage\\
        Sparse Matrix -- Dense Matrix Multiplication       & $Y := \alpha A \cdot X + \beta Z$  & SpMV-type & Single-stage \\
        Sparse Matrix -- Dense Vector Multiplication       & $y := \alpha A \cdot x + \beta z$  & SpMV-type & Single-stage \\
-       Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & SpTRSV-type & Single-stage \\
+       Vector Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & SpTRSV-type & Single-stage \\
+       Matrix Triangular Solve                                   & Solve $A \cdot Y = X$ for $YA$  & SpTRSM-type & Single-stage \\
 %       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
 %       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
        Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & SpMM-type & Multi-stage\\
