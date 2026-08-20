@@ -691,16 +691,28 @@ In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine 
 \label{sec:ownership}
 
 There exist different strategies for handling the ownership of data in sparse linear algebra operations. 
-\begin{itemize}
-\item A \textbf{fully owning, less transparent} API based on opaque objects where the library allocates and owns the data.
-\item A \textbf{non-owning, fully transparent} API based on the \cplusplus views concept where the user allocates and owns the data, and the library accesses the data via views.
-\end{itemize}
+%\begin{itemize}
+%\item 
+With \textbf{fully owning} APIs, the library allocates and owns the data; while
+%\item 
+\textbf{non-owning} APIs assume the user allocates and owns the data.
+%\end{itemize}
+A separate axis separates APIs that expose \textbf{fully transparent} data structures frome those with \textbf{opaque} data structures.
 
-There are multiple reasons for having these two types of API. 1) transparent, non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), but on the other hand, owning matrix objects come with an initial usage cost and require copies; 2) non-owning types require multiple phases for their instantiation and allocation which must be explicitly exposed to the user, which can be especially complex and require several steps for more complex operations (e.g., Sparse-Matrix times Sparse-Matrix product -- SpGEMM); 3) with transparent, non-owning objects, the internal data can always be inspected and accessed at little cost, whereas accessors are required for opaque objects and can come with an extra cost.
+The GraphBLAS C Specification exposes a fully owning, opaque API which some implementations extended to handle a mixture of fully owned and non-owned data.
+In contrast,
+BLAS and LAPACK expose non-owning APIs with transparent data types.
+For Sparse BLAS,
+multiple reasons for either type of API exist:
+1) non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), while owning matrix objects come with an initial usage cost and may require copies;
+2) non-owning matrix objects may require multiple phases for their instantiation and allocation that must be explicitly exposed to the user and interleaved with library calls, while owning matrix objects can prevent the user-code complexity this entails;
+3) opaque objects require accessors that can come with an extra cost while transparent objects enable users to inspect and access data at little cost.
 
-Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed and complementary, and providing these two types of API will satisfy most needs. Generally, designing a non-owning API for functionality is significantly harder. For this reason, in this first version of an interface design, 
-we focus on the second option, the non-owning API for functionality. However, as we will detail next, we extend this approach to allow for a moderate level of optimization. 
-In this non-owning API, the user owns the data, and a light-weight construct is used to expose the data structures to the library operations, very similar to C++ views~\cite{cpplinalg:p1673r13}, as we will discuss next.
+Because each of these aspects can be important in different situations and to different users, we believe that mixtures of these choices are both needed as well as complementary, satisfying most needs. Generally, designing a non-owning, transparent API for functionality is significantly harder. For this reason, this first version of an interface design focuses on this option first:
+%As we will detail next, we extend this choice to allow for a moderate level of optimization
+%by mixing both (non-)owning and transparent/opaque APIs:
+%AJ, note: I disabled the above as it comes back more clearly later. Adding it here would expose that the current proposed API is a mixture of (non-)owning and opaque/transparent, while it serves the position paper better if it communicates a clear overarching choice first
+the user always owns the data while a light-weight construct exposes the data structures to the library operations, which the \cplusplus views concept standardises~\cite{cpplinalg:p1673r13}-- as we will discuss next.
 
 
 \subsection{Matrix Wrappers, Matrix Objects and Property tags}
