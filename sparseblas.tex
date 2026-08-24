@@ -85,6 +85,7 @@
 \usepackage{soul}
 \usepackage{amsmath}
 \usepackage{todonotes}
+\usepackage{cleveref}
 
 
 % I THINK THAT THESE PACKAGES ARE NOT NEEDED ANYMORE
@@ -96,7 +97,6 @@
 % \usepackage{comment}
 % \usepackage{placeins} % REMOVE? Forcing float placement, maybe not good for ACM template
 % \usepackage[colorlinks,linkcolor=MediumSlateBlue,citecolor=MediumSlateBlue,urlcolor=MediumSlateBlue]{hyperref} % REMOVE (acmart defines it internally)
-% \usepackage{cleveref}
 % \usepackage{marginnote}
 % \usepackage[T1]{fontenc} % REMOVE (font set from acm)
 % \usepackage{multicol}
@@ -734,7 +734,7 @@ Furthermore, we acknowledge in this proposal that for repeated application of a 
 
 \subsection{Review of existing API designs for the SpMV operation}
 \label{sec:spmvReview}
-While none of the SparseBLAS standards discussed in~\ref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
+While none of the SparseBLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
 Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
 Thus, we consider it beneficial to the reader to list existing C and
 \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
@@ -998,7 +998,7 @@ In the following sections, we address these intertwined aspects individually.
 To reduce complexity, we have omitted advanced functionalities that operate on sparse objects such as sparse factorizations, 
 iterative solvers, eigensolvers, and preconditioners. 
 %Even so, the SparseBLAS serves as an important foundation for building high-level applications, facilitating integration between advanced algorithms and low-level building blocks.
-The functionality we consider in scope of this effort is listed in~\ref{sec:functionality}. Instead of discussing the characteristics of the distinct SparseBLAS routines individually, we identify in~\ref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\ref{sec:sparse-formats}. In~\ref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
+The functionality we consider in scope of this effort is listed in~\Cref{sec:functionality}. Instead of discussing the characteristics of the distinct SparseBLAS routines individually, we identify in~\Cref{sec:archetype} a set of archetypes that represent functionality groups. Before that, the concept and standardization of sparse storage formats is addressed in~\Cref{sec:sparse-formats}. In~\Cref{sec:ownership}, we discuss the opaqueness and ownership of the sparse objects, and how a combination of data wrappers and objects can be used to find a balance between accessibility and performance optimization aspects.
 
 
 
@@ -1016,14 +1016,14 @@ By adopting specialized data structures that omit the majority of (or all) zeros
 Over the decades, a set of commonly used sparse matrix formats has emerged, providing a versatile set of data structures that allow for productivity and performance. The formats we identified as most common are \textit{Compressed Sparse Row} (CSR)\footnote{Also known as Compressed Row Storage (CRS)}, \textit{Compressed Sparse Column} (CSC), and \textit{Coordinate} (COO).
 These formats are well-supported in existing libraries and widely used
 for storage and exchange. We will consider these as input formats for
-the standard, and each of these formats will be supported through a lightweight, non-owning view-like class defined by the SparseBLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given in \ref{tab:csr_param}--\ref{tab:dense_param}. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
+the standard, and each of these formats will be supported through a lightweight, non-owning view-like class defined by the SparseBLAS standard. We will also support dense vectors and matrices, including row and column major versions, using \cppstd{23}'s \texttt{mdspan} as a standard view interface for dense vector and matrix formats. The proposed set of user inputs necessary for defining a matrix stored in these formats as well as constructing a new matrix type are given in \Cref{tab:csr_param}--\Cref{tab:dense_param}. It is noteworthy that the API can be extended to accommodate non-standard formats by introducing additional views, removing the need to otherwise modify program logic.
 
 
 
 Some applications require the structure of sparse matrices only (i.e.,~the pattern of non-zero elements) and not the values themselves. Other applications may use the same value in all nonzero locations; we may call these iso-valued matrices. We do not provide a specific type for structure-only matrices but instead define iso-valued matrices.  We anticipate iso-valued matrix views being created via CSR, CSC, or COO matrix views whose value arrays are replaced by a symbolic ``iso array'' whose values are all the same.
 
 % A note on types used in the tables...
-Table \ref{tab:csr_param} outlines the input parameters required to construct a CSR matrix. These input parameters are defined by three important types: \texttt{scalar\_type}, which is the type of the scalar elements stored in the sparse matrix, \texttt{index\_type}, which is the type used to store explicit indices, and \texttt{offset\_type}, which is the type used to store offsets into other arrays.  The \texttt{index\_type} limits the maximum dimensions of a matrix that can be stored, while \texttt{offset\_type} limits the maximum number of nonzeros that can be stored.  This is useful, for example when large matrices may require \texttt{int64\_t} for CSR \texttt{rowptr} elements in order to avoid integer overflow during calculations involving \texttt{rowptr}.
+\Cref{tab:csr_param} outlines the input parameters required to construct a CSR matrix. These input parameters are defined by three important types: \texttt{scalar\_type}, which is the type of the scalar elements stored in the sparse matrix, \texttt{index\_type}, which is the type used to store explicit indices, and \texttt{offset\_type}, which is the type used to store offsets into other arrays.  The \texttt{index\_type} limits the maximum dimensions of a matrix that can be stored, while \texttt{offset\_type} limits the maximum number of nonzeros that can be stored.  This is useful, for example when large matrices may require \texttt{int64\_t} for CSR \texttt{rowptr} elements in order to avoid integer overflow during calculations involving \texttt{rowptr}.
 However, using \texttt{int64\_t} for the large \texttt{colindx} would be unnecessary unless the matrix dimensions are larger than $2^{32}$ and could result in lower performance than using a smaller integer type.
 %\todo[inline]{Does everyone agree with that? I can see the usefulness of int64\_t for column indices if the restriction is that column indices must be greater or equal to the base and lower than $ncols + base$. Which also makes me say that index\_base should be of index\_type, not base\_type. (Yvan M.)}
 %HA: I agree
@@ -1076,7 +1076,7 @@ The parameter \texttt{nnz} might easily be deduced from the input arrays,
 but it can be convenient to store it explicitly in specific scenarios. Therefore, the parameter \texttt{nnz} is part of the sparse data structures.
 
 %but we agree that it is useful for developers to have this information provided explicitly. These values should be easily obtained by users and harmonize the input lists for CSR/CSC with those required for COO (where \texttt{nnz} and \texttt{index\_base} must be explicitly provided). 
-Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:coo_param}, respectively.
+Parameters for CSC and COO are given in \Cref{tab:csc_param} and \Cref{tab:coo_param}, respectively.
 
 
 %\todo[inline]{I disagree for \texttt{index\_base} being easily deduced; I think this information must be 
@@ -1276,7 +1276,7 @@ For sparse formats that are row oriented, like CSR, the SpMV routine is often tr
         
 
 
-In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} archetype (SpGEMM, computing the product of two sparse matrices) represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as a multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\ref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGEMM include
+In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication} archetype (SpGEMM, computing the product of two sparse matrices) represents a class of much more complex routines that share the property of generating a sparse matrix as output with unknown sparsity pattern. In consequence, the sparse data structure for the output can not be allocated prior to the invocation of the functionality. The functionality can only be implemented as a multi-stage routine. The process begins with the first stage computing the size of the output, the allocation of the output data structure, and the final stage filling the output data structure. In~\Cref{sec:ownership} we will discuss the ownership of the input and output data structures, but already here we mention that the sparse input matrices could be enhanced with optimization-enabling information, the sparse output matrix is expected to be a plain sparse matrix. For the SpGEMM routine, different parallelization strategies can be realized, ranging from row-parallel and column-parallel to sub-matrix parallel and element-parallel, but all coming with their strategy-specific downsides. Functionality falling into the group represented by the SpGEMM include
 \begin{itemize}
 \item SpGEMM (  sparse matrix * sparse matrix -> sparse matrix)
 \item SpGEAM or SpADD ( sparse matrix + sparse matrix -> sparse matrix)
@@ -1285,8 +1285,8 @@ In contrast to the SpMV kernel, the \textbf{Sparse Matrix-Matrix Multiplication}
 \item Transposition:  sparse matrix -> sparse matrix
 \end{itemize}
 
-The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern. As the operation is inherently sequential: each element of the output vector may depend on previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in Section~\ref{sec:views}).
-In~\ref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all SparseBLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
+The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern. As the operation is inherently sequential: each element of the output vector may depend on previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in~\Cref{sec:views}).
+In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all SparseBLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
 
 
 
@@ -1334,7 +1334,7 @@ With the intention of allowing for aggressive optimization while to a large degr
 
 Some users want to keep control of all available memory, in particular, control where data structures are allocated by the library. For this reason, we propose a design where the user can pass an \texttt{allocator} to the library that is then used by the library to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
 
-In Listing~\ref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
+In~\Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
 
 
 \begin{listing}[h]
@@ -1378,7 +1378,7 @@ While there exist strong arguments for unifying the interface for the different 
 
 Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix object. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. 
 If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
-This concept of an optional inspect phase is in line with the current design of vendor interfaces, see Section \ref{sec:spmvReview}.
+This concept of an optional inspect phase is in line with the current design of vendor interfaces, see~\Cref{sec:spmvReview}.
 
 
 
@@ -1389,7 +1389,7 @@ Note that all operations take \texttt{policy} and \texttt{state} objects as inpu
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with a known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose, and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general, and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We present here the interface for the two archetypes producing known output size: the sparse matrix vector multiplication (\ref{listing:spmv}) and the sparse triangular solve (\ref{listing:sptrsv}). We list the interfaces to the other SparseBLAS functionality producing output of known size in the appendix.
+Operations with a known output size can be realized using a single routine. Functionality listed in~\Cref{tab:scope} falling into this category includes: scaling, transpose, and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general, and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We present here the interface for the two archetypes producing known output size: the sparse matrix vector multiplication (\Cref{listing:spmv}) and the sparse triangular solve (\Cref{listing:sptrsv}). We list the interfaces to the other SparseBLAS functionality producing output of known size in the appendix.
 
 
 \begin{listing}[h]
@@ -1479,7 +1479,7 @@ C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D]
 \end{equation}
 
 with the addition of the sparse matrix $\alpha \cdot D$ being optional, %can be realized using the following sequence of steps:
-can be realized using the three-stage API sequence shown in Listing~\ref{lst:spgemm_threestage}.
+can be realized using the three-stage API sequence shown in~\Cref{lst:spgemm_threestage}.
 %\todo[inline]{C is not an obj, but the CSR view}
 % \begin{minted}{c++}
 % using namespace spblas;
@@ -1543,7 +1543,7 @@ The only step that has to happen critically in the \texttt{multiply\_compute} ro
 A critical question is how the library allocates these internal buffers, via a library-preferred allocator or an allocator passed to the library from the user. This boils down to whether the user has buffer management on the application level, i.e., manages all the device memory in the application. At the same time, requiring the user to always provide an allocator to the library can become cumbersome. In the current design proposal, we allow the user to pass in a memory allocator (for the memory space where the computations are executed, i.e. the ``compute device'') that is then used by the library for the allocation of buffers. If no allocator is passed, the library is free to use its own allocator.\\
 
 Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one kernel. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, %an alternative API for realizing \eqref{eq:SpGEMM} is:
-the simplified two-stage SpGEMM interface shown in Listing~\ref{lst:spgemm_twostage} can be used for Equation~\eqref{eq:SpGEMM}.
+the simplified two-stage SpGEMM interface shown in~\Cref{lst:spgemm_twostage} can be used for Equation~\eqref{eq:SpGEMM}.
 
 % \begin{minted}{c++}
 % using namespace spblas;
@@ -1595,7 +1595,7 @@ multiply_fill(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
   \end{minted}
 \end{listing}
 
-Also this interface gives some freedom on how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \ref{fig:SpGEMM_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
+Also this interface gives some freedom on how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in~\Cref{fig:SpGEMM_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
 
 
 
@@ -1687,7 +1687,7 @@ multiply(A_opt, x, y);
 \end{minted}
 
 
-The API for both single-stage functions and multi-stage functions will also need to allow vendors to be able to apply scaling and transpose operations within a single \textit{compute}  vendor library function call. The SpMV examples in \ref{sec:spmvReview} all implement something like \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*} in a single \textit{compute} call. To allow this, the \texttt{scaled()} function in the standard API will return \texttt{scaled\_view} types, which contain the scalar and matrix/vector view. This type can be unpacked during the \textit{compute} call, passing the scalar into the vendor library function call. A similar strategy can be followed for the \texttt{transposed()} function.
+The API for both single-stage functions and multi-stage functions will also need to allow vendors to be able to apply scaling and transpose operations within a single \textit{compute}  vendor library function call. The SpMV examples in~\Cref{sec:spmvReview} all implement something like \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*} in a single \textit{compute} call. To allow this, the \texttt{scaled()} function in the standard API will return \texttt{scaled\_view} types, which contain the scalar and matrix/vector view. This type can be unpacked during the \textit{compute} call, passing the scalar into the vendor library function call. A similar strategy can be followed for the \texttt{transposed()} function.
 
 For example, here \texttt{scaled()} will return a \texttt{scaled\_view}, and applying \texttt{alpha} to \texttt{b} may happen within a vendor kernel:
 \begin{minted}{c++}
@@ -1712,7 +1712,7 @@ multiply(A, scaled(alpha, x), y);
 
 \subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in~\Cref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
 $\mathcal{O}(1)$ operation, but through the use of internal caching, can
 be fast after the first time it is computed.
 
@@ -1768,7 +1768,7 @@ Libraries are free to implement views however they see fit. For instance, a simp
 \label{sec:functionality}
 
 
-In the preceding sections, we have introduced a number of new types. Table \ref{tab:newtypes} provides a summary.
+In the preceding sections, we have introduced a number of new types. \Cref{tab:newtypes} provides a summary.
 
 \begin{table}[h]
     \centering
@@ -1824,7 +1824,7 @@ In the preceding sections, we have introduced a number of new types. Table \ref{
 %   \label{tab:newtypes}
 % \end{table}
 
-While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\ref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \ref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \ref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
+While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in~\Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in~\Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
 
 % \begin{table}[h]
@@ -2171,7 +2171,7 @@ below are independent of one another.
 %"Permissive" will be the default version, but we request feedback from readers as to which other design points should be recommended or required as options.
 %We note that these design points are ordered in the sense that each one includes the requirements of the previous ones in the list, and is likely to be slower.
 \begin{enumerate}
-    \item Permissive. We only require that error bounds described earlier in subsection~\ref{Error_Bounds} be satisfied in the absence of floating point exceptions, or exceptional inputs like \texttt{Inf} and \texttt{NaN}. For \texttt{SpMV}, $y = \alpha \cdot A \cdot x + \beta \cdot y$, this applies independently to every output component $y(i)$.
+    \item Permissive. We only require that error bounds described earlier in~\Cref{Error_Bounds} be satisfied in the absence of floating point exceptions, or exceptional inputs like \texttt{Inf} and \texttt{NaN}. For \texttt{SpMV}, $y = \alpha \cdot A \cdot x + \beta \cdot y$, this applies independently to every output component $y(i)$.
     \item Consistent exception propagation from input to output. For simplicity, again consider SpMV. If $A(i,j)$ is a \texttt{NaN}  or Inf, then $y(i)$ should be a \texttt{NaN} or \texttt{Inf}
     (unless $\alpha = 0$, see below). We do not specify which to return, i.e. either \texttt{NaN}  or \texttt{Inf} is acceptable, since depending on how many Infs occur (perhaps from overflow), an intermediate \texttt{Inf} could result in an \texttt{Inf} or \texttt{NaN}  output. The interesting case, which is different from the dense BLAS, occurs when $x(j)$ is an \texttt{Inf} or \texttt{NaN} , and $A(i,j)$ is an implicit zero, i.e. not stored in the sparse matrix data structure provided as input. The user expectation is that $A(i,j) \cdot x(j)$ should not be performed, so we require that the \texttt{Inf} or \texttt{NaN}  in $x(j)$ not propagate to $y(i)$. This requirement might not be satisfied by a permissive implementation that changes $A(i,j)$ to an explicit zero, e.g. in order to perform a SIMD optimization, unless we also check that $x(j)$ is neither an \texttt{Inf} nor a \texttt{NaN} . It would also not be permitted to convert an explicitly stored $A(i,j)=0$ to an implicit zero, again unless we checked $x(j)$. We note that for \texttt{SpMV} to be consistent with the dense BLAS GEMV, if $\alpha = 0$ then $\alpha \cdot A \cdot x$ is assumed to be zero, no matter what data $A$ and $x$ contain (similarly if $\beta=0$).
     See \cite{Proposed_BLAS_LAPACK_exception_handling} for a discussion of the
@@ -2180,7 +2180,7 @@ below are independent of one another.
     %\todo[inline]{[Jim D.] I added a new version of this discussion of consistency below.}
 %    \item Run-to-run bitwise-reproducibility (with a variety of possible meanings). While this would surely be of interest to many users, eg to aid debugging,
 %    we do not recommend it be included in a preliminary SparseBLAS standard.
-    \item Run-to-run bitwise-reproducibility properties in SparseBLAS routines are discussed in Section~\ref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
+    \item Run-to-run bitwise-reproducibility properties in SparseBLAS routines are discussed in~\Cref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
     \todo[inline]{ [Spencer] should reproducibility still be lumped in with permissive/consistency ?  it seems orthogonal now, so does not quite fit here. Maybe it should just be it's own subsection ?}
 \end{enumerate}
 We anticipate that the "permissive" policy will be the most common use case and developers might limit their scope to support this mode. The other modes come with sometimes significant performance overhead, but are important for various critical applications.
@@ -2366,9 +2366,8 @@ and if these tests are not satisfied by an individual test, then the test is dee
 a failure. We note that these tests
 are quite weak, for example only testing
 quite small matrices. Combined with the
-many new algorithms mentioned in
-sections~\ref{sec:ChoicesNumericalFormats},
-and \ref{Error_Bounds},
+many new algorithms mentioned in~\Cref{sec:ChoicesNumericalFormats},
+and~\Cref{Error_Bounds},
 there is an ongoing effort to ``grade the
 BLAS'', i.e. automatically decide which error
 bound a particular implementation might satisfy.
@@ -2401,7 +2400,7 @@ Furthermore, to reduce complexity, in this proposal, we exclusively discussed th
 
 We here focused on the IEEE FP64 and IEEE FP32 precision formats. Support for low precision formats such as IEEE FP16 or BFloat16 may be added by the community as the demand arises, but the overhead of the indexing in sparse data structures will likely render only moderate performance improvements over high precision functionality.
 
-As hinted at in Section~\ref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing SparseBLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the SparseBLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how it will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
+As hinted at in~\Cref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing SparseBLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the SparseBLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how it will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
 
 
 Functionality-wise, we plan to expand the sparse triangular solves to also accept dense matrices and sparse vectors, and extend the scope to more complex algorithms like solvers and graph algorithms.
