@@ -740,7 +740,6 @@ Thus, we consider it beneficial to the reader to list existing C and
 \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
 Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
 
-% \newpage
 % Initial
 \noindent\textbf{\texttt{SpMV} API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y\end{equation*}
 \begin{enumerate}[label=(\arabic*)]
@@ -824,8 +823,11 @@ KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
 // matrix::Dense *alpha, *beta; // scalars of dimension 1x1
 A->apply(alpha, x, beta, y);
 \end{minted}
+\end{enumerate}
 
-% Summary table
+% *** NEW  ***
+% Summary table (AI Generated!)
+% -> Skip on the detailed API calls in favour of direct information lookup for reader (API differences)
 \begin{table*}[t]
   \centering
   \caption{Comparison of SpMV execution APIs across vendor and domain libraries for $y = \alpha \cdot \text{op}(A) \cdot x + \beta \cdot y$.}
@@ -850,7 +852,10 @@ A->apply(alpha, x, beta, y);
   \end{tabularx}
 \end{table*}
 
+% *** NEW  ***
 % Re-factored into single listing of option 1.
+% -> Better acmart treatment of single-listing intead of enumeration of 12
+% -> Compressed version (take less space but removed some details)
 \begin{listing}[htbp]
 \caption{\texttt{SpMV} API comparison ($y = \alpha \cdot \text{op}(A) \cdot x + \beta \cdot y$) across libraries.}
 \label{lst:spmv_comparison}
@@ -901,91 +906,6 @@ A->apply(alpha, x, beta, y);
 \end{listing}
 
 
-
-
-% I changed the lstlisting to minted so that we can have only the mitned package and not the listing one on top.
-% \begin{lstlisting}
-% // comm
-% /* comm */
-% info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
-% \end{lstlisting}
-% \item oneMKL C API (has an optional hint/optimize stage)
-% \begin{lstlisting}
-% status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
-%             alpha, csrA, descrA, x, beta, y);
-% \end{lstlisting}
-% \item AOCL-sparse C API (has an optional hint/optimize stage)
-% \begin{lstlisting}
-% status = aoclsparse_dmv(aoclsparse_operation_none,
-%             p_alpha, A, descr_a, x, p_beta, y);
-% \end{lstlisting}
-% \item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
-% \begin{lstlisting}
-% // y = alpha*y
-% GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-% //y += beta*A*x
-% GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
-% \end{lstlisting}
-% \item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
-% \begin{lstlisting}
-% grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
-%     grb::identities::zero, grb::identities::one > plusTimes;
-% grb::Monoid< grb::operators::mul< double >, grb::identities::one > mul;
-% status = grb::foldr( beta / alpha, y, mul );
-% status = status ? status : grb::mxv< op >( y, A, x, plusTimes );
-% status = status ? status : grb::foldr( alpha, y, mul );
-% \end{lstlisting}
-% \item cuSPARSE CUDA C, generic API (has multiple required stages)
-% \begin{lstlisting}
-% status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-%             p_alpha, matA, vecX, p_beta, vecY,
-%             CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT,
-%             externalBuffer);
-% \end{lstlisting}
-% \item rocSPARSE ROCm C, generic API (has multiple required stages)
-% \begin{lstlisting}
-% status = rocsparse_spmv(handle, rocsparse_operation_none,
-%             p_alpha, matA, vecX, p_beta, vecY,
-%             rocsparse_datatype_f64_r,
-%             rocsparse_spmv_alg_csr_adaptive,
-%             rocsparse_spmv_stage_compute,
-%             p_buffer_size, temp_buffer);
-% \end{lstlisting}
-% \item hipSPARSE ROCm/CUDA C API
-% \begin{lstlisting}
-% status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE,
-%             m, n, nnz, p_alpha, descrA,
-%             valA, rowptrA, colindA, x, p_beta, y);
-% \end{lstlisting}
-% \item oneMKL SYCL \cplusplus API with an out-of-order queue (has an optional optimize stage)
-% \begin{lstlisting}
-% ev_gemv = oneapi::mkl::sparse::gemv(
-%             queue, oneapi::mkl::transpose::nontrans,
-%             alpha, csrA, x, beta, y, {ev_opt});
-% \end{lstlisting}
-% \item oneMKL SYCL \cplusplus API with an in-order queue (has an optional optimize stage)
-% \begin{lstlisting}
-% oneapi::mkl::sparse::gemv(
-%             queue, oneapi::mkl::transpose::nontrans,
-%             alpha, csrA, x, beta, y);
-% \end{lstlisting}
-% \item Kokkos-kernel \cplusplus API (can set algorithm in \textit{controls} argument)
-% \begin{lstlisting}
-% KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
-%             alpha, A, x, beta, y);
-% \end{lstlisting}
-% \item Ginkgo \cplusplus API
-% \begin{lstlisting}
-% // cuda/rocm stream or sycl::queue is attached to A previously
-% // (through an ''Executor'' object)
-% // matrix::Csr *A;              // sparse matrix
-% // matrix::Dense *y, *x;        // vectors tall and skinny matrices
-% // matrix::Dense *alpha, *beta; // scalars of dimension 1x1
-% A->apply(alpha, x, beta, y);
-% \end{lstlisting}
-
-\end{enumerate}
-
 Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their SparseBLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
 
 
@@ -1029,27 +949,6 @@ However, using \texttt{int64\_t} for the large \texttt{colindx} would be unneces
 %HA: I agree
 
 % CSR
-% \begin{table}[htbp]
-% \scriptsize
-% \caption{CSR input parameters}
-% \label{tab:csr_param}
-% \begin{center}
-%      \begin{tabular}{l l l}
-%          \toprule
-%          \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-%          \midrule
-%          \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-%          \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-%          \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-%          \texttt{offset\_type} array & \texttt{rowptr} & Row pointer array (length: \texttt{nrows+1}) \\
-%          \texttt{index\_type} array & \texttt{colindx} & Column indices array (length: \texttt{nnz}) \\
-%          \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-%          \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
-%          \bottomrule
-%      \end{tabular}
-% \end{center}
-% \end{table}
-
 \begin{table}[htbp]
   \centering
   \caption{CSR input parameters.}
@@ -1088,27 +987,6 @@ Parameters for CSC and COO are given in \Cref{tab:csc_param} and \Cref{tab:coo_p
 % Give an example?
 
 % CSC
-% \begin{table}[htbp]
-% \scriptsize
-% \caption{CSC input parameters}
-% \label{tab:csc_param}
-% \begin{center}
-%      \begin{tabular}{l l l}
-%          \toprule
-%          \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-%          \midrule
-%          \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-%          \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-%          \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-%          \texttt{offset\_type} array & \texttt{colptr} & Column pointer array (length: \texttt{ncols+1}) \\
-%          \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
-%          \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-%          \texttt{base\_type} & \texttt{index\_base} & Base indexing \\
-%          \bottomrule
-%      \end{tabular}
-% \end{center}
-% \end{table}
-
 \begin{table}[htbp]
   \centering
   \caption{CSC input parameters.}
@@ -1130,27 +1008,6 @@ Parameters for CSC and COO are given in \Cref{tab:csc_param} and \Cref{tab:coo_p
 
 
 % COO
-% \begin{table}[htbp]
-% \scriptsize
-% \caption{COO input parameters}
-% \label{tab:coo_param}
-% \begin{center}
-%      \begin{tabular}{l l l}
-%          \toprule
-%          \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-%          \midrule
-%          \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-%          \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-%          \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-%          \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
-%          \texttt{index\_type} array & \texttt{colindx} & Column indices array (length: \texttt{nnz}) \\
-%          \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-%          \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
-%          \bottomrule
-%      \end{tabular}
-% \end{center}
-% \end{table}
-
 \begin{table}[htbp]
   \centering
   \caption{COO input parameters.}
@@ -1218,25 +1075,6 @@ We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support 
 \end{table}
 \end{comment}
 
-% \begin{table}[htbp]
-% \scriptsize
-%      \begin{tabular}{l l L{7cm}}
-%          \toprule
-%          \textbf{Type}    & \textbf{Name} & \textbf{Description} \\
-%          \midrule
-%          \texttt{}
-%          - & \texttt{T} & Type of values stored in \texttt{mdspan}, equivalent to \texttt{scalar\_type}. \\
-%          - & \texttt{Extents} & Type specifying the number of dimensions, their types, and whether they are known at compile time or runtime.\\
-%          - & LayoutPolicy & A type defining how matrix elements are laid out. (e.g. \texttt{std::layout\_left}, \texttt{std::layout\_right})\\
-%          - & AccessorPolicy & A type defining how matrix elements should be accessed.\\
-%          \\
-%          \texttt{data\_handle\_type} & p & Handle to dense matrix values. \\
-%          \texttt{std::integral} type & \texttt{exts...} & The matrix's extents, or dimensions.\\
-%          \bottomrule
-%      \end{tabular}
-%      \caption{Key template parameters and constructor arguments for building an \texttt{std::mdspan}.  Template parameters, which provide types that customize the \texttt{mdspan}, are shown with ``type'' field empty, while runtime types have their type listed.}
-%     \label{tab:dense_param}
-% \end{table}
 \begin{table}[htbp]
   \centering
   \caption{Key template parameters and constructor arguments for building an \texttt{std::mdspan}. Template parameters, which provide types that customize the \texttt{mdspan}, are shown with ``type'' field empty, while runtime types have their type listed.}
@@ -1481,30 +1319,6 @@ C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D]
 with the addition of the sparse matrix $\alpha \cdot D$ being optional, %can be realized using the following sequence of steps:
 can be realized using the three-stage API sequence shown in~\Cref{lst:spgemm_threestage}.
 %\todo[inline]{C is not an obj, but the CSR view}
-% \begin{minted}{c++}
-% using namespace spblas;
-% // csr_wrapper<float> A,B,D filled elsewhere
-% // csr_wrapper<float> C(c_nrows, c_ncols);
-% // auto A_obj = matrix_opt(A, allocator);
-% // auto B_obj = matrix_opt(B, allocator);
-% // auto D_obj = matrix_opt(D, allocator);
-
-% operation_state state(allocator);
-% multiply_inspect(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C); // optional
-% multiply_compute_symbolic(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C);
-% index_t nnz = state.get_result_nnz();
-% //T the user allocates the arrays for C
-% multiply_fill_symbolic(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C);
-% multiply_numeric(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C);
-% // csr_wrapper C is now ready to be used
-% \end{minted}
-% % \fb{\texttt{A, B, C, D} are repeated in all functions}
-% % \fb{\texttt{allocator} is not mentioned in the text}
-
 \begin{listing}[htbp]
 \caption{Three-stage API sequence for explicit symbolic/numeric separation in \texttt{SpGEMM}.}
 \label{lst:spgemm_threestage}
@@ -1544,28 +1358,6 @@ A critical question is how the library allocates these internal buffers, via a l
 
 Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one kernel. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, %an alternative API for realizing \eqref{eq:SpGEMM} is:
 the simplified two-stage SpGEMM interface shown in~\Cref{lst:spgemm_twostage} can be used for Equation~\eqref{eq:SpGEMM}.
-
-% \begin{minted}{c++}
-% using namespace spblas;
-% // csr_wrapper<float> A,B,D filled elsewhwere
-% // csr_wrapper<float> C(c_nrows, c_ncols);
-% // auto A_obj = matrix_opt(A, allocator);
-% // auto B_obj = matrix_opt(B, allocator);
-% // auto D_obj = matrix_opt(D, allocator);
-
-% operation_state state(allocator);
-% multiply_inspect(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C); // optional
-% multiply_compute(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C);
-% index_t nnz = state.get_result_nnz();
-% //T the user allocates the arrays for C
-% multiply_fill(policy, state, 
-%     alpha, A_obj, B_obj, beta, D_obj, C);
-% // csr_wrapper C is now ready to be used
-% \end{minted}
-% % \fb{\texttt{A, B, C, D} are repeated in all functions}
-% % \fb{\texttt{allocator} is not mentioned in the text}
 
 \begin{listing}[htbp]
   \caption{Alternative two-stage API for \texttt{SpGEMM} combining symbolic and numeric resolution.}
@@ -1716,32 +1508,6 @@ In some situations, a sparse matrix object is not used in its original form, but
 $\mathcal{O}(1)$ operation, but through the use of internal caching, can
 be fast after the first time it is computed.
 
-% \begin{table}[h]
-%     \centering
-%     \footnotesize
-%     \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} 
-%     \label{tab:views}
-%     \begin{tabular}{|l|l|}
-%     %\toprule
-%     \hline
-%     \makecell[c]{\textbf{\texttt{view}}} & \makecell[c]{\textbf{Description}}\\
-%     %\midrule
-%     \hline
-%        \verb|spblas::view::transpose(M)| & \makecell[l]{Expose transposed data of argument \texttt{M}.} \\
-%        \hline
-%        \verb|spblas::view::conjugate(M)| & \makecell[l]{Expose conjugated data of argument \texttt{M}.} \\
-%        \hline
-%        \verb|spblas::view::triangle(M, uplo, diag)| & \makecell[l]{Expose \texttt{uplo} triangular data of argument \texttt{M}.} \\
-%        \hline
-%        \verb|spblas::view::diagonal(M, diag)| & \makecell[l]{Expose diagonal data (not strictly lower \\ or upper triangle) of argument \texttt{M}.} \\
-%        \hline
-%        \verb|spblas::view::symmetric(M, uplo, diag)| & \makecell[l]{Expose symmetric matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
-%        \hline
-%        \verb|spblas::view::hermitian(M, uplo, diag)| & \makecell[l]{Expose Hermitian matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
-%        \hline
-%     %\bottomrule
-%     \end{tabular}
-% \end{table}
 \begin{table}[htbp]
   \centering
   \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} 
@@ -1770,59 +1536,36 @@ Libraries are free to implement views however they see fit. For instance, a simp
 
 In the preceding sections, we have introduced a number of new types. \Cref{tab:newtypes} provides a summary.
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \caption{Summary of types introduced by the standard.} 
-    \label{tab:newtypes}
-    \begin{tabular}{ l p{4.5cm} p{4.5cm} }%{Functionality|Matlab description}
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of types introduced by the standard.} 
+  \label{tab:newtypes}
+  \begin{tabularx}{\linewidth}{l X X}
     \toprule
-    \textbf{Type} & \textbf{Definition} & \textbf{Notes}\\ 
+    \textbf{Type} & \textbf{Definition} & \textbf{Notes} \\
     \midrule
-        \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}}. Operations take either views or matrix handles. \\
-    \midrule        
-        \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments.\\
-    \midrule        
-        \texttt{operation\_state} & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
-    \midrule        
-        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
-    \midrule    
-        \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
+    \texttt{csr\_wrapper<T>} 
+      & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. 
+      & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}} Operations take either views or matrix handles. \\
+    \addlinespace
+    \texttt{matrix\_opt} 
+      & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. 
+      & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments. \\
+    \addlinespace
+    \texttt{operation\_state} 
+      & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. 
+      & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\
+    \addlinespace
+    \texttt{allocator} 
+      & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. 
+      & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
+    \addlinespace
+    \texttt{policy} 
+      & C++ \texttt{std::execution} policy extended with vendor specific policies. 
+      & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
     \bottomrule
-    \end{tabular}
+  \end{tabularx}
 \end{table}
-
-% full width version
-% \begin{table}[htbp]
-%   \centering
-%   \begin{tabularx}{\linewidth}{l X X}
-%     \toprule
-%     \textbf{Type} & \textbf{Definition} & \textbf{Notes} \\
-%     \midrule
-%     \texttt{csr\_wrapper<T>} 
-%       & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. 
-%       & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}} Operations take either views or matrix handles. \\
-%     \addlinespace
-%     \texttt{matrix\_opt} 
-%       & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. 
-%       & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments. \\
-%     \addlinespace
-%     \texttt{operation\_state} 
-%       & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. 
-%       & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\
-%     \addlinespace
-%     \texttt{allocator} 
-%       & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. 
-%       & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
-%     \addlinespace
-%     \texttt{policy} 
-%       & C++ \texttt{std::execution} policy extended with vendor specific policies. 
-%       & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
-%     \bottomrule
-%   \end{tabularx}
-%   \caption{Summary of types introduced by the standard.} 
-%   \label{tab:newtypes}
-% \end{table}
 
 While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in~\Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in~\Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
