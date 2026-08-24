@@ -4,7 +4,8 @@
 
 %\linesep
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Sparse matrix dense matrix product, $Y = \alpha \cdot A \cdot X  [+ \beta \cdot Z]$, with $X$, $Y$, and $Z$ being dense matrices.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 float alpha = ..., beta = ...;
@@ -28,7 +29,6 @@ multiply_inspect(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
 multiply(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
 
 \end{minted}
-\caption{Sparse matrix dense matrix product, $Y = \alpha \cdot A \cdot X  [+ \beta \cdot Z]$, with $X$, $Y$, and $Z$ being dense matrices.}
 \end{listing}
 
 
@@ -36,7 +36,8 @@ multiply(policy, state, alpha, A_opt, X, [ beta, Z ], Y);
 %\linesep
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Scaling, $A := \alpha A$}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
@@ -45,7 +46,6 @@ csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 operation_state state(allocator);
 scale(policy, state, 2.3, A);
 \end{minted}
-\caption{Scaling, $A := \alpha A$}
 \end{listing}
 %\todo[inline]{The table in Section 3 is assigning to a different matrix, but my understanding is we'd want this in-place, like std::linalg?}
 
@@ -53,7 +53,8 @@ scale(policy, state, 2.3, A);
 %\linesep
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Inf Matrix Norm, $\alpha = \|A\|_\text{inf}$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
@@ -65,14 +66,14 @@ auto A_opt = matrix_opt(A, allocator);
 operation_state state(allocator);
 auto inf_nrm = matrix_inf_norm(policy, state, A);
 \end{minted}
-\caption{Inf Matrix Norm, $\alpha = \|A\|_\text{inf}$.}
 \end{listing}
 
 
 %\linesep
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Frobenius Matrix Norm, $\alpha = \|A\|_F$}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
@@ -83,13 +84,13 @@ auto frob_nrm = matrix_frob_norm(policy, state, A);
 // or - without passing a policy, resulting in a default:
 auto frob_nrm = matrix_frob_norm(state, A);
 \end{minted}
-\caption{Frobenius Matrix Norm, $\alpha = \|A\|_F$}
 \end{listing}
 
 
 %\linesep
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Sampled dense dense matrix multiplication (SDDMM), $C\langle \text{mask} \rangle = X\cdot Y$, where the $C$ sparsity pattern encodes the mask}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 auto X = std::mdspan(raw_x.data(), m, k);
 auto Y = std::mdspan(raw_b.data(), k, n);
@@ -103,7 +104,6 @@ sampled_multiply_inspect(policy, state, X, Y, C);
 sampled_multiply(policy, state, X, Y, C); 
 
 \end{minted}
-\caption{Sampled dense dense matrix multiplication (SDDMM), $C\langle \text{mask} \rangle = X\cdot Y$, where the $C$ sparsity pattern encodes the mask}
 \end{listing}
 
 
@@ -116,7 +116,8 @@ sampled_multiply(policy, state, X, Y, C);
 
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Three-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) $C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 // csr_wrapper<float> A,B,D filled elsewhwere
 // csr_wrapper<float> C(c_nrows, c_ncols);
@@ -137,12 +138,11 @@ multiply_numeric(policy, state,
     alpha, A_obj, B_obj, [ beta, D_obj, ] C);
 // csr_wrapper C is now ready to be used
 \end{minted}
-\caption{Three-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) 
-$C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
 \end{listing}
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Two-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) $C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 // csr_wrapper<float> A,B,D filled elsewhwere
 // csr_wrapper<float> C(c_nrows, c_ncols);
@@ -161,14 +161,13 @@ multiply_fill(policy, state,
     alpha, A_obj, B_obj, [ beta, D_obj, ] C);
 // csr_wrapper C is now ready to be used
 \end{minted}
-\caption{Two-stage variant (with optional inspect phase) for the sparse matrix multiplication (SpGEMM) 
-$C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D ]$.}
 \end{listing}
 
 
 %\linesep
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Sparse Matrix Format Conversion, $B = \text{sparse}(A)$. Note that this will not remove explicit zeros except for conversion from dense. The above convert\_* functions might accept the predicate function additionally to remove some entries during conversion, which can give some performance benefit without creating a matrix two times.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 auto A = std::mdspan(raw_x.data(), m, k);
 csr_wrapper<float> B(m, n);
@@ -180,14 +179,14 @@ index_t nnz = state.get_result_nnz();
 // allocate the memory for B and put them in B
 convert_fill(policy, state, A, B); 
 \end{minted}
-\caption{Sparse Matrix Format Conversion, $B = \text{sparse}(A)$. Note that this will not remove explicit zeros except for conversion from dense. The above convert\_* functions might accept the predicate function additionally to remove some entries during conversion, which can give some performance benefit without creating a matrix two times.}
 \end{listing}
 
 
 %\linesep
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Element-wise Multiplication, $C = A~.*B$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
@@ -203,13 +202,13 @@ index_t nnz = state.get_result_nnz();
 multiply_elementwise_fill(policy, state, A, B, C);
 // C structure and values are now able to be used
 \end{minted}
-\caption{Element-wise Multiplication, $C = A~.*B$.}
 \end{listing}
 
 %\linesep
 
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Sparse Matrix -- Sparse Matrix Addition, $C = A + B$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 // auto A = matrix_opt(csr_wrapper<float>(...), allocator);
@@ -225,12 +224,12 @@ index_t nnz = state.get_result_nnz();
 add_fill(policy, state, A, B, C);
 // C structure and values are now able to be used
 \end{minted}
-\caption{Sparse Matrix -- Sparse Matrix Addition, $C = A + B$.}
 \end{listing}
 
 %\linesep
 \begin{listing}[H]
-\begin{minted}{c++}
+\caption{Predicate Selection, $B = A.*(A>0)$.}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A_view(values, rowptr, colind, shape, nnz);
 csr_wrapper<float> B(values, rowptr, colind, shape, nnz);
@@ -253,7 +252,6 @@ index_t nnz = state.get_result_nnz();
 // finally, the output structure can be filled
 filter_fill(policy, state, A, B, pred); 
 \end{minted}
-\caption{Predicate Selection, $B = A.*(A>0)$.}
 \end{listing}
 
 
@@ -264,6 +262,6 @@ filter_fill(policy, state, A, B, pred);
 
 %################################################################
 
-\subsection*{Utility Functionality}
+% \subsection*{Utility Functionality}
 
 

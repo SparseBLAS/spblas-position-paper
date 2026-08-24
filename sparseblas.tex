@@ -126,6 +126,8 @@
 \newcommand{\cppstd}[1]{C\texttt{++}#1\xspace}
 \newcommand{\ignore}[1]{}
 
+% Listing background color
+\definecolor{listing_bck}{HTML}{F2F2F2}
 
 % NOT SURE WHAT THIS WAS FOR?
 % \lstset{%
@@ -859,7 +861,7 @@ A->apply(alpha, x, beta, y);
 \begin{listing}[htbp]
 \caption{\texttt{SpMV} API comparison ($y = \alpha \cdot \text{op}(A) \cdot x + \beta \cdot y$) across libraries.}
 \label{lst:spmv_comparison}
-\begin{minted}[fontsize=\footnotesize,linenos=false]{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 // (1) Arm Performance Libraries C API (Optional hint/optimize stage)
 info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
 
@@ -1178,7 +1180,7 @@ In~\Cref{fig:csrmatrixhandle} we demonstrate how to wrap a user-owned CSR matrix
 \begin{listing}[h]
 \caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
 \label{fig:csrmatrixhandle}
-\begin{minted}{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<int, int, float> A(values, rowptr, colind, shape, nnz, property_tags);
 
@@ -1233,7 +1235,7 @@ Operations with a known output size can be realized using a single routine. Func
 \begin{listing}[h]
 \caption{Sparse matrix vector product $y = \alpha \cdot A \cdot x\ [ + \beta \cdot z]$. The arguments $\beta$ and $z$ are optional.}
 \label{listing:spmv}
-\begin{minted}{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
@@ -1261,7 +1263,7 @@ multiply(policy, state, alpha, A_opt, x, [ beta, z, ] y);
 \begin{listing}[h]
 \caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is $1.0$.}
 \label{listing:sptrsv}
-\begin{minted}{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 
 spblas::property_list props(spblas::property::sorted);
@@ -1295,7 +1297,8 @@ As mentioned above, a fundamental difference to dense BLAS functionality is that
     \item \texttt{inspect phase} -- (optional) prepare any potential optimizations for subsequent phases (e.g.  internal transpose copies as applicable), or may do nothing
     \item \texttt{compute symbolic} -- computing the size of the sparse output structure, which typically requires significant work\\
     \textit{Post-Condition: The size of the sparse output structure is known.}
-    \item \texttt{allocation phase} -- allocating the memory for the sparse output data structure and placing it in the output matrix object to be filled\\
+    \item \texttt{allocation phase} -- allocating the memory for the sparse output data structure and placing it in the output matrix object to be filled.
+    \\
     \textit{Pre-Condition: The size of the sparse output structure is known.}\\
     \textit{Post-Condition: Sparse output structure is allocated.}
     \item \texttt{fill symbolic} -- filling the sparsity pattern into the output data structure
@@ -1322,7 +1325,7 @@ can be realized using the three-stage API sequence shown in~\Cref{lst:spgemm_thr
 \begin{listing}[htbp]
 \caption{Three-stage API sequence for explicit symbolic/numeric separation in \texttt{SpGEMM}.}
 \label{lst:spgemm_threestage}
-\begin{minted}[fontsize=\small]{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 // csr_wrapper A, B, D initialized elsewhere
 // csr_wrapper C(c_nrows, c_ncols);
@@ -1362,7 +1365,7 @@ the simplified two-stage SpGEMM interface shown in~\Cref{lst:spgemm_twostage} ca
 \begin{listing}[htbp]
   \caption{Alternative two-stage API for \texttt{SpGEMM} combining symbolic and numeric resolution.}
   \label{lst:spgemm_twostage}
-  \begin{minted}[fontsize=\small]{c++}
+  \begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 // csr_wrapper<float> A, B, D initialized elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
@@ -2054,7 +2057,7 @@ We propose to introduce a global CNR property for the library that can be set vi
 \begin{listing}[h]
 \caption{Conditional Numerical Reproducibility properties in SparseBLAS}
 \label{listing:cnr}
-\begin{minted}{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 namespace spblas {
 
     enum class cnrProperty {
