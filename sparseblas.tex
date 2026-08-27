@@ -80,7 +80,13 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{makecell}
-\usepackage[newfloat]{minted}
+% minted v3 delegates to the latexminted Python executable. Use its bundled
+% v2 compatibility layer when available; this also works with TeX installs in
+% which latexminted itself is broken or unavailable. Older TeX releases only
+% provide minted.sty, so retain that as a fallback.
+\IfFileExists{minted2.sty}
+  {\usepackage[newfloat,outputdir=build]{minted2}}
+  {\usepackage[newfloat,outputdir=build]{minted}}
 \usemintedstyle{friendly}
 \usepackage{soul}
 \usepackage{amsmath}
@@ -1402,7 +1408,7 @@ Also this interface gives some freedom on how implementations arrange the differ
 % \newpage
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{graphics/different_SpGEMM.png}
+    \includegraphics[width=0.9\linewidth]{graphics/different_spgemm.png}
     \caption{Different realizations of the CSR-SpGEMM routine. Top: Splitting into three routines: symbolic analysis, (memory allocation by user), symbolic fill, numeric computation. Bottom: Splitting into two routines: symbolic analysis, (memory allocation by user), computations and filling of output structure.}
     \label{fig:SpGEMM_workflows}
 \end{figure}
