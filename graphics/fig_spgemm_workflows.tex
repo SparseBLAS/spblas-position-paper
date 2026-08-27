@@ -61,12 +61,12 @@
             \textbf{Post condition}\\
             \textbullet\quad Output CSR C row + col + val};
 
-        \foreach \x in {6.05,8.50,10.95,13.40} {
-            \path[workflow panel] (\x,-0.25) rectangle +(2.25,-6.52);
+        \foreach \x in {6.05,8.465,10.88,13.295} {
+            \path[workflow panel] (\x,-0.25) rectangle +(2.215,-6.52);
         }
         \node[allocation,text width=14.87cm,minimum height=0.62cm]
             (two-allocate) at (0.5,-3.20) {%
-            \textbf{User allocates}\quad \textbullet\quad
+            \textbf{User allocates:}
             \texttt{C row + col + val}};
 
         \node[workflow text] at (6.22,-0.55) {%
@@ -82,11 +82,11 @@
             \textbullet\quad \texttt{C col}\\
             \textbullet\quad \texttt{C val}};
 
-        \node[workflow text] at (8.67,-0.55) {%
+        \node[workflow text] at (8.635,-0.55) {%
             \textbf{Compute}\\
             \textbullet\quad \texttt{nnz}\\
             \textbullet\quad \texttt{C row}};
-        \node[workflow text] at (8.67,-4.05) {%
+        \node[workflow text] at (8.635,-4.05) {%
             \textbf{Compute}\\
             \textbullet\quad \texttt{C col}\\
             \textbullet\quad \texttt{C val}\\[3pt]
@@ -95,12 +95,12 @@
             \textbullet\quad \texttt{C col}\\
             \textbullet\quad \texttt{C val}};
 
-        \node[workflow text] at (11.12,-0.55) {%
+        \node[workflow text] at (11.05,-0.55) {%
             \textbf{Compute}\\
             \textbullet\quad \texttt{nnz}\\
             \textbullet\quad \texttt{C row}\\
             \textbullet\quad \texttt{C col}};
-        \node[workflow text] at (11.12,-4.05) {%
+        \node[workflow text] at (11.05,-4.05) {%
             \textbf{Compute}\\
             \textbullet\quad \texttt{C val}\\[3pt]
             \textbf{Fill}\\
@@ -108,13 +108,13 @@
             \textbullet\quad \texttt{C col}\\
             \textbullet\quad \texttt{C val}};
 
-        \node[workflow text] at (13.57,-0.55) {%
+        \node[workflow text] at (13.465,-0.55) {%
             \textbf{Compute}\\
             \textbullet\quad \texttt{nnz}\\
             \textbullet\quad \texttt{C row}\\
             \textbullet\quad \texttt{C col}\\
             \textbullet\quad \texttt{C val}};
-        \node[workflow text] at (13.57,-4.05) {%
+        \node[workflow text] at (13.465,-4.05) {%
             \textbf{Fill}\\
             \textbullet\quad \texttt{C row}\\
             \textbullet\quad \texttt{C col}\\
@@ -163,7 +163,7 @@
         }
         \node[allocation,text width=14.87cm,minimum height=0.62cm]
             (three-allocate) at (0.5,-10.87) {%
-            \textbf{User allocates}\quad \textbullet\quad
+            \textbf{User allocates:}
             \texttt{C row + col + val}};
         \draw[stage line] (6.05,-13.93) -- (15.51,-13.93);
 
