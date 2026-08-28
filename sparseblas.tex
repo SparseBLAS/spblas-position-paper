@@ -742,97 +742,9 @@ Thus, we consider it beneficial to the reader to list existing C and
 \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
 Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
 
-% Initial
-\noindent\textbf{\texttt{SpMV} API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y\end{equation*}
-\begin{enumerate}[label=(\arabic*)]
-\item Arm Performance Libraries C API (has an optional hint/optimize stage)
-\begin{minted}{c++}
-// comm
-/* comm */
-info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
-\end{minted}
-\item oneMKL C API (has an optional hint/optimize stage)
-\begin{minted}{c++}
-status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
-            alpha, csrA, descrA, x, beta, y);
-\end{minted}
-\item AOCL-sparse C API (has an optional hint/optimize stage)
-\begin{minted}{c++}
-status = aoclsparse_dmv(aoclsparse_operation_none,
-            p_alpha, A, descr_a, x, p_beta, y);
-\end{minted}
-\item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
-\begin{minted}{c++}
-// y = alpha*y
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-//y += beta*A*x
-GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
-\end{minted}
-\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
-\begin{minted}{c++}
-grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
-    grb::identities::zero, grb::identities::one > plusTimes;
-grb::Monoid< grb::operators::mul< double >, grb::identities::one > mul;
-status = grb::foldr( beta / alpha, y, mul );
-status = status ? status : grb::mxv< op >( y, A, x, plusTimes );
-status = status ? status : grb::foldr( alpha, y, mul );
-\end{minted}
-\item cuSPARSE CUDA C, generic API (has multiple required stages)
-\begin{minted}{c++}
-status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-            p_alpha, matA, vecX, p_beta, vecY,
-            CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT,
-            externalBuffer);
-\end{minted}
-\item rocSPARSE ROCm C, generic API (has multiple required stages)
-\begin{minted}{c++}
-status = rocsparse_spmv(handle, rocsparse_operation_none,
-            p_alpha, matA, vecX, p_beta, vecY,
-            rocsparse_datatype_f64_r,
-            rocsparse_spmv_alg_csr_adaptive,
-            rocsparse_spmv_stage_compute,
-            p_buffer_size, temp_buffer);
-\end{minted}
-\item hipSPARSE ROCm/CUDA C API
-\begin{minted}{c++}
-status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE,
-            m, n, nnz, p_alpha, descrA,
-            valA, rowptrA, colindA, x, p_beta, y);
-\end{minted}
-\item oneMKL SYCL \cplusplus API with an out-of-order queue (has an optional optimize stage)
-\begin{minted}{c++}
-ev_gemv = oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y, {ev_opt});
-\end{minted}
-\item oneMKL SYCL \cplusplus API with an in-order queue (has an optional optimize stage)
-\begin{minted}{c++}
-oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y);
-\end{minted}
-\item Kokkos-kernel \cplusplus API (can set algorithm in \textit{controls} argument)
-\begin{minted}{c++}
-KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
-            alpha, A, x, beta, y);
-\end{minted}
-\item Ginkgo \cplusplus API
-\begin{minted}{c++}
-// cuda/rocm stream or sycl::queue is attached to A previously
-// (through an ''Executor'' object)
-// matrix::Csr *A;              // sparse matrix
-// matrix::Dense *y, *x;        // vectors tall and skinny matrices
-// matrix::Dense *alpha, *beta; // scalars of dimension 1x1
-A->apply(alpha, x, beta, y);
-\end{minted}
-\end{enumerate}
-
-% *** NEW  ***
-% Summary table (AI Generated!)
-% -> Skip on the detailed API calls in favour of direct information lookup for reader (API differences)
-\begin{table*}[t]
+\begin{table*}[b]
   \centering
-  \caption{Comparison of SpMV execution APIs across vendor and domain libraries for $y = \alpha \cdot \text{op}(A) \cdot x + \beta \cdot y$.}
+  \caption{Comparison of execution APIs across vendor and domain libraries for IEEE 754 double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}): $y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y $}
   \label{tab:spmv_api_comparison}
   \small
   \begin{tabularx}{\textwidth}{l l X c}
@@ -842,27 +754,25 @@ A->apply(alpha, x, beta, y);
     \textbf{ArmPL} & C & \texttt{armpl\_spmv\_exec\_d(...)} & Hint / Opt \\
     \textbf{oneMKL (C)} & C & \texttt{mkl\_sparse\_d\_mv(...)} & Hint / Opt \\
     \textbf{AOCL-Sparse} & C & \texttt{aoclsparse\_dmv(...)} & Hint / Opt \\
-    \textbf{GraphBLAS Suite} & C & \texttt{GrB\_mxm(...)} & Direct \\
+    \textbf{GraphBLAS Suite Sparse} & C & \texttt{GrB\_mxm(...)} & Direct \\
     \textbf{ALP/GraphBLAS} & C++ & \texttt{grb::mxv<op>(y, A, x, semiring)} & Non-blocking \\
-    \textbf{cuSPARSE} & CUDA C & \texttt{cusparseSpMV(...)} & Multi-stage \\
-    \textbf{rocSPARSE} & ROCm C & \texttt{rocsparse\_spmv(...)} & Multi-stage \\
-    \textbf{hipSPARSE} & C++ & \texttt{hipsparseDcsrmv(...)} & Legacy direct \\
-    \textbf{oneMKL (SYCL)} & SYCL & \texttt{oneapi::mkl::sparse::gemv(queue, ...)} & Out-of-order / Opt \\
+    \textbf{cuSPARSE} & CUDA C & \texttt{cusparseSpMV(handle, ...)} & Multi-stage \\
+    \textbf{rocSPARSE} & ROCm C & \texttt{rocsparse\_spmv(handle, ...)} & Multi-stage \\
+    \textbf{hipSPARSE} & C++ & \texttt{hipsparseDcsrmv(handle, ...)} & Legacy direct \\
+    \textbf{oneMKL (SYCL)} & SYCL & \texttt{oneapi::mkl::sparse::gemv(queue, ..., \{ev\_opt\})} & Out-of-order + Opt \\
+    \textbf{oneMKL (SYCL)} & SYCL & \texttt{oneapi::mkl::sparse::gemv(queue, ...)} & In-order + Opt \\
     \textbf{Kokkos-Kernels} & C++ & \texttt{KokkosSparse::spmv(controls, ...)} & Direct \\
     \textbf{Ginkgo} & C++ & \texttt{A->apply(alpha, x, beta, y)} & Executor-bound \\
     \bottomrule
   \end{tabularx}
 \end{table*}
 
-% *** NEW  ***
-% Re-factored into single listing of option 1.
-% -> Better acmart treatment of single-listing intead of enumeration of 12
-% -> Compressed version (take less space but removed some details)
 \begin{listing}[htbp]
-\caption{\texttt{SpMV} API comparison ($y = \alpha \cdot \text{op}(A) \cdot x + \beta \cdot y$) across libraries.}
+\caption{Detailed overview of execution APIs across vendor and domain libraries for IEEE 754 double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}): $y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y $}
 \label{lst:spmv_comparison}
-\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck,escapeinside=||]{c++}
 // (1) Arm Performance Libraries C API (Optional hint/optimize stage)
+/* comm */
 info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
 
 // (2) oneMKL C API (Optional hint/optimize stage)
@@ -871,18 +781,24 @@ status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE, alpha, csrA, descrA, x,
 // (3) AOCL-sparse C API (Optional hint/optimize stage)
 status = aoclsparse_dmv(aoclsparse_operation_none, p_alpha, A, descr_a, x, p_beta, y);
 
-// (4) GraphBLAS Suite Sparse C API (y<mask) = accum(y, A*x))
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-GrB_mxm(y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
+// (4) GraphBLAS Suite Sparse C API
+// Implements |$y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$| in some semiring.
+GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL); /* |$y = \alpha \cdot y$| */
+GrB_mxm(y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL); /* |$y \mathrel{+}= \beta \cdot A \cdot x$| */
 
-// (5) ALP/GraphBLAS C++ (Optimised by nonblocking execution)
-status = grb::mxv<op>(y, A, x, plusTimes);
+// (5) ALP/GraphBLAS C++ (Minimum number of containers, optimised by nonblocking execution)
+grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>, 
+               grb::identities::zero, grb::identities::one > plusTimes;
+grb::Monoid< grb::operators::mul<double>, grb::identities::one > mul;
+status = grb::foldr(beta / alpha, y, mul);
+status = status ? status : grb::mxv< op >(y, A, x, plusTimes);
+status = status ? status : grb::foldr(alpha, y, mul);
 
-// (6) cuSPARSE CUDA C (Multi-stage generic API)
+// (6) cuSPARSE CUDA C (Generic API, Multiple required stages)
 status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, p_alpha, matA, vecX, 
                       p_beta, vecY, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
 
-// (7) rocSPARSE ROCm C (Multi-stage generic API)
+// (7) rocSPARSE ROCm C (Generic API, Multiple required stages)
 status = rocsparse_spmv(handle, rocsparse_operation_none, p_alpha, matA, vecX, p_beta, 
                         vecY, rocsparse_datatype_f64_r, rocsparse_spmv_alg_csr_adaptive, 
                         rocsparse_spmv_stage_compute, p_buffer_size, temp_buffer);
@@ -891,18 +807,23 @@ status = rocsparse_spmv(handle, rocsparse_operation_none, p_alpha, matA, vecX, p
 status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, 
                          p_alpha, descrA, valA, rowptrA, colindA, x, p_beta, y);
 
-// (9) oneMKL SYCL C++ API (Out-of-order queue)
+// (9) oneMKL SYCL C++ API (Out-of-order queue, optional hint/optimize stage)
 ev_gemv = oneapi::mkl::sparse::gemv(queue, oneapi::mkl::transpose::nontrans, 
                                     alpha, csrA, x, beta, y, {ev_opt});
 
-// (10) oneMKL SYCL C++ API (In-order queue)
+// (10) oneMKL SYCL C++ API (In-order queue, optional hint/optimize stage)
 ev_gemv = oneapi::mkl::sparse::gemv(queue, oneapi::mkl::transpose::nontrans, 
                                     alpha, csrA, x, beta, y);
 
 // (11) Kokkos-Kernels C++ API
+// Algorithm in set in |$controls$| argument.
 KokkosSparse::spmv(controls, KokkosSparse::NoTranspose, alpha, A, x, beta, y);
 
 // (12) Ginkgo C++ API
+// Given a cuda/rocm stream or sycl::queue attached to A previously through an |$Executor$| object.
+/* matrix::Csr *A */
+/* matrix::Dense *y, *x; // vectors tall and skinny matrices */
+/* matrix::Dense *alpha, *beta; // scalars of dimension 1x1 */
 A->apply(alpha, x, beta, y);
 \end{minted}
 \end{listing}
