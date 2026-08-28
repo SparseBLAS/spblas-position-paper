@@ -737,10 +737,12 @@ Furthermore, we acknowledge in this proposal that for repeated application of a 
 \subsection{Review of existing API designs for the SpMV operation}
 \label{sec:spmvReview}
 While none of the SparseBLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
-Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
-Thus, we consider it beneficial to the reader to list existing C and
-\cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
-Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
+% Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality. Thus, we consider it beneficial to the reader to list existing C and \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector. Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
+Existing APIs differ in their design, but share several common patterns that provide useful blueprints for the design of a new standard API for sparse linear algebra functionality. To illustrate these patterns, we review existing C and \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation, which computes the product of a sparse matrix and a dense vector. These APIs support different execution models: some are synchronous and blocking, whereas others additionally support asynchronous, non-blocking execution.
+\Cref{tab:spmv_api_comparison} summarizes the primary differences across vendor and domain-specific APIs for double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}), while \Cref{lst:spmv_comparison} in the Appendix provides code-level specifications.
+
+
+
 
 \begin{table*}[b]
   \centering
@@ -767,66 +769,6 @@ Some APIs are synchronous and blocking, while others extend to asynchronous non-
   \end{tabularx}
 \end{table*}
 
-\begin{listing}[htbp]
-\caption{Detailed overview of execution APIs across vendor and domain libraries for IEEE 754 double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}): $y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y $}
-\label{lst:spmv_comparison}
-\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck,escapeinside=||]{c++}
-// (1) Arm Performance Libraries C API (Optional hint/optimize stage)
-/* comm */
-info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
-
-// (2) oneMKL C API (Optional hint/optimize stage)
-status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE, alpha, csrA, descrA, x, beta, y);
-
-// (3) AOCL-sparse C API (Optional hint/optimize stage)
-status = aoclsparse_dmv(aoclsparse_operation_none, p_alpha, A, descr_a, x, p_beta, y);
-
-// (4) GraphBLAS Suite Sparse C API
-// Implements |$y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$| in some semiring.
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL); /* |$y = \alpha \cdot y$| */
-GrB_mxm(y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL); /* |$y \mathrel{+}= \beta \cdot A \cdot x$| */
-
-// (5) ALP/GraphBLAS C++ (Minimum number of containers, optimised by nonblocking execution)
-grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>, 
-               grb::identities::zero, grb::identities::one > plusTimes;
-grb::Monoid< grb::operators::mul<double>, grb::identities::one > mul;
-status = grb::foldr(beta / alpha, y, mul);
-status = status ? status : grb::mxv< op >(y, A, x, plusTimes);
-status = status ? status : grb::foldr(alpha, y, mul);
-
-// (6) cuSPARSE CUDA C (Generic API, Multiple required stages)
-status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, p_alpha, matA, vecX, 
-                      p_beta, vecY, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
-
-// (7) rocSPARSE ROCm C (Generic API, Multiple required stages)
-status = rocsparse_spmv(handle, rocsparse_operation_none, p_alpha, matA, vecX, p_beta, 
-                        vecY, rocsparse_datatype_f64_r, rocsparse_spmv_alg_csr_adaptive, 
-                        rocsparse_spmv_stage_compute, p_buffer_size, temp_buffer);
-
-// (8) hipSPARSE ROCm/CUDA C API
-status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, 
-                         p_alpha, descrA, valA, rowptrA, colindA, x, p_beta, y);
-
-// (9) oneMKL SYCL C++ API (Out-of-order queue, optional hint/optimize stage)
-ev_gemv = oneapi::mkl::sparse::gemv(queue, oneapi::mkl::transpose::nontrans, 
-                                    alpha, csrA, x, beta, y, {ev_opt});
-
-// (10) oneMKL SYCL C++ API (In-order queue, optional hint/optimize stage)
-ev_gemv = oneapi::mkl::sparse::gemv(queue, oneapi::mkl::transpose::nontrans, 
-                                    alpha, csrA, x, beta, y);
-
-// (11) Kokkos-Kernels C++ API
-// Algorithm in set in |$controls$| argument.
-KokkosSparse::spmv(controls, KokkosSparse::NoTranspose, alpha, A, x, beta, y);
-
-// (12) Ginkgo C++ API
-// Given a cuda/rocm stream or sycl::queue attached to A previously through an |$Executor$| object.
-/* matrix::Csr *A */
-/* matrix::Dense *y, *x; // vectors tall and skinny matrices */
-/* matrix::Dense *alpha, *beta; // scalars of dimension 1x1 */
-A->apply(alpha, x, beta, y);
-\end{minted}
-\end{listing}
 
 
 Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their SparseBLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
