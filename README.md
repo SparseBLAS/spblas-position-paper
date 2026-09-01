@@ -44,7 +44,7 @@ To build the PDF:
 make
 ```
 
-This will generate `sparseblas.pdf`.
+This will generate `build/sparseblas.pdf`.
 
 ## Repository Structure
 

@@ -80,7 +80,15 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{makecell}
-\usepackage[newfloat]{minted}
+\usepackage{tikz}
+\usetikzlibrary{calc,decorations.pathreplacing}
+% minted v3 delegates to the latexminted Python executable. Use its bundled
+% v2 compatibility layer when available; this also works with TeX installs in
+% which latexminted itself is broken or unavailable. Older TeX releases only
+% provide minted.sty, so retain that as a fallback.
+\IfFileExists{minted2.sty}
+  {\usepackage[newfloat,outputdir=build]{minted2}}
+  {\usepackage[newfloat,outputdir=build]{minted}}
 \usemintedstyle{friendly}
 \usepackage{soul}
 \usepackage{amsmath}
@@ -251,6 +259,7 @@ Interface for Sparse Linear Algebra Operations}
 }
 
 \author{Grace Dinh}
+\authornote{Part of this research was conducted at the Simons Institute for the Theory of Computing, supported in part by ADIA Lab, Fall 2025.}
 \affiliation{%
   \institution{Cornell University}
   \city{Ithaca}
@@ -1263,12 +1272,7 @@ Also this interface gives some freedom on how implementations arrange the differ
 
 
 % \newpage
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{graphics/different_SpGEMM.png}
-    \caption{Different realizations of the CSR-SpGEMM routine. Top: Splitting into three routines: symbolic analysis, (memory allocation by user), symbolic fill, numeric computation. Bottom: Splitting into two routines: symbolic analysis, (memory allocation by user), computations and filling of output structure.}
-    \label{fig:SpGEMM_workflows}
-\end{figure}
+\input{graphics/fig_spgemm_workflows}
 % \newpage
 
 

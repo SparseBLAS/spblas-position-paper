@@ -1,0 +1,220 @@
+\begin{figure}
+    \centering
+    \resizebox{\linewidth}{!}{%
+    \begin{tikzpicture}[
+        x=1cm,
+        y=1cm,
+        api/.style={
+            draw=SteelBlue4,
+            fill=SteelBlue1!22,
+            rounded corners=1.5pt,
+            line width=0.45pt,
+            anchor=north west,
+            align=left,
+            inner sep=4pt,
+            text width=5.0cm,
+            font=\fontsize{6.8}{7.8}\selectfont
+        },
+        allocation/.style={
+            draw=black!35,
+            fill=black!8,
+            rounded corners=1.5pt,
+            line width=0.4pt,
+            anchor=north west,
+            align=left,
+            inner sep=4pt,
+            text width=5.0cm,
+            font=\fontsize{6.8}{7.8}\selectfont
+        },
+        workflow text/.style={
+            anchor=north west,
+            align=left,
+            inner sep=0pt,
+            font=\fontsize{6.8}{7.8}\selectfont
+        },
+        workflow panel/.style={
+            draw=SteelBlue4!65,
+            fill=SteelBlue1!6,
+            rounded corners=1.5pt,
+            line width=0.4pt
+        },
+        stage line/.style={draw=SteelBlue4!55, densely dashed, line width=0.4pt}
+    ]
+        % Two-stage API.
+        \node[anchor=west,font=\bfseries\small] at (0.5,0.15)
+            {Two-Stage SpGEMM};
+        \node[anchor=center,font=\bfseries\small] at (10.9,0.15)
+            {Potential Library-internal workflows:};
+
+        \node[api,minimum height=2.75cm] (two-compute) at (0.5,-0.25) {%
+            \textbf{\texttt{matrix\_multiply\_compute}}\\[3pt]
+            \textbf{Pre-condition}\\
+            \textbullet\quad Input CSR A row + col + val\\
+            \textbullet\quad Input CSR B row + col + val\\[3pt]
+            \textbf{Post condition}\\
+            \textbullet\quad Output C nnz};
+        \node[api,minimum height=2.75cm] (two-fill) at (0.5,-4.02) {%
+            \textbf{\texttt{matrix\_multiply\_fill}}\\[3pt]
+            \textbf{Pre-condition}\\
+            \textbullet\quad Output C nnz\\
+            \textbullet\quad C row + col + val allocated\\[3pt]
+            \textbf{Post condition}\\
+            \textbullet\quad Output CSR C row + col + val};
+
+        \foreach \x in {6.05,8.465,10.88,13.295} {
+            \path[workflow panel] (\x,-0.25) rectangle +(2.215,-6.52);
+        }
+        \node[allocation,text width=14.87cm,minimum height=0.62cm]
+            (two-allocate) at (0.5,-3.20) {%
+            \textbf{User allocates:}
+            \texttt{C row + col + val}};
+
+        \node[workflow text] at (6.22,-0.55) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}};
+        \node[workflow text] at (6.22,-4.05) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}};
+
+        \node[workflow text] at (8.635,-0.55) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}\\
+            \textbullet\quad \texttt{C row}};
+        \node[workflow text] at (8.635,-4.05) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}};
+
+        \node[workflow text] at (11.05,-0.55) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}};
+        \node[workflow text] at (11.05,-4.05) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}};
+
+        \node[workflow text] at (13.465,-0.55) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}};
+        \node[workflow text] at (13.465,-4.05) {%
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\
+            \textbullet\quad \texttt{C val}};
+
+        % Three-stage API.
+        \draw[black!25,line width=0.5pt] (0.5,-7.12) -- (15.65,-7.12);
+        \node[anchor=west,font=\bfseries\small] at (0.5,-7.52)
+            {Three-Stage SpGEMM};
+        \node[anchor=center,font=\bfseries\small] at (10.9,-7.52)
+            {Potential Library-internal workflows:};
+
+        \node[api,minimum height=2.75cm] (three-compute) at (0.5,-7.92) {%
+            \textbf{\texttt{matrix\_multiply\_symb\_compute}}\\[3pt]
+            \textbf{Pre-condition}\\
+            \textbullet\quad Input CSR A row + col + val\\
+            \textbullet\quad Input CSR B row + col + val\\
+            \textcolor{red!75!black}{\textbullet\quad A \& B val arrays not used}\\[3pt]
+            \textbf{Post condition}\\
+            \textbullet\quad Output C nnz};
+        \node[api,minimum height=2.15cm] (three-symb-fill) at (0.5,-11.69) {%
+            \textbf{\texttt{matrix\_multiply\_symb\_fill}}\\
+            \textbf{Pre-condition}\\
+            \textbullet\quad Output C nnz\\
+            \textbullet\quad C row + col allocated\\
+            \textbf{Post condition}\\
+            \textbullet\quad Output CSR C row + col};
+        \node[api,minimum height=2.35cm] (three-numeric) at (0.5,-14.04) {%
+            \textbf{\texttt{matrix\_multiply\_numeric}}\\
+            \textbf{Pre-condition}\\
+            \textbullet\quad Output C row + col\\
+            \textbullet\quad Output C val allocated\\
+            \textcolor{red!75!black}{\textbullet\quad A \& B val arrays}\\
+            \textbf{Post condition}\\
+            \textbullet\quad Output CSR C row + col + val};
+
+        \draw[decorate,decoration={brace,amplitude=4pt,mirror},SteelBlue4,
+              line width=0.5pt]
+            (0.34,-11.69) -- (0.34,-16.39);
+        \node[anchor=center,rotate=90,text=SteelBlue4,
+              font=\fontsize{6.8}{7.8}\selectfont]
+            at (-0.02,-14.04) {Can be combined into one};
+
+        \foreach \x in {6.05,9.27,12.49} {
+            \path[workflow panel] (\x,-7.92) rectangle +(3.02,-8.47);
+        }
+        \node[allocation,text width=14.87cm,minimum height=0.62cm]
+            (three-allocate) at (0.5,-10.87) {%
+            \textbf{User allocates:}
+            \texttt{C row + col + val}};
+        \draw[stage line] (6.05,-13.93) -- (15.51,-13.93);
+
+        \node[workflow text] at (6.25,-8.22) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}};
+        \node[workflow text] at (6.25,-11.72) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}};
+        \node[workflow text] at (6.25,-14.25) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C val}};
+
+        \node[workflow text] at (9.47,-8.22) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}\\
+            \textbullet\quad \texttt{C row}};
+        \node[workflow text] at (9.47,-11.72) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C col}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}};
+        \node[workflow text] at (9.47,-14.25) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C val}};
+
+        \node[workflow text] at (12.69,-8.22) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{nnz}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}};
+        \node[workflow text] at (12.69,-11.72) {%
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C row}\\
+            \textbullet\quad \texttt{C col}};
+        \node[workflow text] at (12.69,-14.25) {%
+            \textbf{Compute}\\
+            \textbullet\quad \texttt{C val}\\[3pt]
+            \textbf{Fill}\\
+            \textbullet\quad \texttt{C val}};
+    \end{tikzpicture}%
+    }
+    \caption{Different realizations of the CSR-SpGEMM routine. Top: Splitting into two routines: symbolic analysis, (memory allocation by user), computations and filling of output structure. Bottom: Splitting into three routines: symbolic analysis, (memory allocation by user), symbolic fill, numeric computation.}
+    \label{fig:SpGEMM_workflows}
+\end{figure}
