@@ -274,8 +274,9 @@ status = aoclsparse_dmv(aoclsparse_operation_none, p_alpha, A, descr_a, x, p_bet
 
 // (4) GraphBLAS Suite Sparse C API
 // Implements |$y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$| in some semiring.
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL); /* |$y = \alpha \cdot y$| */
-GrB_mxm(y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL); /* |$y \mathrel{+}= \beta \cdot A \cdot x$| */
+GrB_apply(x, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, x, GrB_NULL); /* |$x = \alpha \cdot x$| */
+GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, beta, y, GrB_NULL); /* |$y = \beta \cdot y$| */
+GrB_mxm(y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL); /* |$y \mathrel{+}= A \cdot x$| */
 
 // (5) ALP/GraphBLAS C++ (Minimum number of containers, optimised by nonblocking execution)
 grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>, 
