@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{p}{;}
+\PYG{c+c1}{// csr\PYGZus{}wrapper\PYGZlt{}float\PYGZgt{} A, B, D initialized elsewhere}
+\PYG{c+c1}{// csr\PYGZus{}wrapper\PYGZlt{}float\PYGZgt{} C(c\PYGZus{}nrows, c\PYGZus{}ncols);}
+\PYG{c+c1}{// auto A\PYGZus{}obj = matrix\PYGZus{}opt(A, allocator);}
+\PYG{c+c1}{// auto B\PYGZus{}obj = matrix\PYGZus{}opt(B, allocator);}
+\PYG{c+c1}{// auto D\PYGZus{}obj = matrix\PYGZus{}opt(D, allocator);}
+
+\PYG{n}{operation\PYGZus{}state}\PYG{+w}{ }\PYG{n+nf}{state}\PYG{p}{(}\PYG{n}{allocator}\PYG{p}{);}
+
+\PYG{c+c1}{// Optional optimization / hint step}
+\PYG{n}{multiply\PYGZus{}inspect}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{D\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+
+\PYG{c+c1}{// Computes output sparsity structure and required memory size}
+\PYG{n}{multiply\PYGZus{}compute}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{D\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+
+\PYG{n}{index\PYGZus{}t}\PYG{+w}{ }\PYG{n}{nnz}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{.}\PYG{n}{get\PYGZus{}result\PYGZus{}nnz}\PYG{p}{();}
+\PYG{c+c1}{// User allocates the required storage arrays for C here}
+
+\PYG{c+c1}{// Populates structural indices and numerical values into C}
+\PYG{n}{multiply\PYGZus{}fill}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{D\PYGZus{}obj}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+\PYG{c+c1}{// csr\PYGZus{}wrapper C is now fully constructed}
+\end{Verbatim}

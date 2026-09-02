@@ -86,14 +86,33 @@
 % v2 compatibility layer when available; this also works with TeX installs in
 % which latexminted itself is broken or unavailable. Older TeX releases only
 % provide minted.sty, so retain that as a fallback.
+\ifdefined\sbmintedfinalize
+  \def\sbmintedmode{finalizecache}
+\else
+  \def\sbmintedmode{frozencache}
+\fi
+\edef\sbmintedopts{newfloat,\sbmintedmode,cachedir=_minted-cache}
 \IfFileExists{minted2.sty}
-  {\usepackage[newfloat,outputdir=build]{minted2}}
-  {\usepackage[newfloat,outputdir=build]{minted}}
+  {\expandafter\usepackage\expandafter[\sbmintedopts]{minted2}}
+  {\expandafter\usepackage\expandafter[\sbmintedopts]{minted}}
 \usemintedstyle{friendly}
 \usepackage{soul}
 \usepackage{amsmath}
 \usepackage{todonotes}
 \usepackage{cleveref}
+
+\makeatletter
+ \AtBeginDocument{%
+   \@ifundefined{hyxmp@parse@acmart}{}{%
+     \let\SB@orig@hyxmp@parse@acmart\hyxmp@parse@acmart
+     \def\hyxmp@parse@acmart{%
+       \let\SB@saved@and\and
+       \let\and\relax
+       \SB@orig@hyxmp@parse@acmart
+       \let\and\SB@saved@and}%
+   }%
+}
+\makeatother
 
 
 % I THINK THAT THESE PACKAGES ARE NOT NEEDED ANYMORE

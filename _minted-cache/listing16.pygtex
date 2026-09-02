@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{p}{;}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{(}\PYG{n}{values}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colind}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{shape}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{);}
+\PYG{c+c1}{// auto A = matrix\PYGZus{}opt(csr\PYGZus{}wrapper\PYGZlt{}float\PYGZgt{}(...), allocator);}
+\PYG{c+c1}{// ... likewise for B}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{n}\PYG{p}{);}
+\PYG{c+c1}{// auto C = matrix\PYGZus{}opt(csr\PYGZus{}wrapper\PYGZlt{}float\PYGZgt{}(...), allocator);}
+
+\PYG{n}{operation\PYGZus{}state}\PYG{+w}{ }\PYG{n+nf}{state}\PYG{p}{(}\PYG{n}{allocator}\PYG{p}{);}
+\PYG{n}{add\PYGZus{}inspect}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}\PYG{+w}{ }\PYG{c+c1}{// optional}
+\PYG{n}{add\PYGZus{}compute}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+\PYG{n}{index\PYGZus{}t}\PYG{+w}{ }\PYG{n}{nnz}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{.}\PYG{n}{get\PYGZus{}result\PYGZus{}nnz}\PYG{p}{();}
+\PYG{c+c1}{// allocate C arrays and put in C}
+\PYG{n}{add\PYGZus{}fill}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+\PYG{c+c1}{// C structure and values are now able to be used}
+\end{Verbatim}

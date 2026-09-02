@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+
+\PYG{+w}{    }\PYG{k}{enum}\PYG{+w}{ }\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{cnrProperty}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{default}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{none}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{cnr}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{strict\PYGZus{}cnr}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{2}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{};}
+
+\PYG{+w}{    }\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{set\PYGZus{}cnr\PYGZus{}property}\PYG{p}{(}\PYG{n}{cnrProperty}\PYG{+w}{ }\PYG{n}{prop}\PYG{p}{);}
+
+\PYG{+w}{    }\PYG{n}{cnrProperty}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}cnr\PYGZus{}property}\PYG{p}{();}
+
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

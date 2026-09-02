@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{p}{;}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{A\PYGZus{}view}\PYG{p}{(}\PYG{n}{values}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colind}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{shape}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{);}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{(}\PYG{n}{values}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colind}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{shape}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{);}
+
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{pred1}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[](}\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{i}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{j}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{              }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{};}
+
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{pred2}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[](}\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{i}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{j}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{              }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mi}{10}\PYG{+w}{ }\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{j}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mi}{10}\PYG{p}{);}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{};}
+
+\PYG{n}{operation\PYGZus{}state}\PYG{+w}{ }\PYG{n+nf}{state}\PYG{p}{(}\PYG{n}{allocator}\PYG{p}{);}
+
+\PYG{c+c1}{// matrix\PYGZus{}opt is opaque and may contain vendor optimization details}
+\PYG{n}{matrix\PYGZus{}opt}\PYG{+w}{ }\PYG{n+nf}{A}\PYG{p}{(}\PYG{n}{A\PYGZus{}view}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{allocator}\PYG{p}{);}
+\PYG{n}{filter\PYGZus{}compute}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pred}\PYG{p}{);}
+\PYG{n}{index\PYGZus{}t}\PYG{+w}{ }\PYG{n}{nnz}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{.}\PYG{n}{get\PYGZus{}result\PYGZus{}nnz}\PYG{p}{();}
+\PYG{c+c1}{// the user can allocate the arrays for the output structure}
+\PYG{c+c1}{// finally, the output structure can be filled}
+\PYG{n}{filter\PYGZus{}fill}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pred}\PYG{p}{);}
+\end{Verbatim}
