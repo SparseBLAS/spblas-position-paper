@@ -1,0 +1,56 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+c1}{// (1) Arm Performance Libraries C API (Optional hint/optimize stage)}
+\PYG{n}{info}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{armpl\PYGZus{}spmv\PYGZus{}exec\PYGZus{}d}\PYG{p}{(}\PYG{n}{ARMPL\PYGZus{}SPARSE\PYGZus{}OPERATION\PYGZus{}NOTRANS}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{armpl\PYGZus{}mat}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (2) oneMKL C API (Optional hint/optimize stage)}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{mkl\PYGZus{}sparse\PYGZus{}d\PYGZus{}mv}\PYG{p}{(}\PYG{n}{SPARSE\PYGZus{}OPERATION\PYGZus{}NON\PYGZus{}TRANSPOSE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{csrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{descrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (3) AOCL\PYGZhy{}sparse C API (Optional hint/optimize stage)}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{aoclsparse\PYGZus{}dmv}\PYG{p}{(}\PYG{n}{aoclsparse\PYGZus{}operation\PYGZus{}none}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{descr\PYGZus{}a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (4) GraphBLAS Suite Sparse C API}
+\PYG{c+c1}{// Implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring.}
+\PYG{n}{GrB\PYGZus{}apply}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}TIMES\PYGZus{}FP64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{ }\PYG{c+cm}{/* $x = \alpha \cdot x$ */}
+\PYG{n}{GrB\PYGZus{}apply}\PYG{p}{(}\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}TIMES\PYGZus{}FP64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{ }\PYG{c+cm}{/* $y = \beta \cdot y$ */}
+\PYG{n}{GrB\PYGZus{}mxm}\PYG{p}{(}\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}PLUS\PYGZus{}FP64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}PLUS\PYGZus{}TIMES\PYGZus{}SEMIRING\PYGZus{}FP64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{GrB\PYGZus{}NULL}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{ }\PYG{c+cm}{/* $y \mathrel{+}= A \cdot x$ */}
+
+\PYG{c+c1}{// (5) ALP/GraphBLAS C++ (Minimum number of containers, optimised by nonblocking execution)}
+\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Semiring}\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{operators}\PYG{o}{:}\PYG{o}{:}\PYG{n}{add}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{operators}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mul}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}}\PYG{p}{,}
+\PYG{+w}{               }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{identities}\PYG{o}{:}\PYG{o}{:}\PYG{n}{zero}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{identities}\PYG{o}{:}\PYG{o}{:}\PYG{n}{one}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{plusTimes}\PYG{p}{;}
+\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Monoid}\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{operators}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mul}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{identities}\PYG{o}{:}\PYG{o}{:}\PYG{n}{one}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{mul}\PYG{p}{;}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{foldr}\PYG{p}{(}\PYG{n}{beta}\PYG{+w}{ }\PYG{o}{/}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{mul}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{status}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{status}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mxv}\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{op}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{plusTimes}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{status}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{status}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{grb}\PYG{o}{:}\PYG{o}{:}\PYG{n}{foldr}\PYG{p}{(}\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{mul}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (6) cuSPARSE CUDA C (Generic API, Multiple required stages)}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{cusparseSpMV}\PYG{p}{(}\PYG{n}{handle}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{CUSPARSE\PYGZus{}OPERATION\PYGZus{}NON\PYGZus{}TRANSPOSE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{matA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{vecX}\PYG{p}{,}
+\PYG{+w}{                      }\PYG{n}{p\PYGZus{}beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{vecY}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{CUDA\PYGZus{}R\PYGZus{}64F}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{CUSPARSE\PYGZus{}SPMV\PYGZus{}ALG\PYGZus{}DEFAULT}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{externalBuffer}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (7) rocSPARSE ROCm C (Generic API, Multiple required stages)}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{rocsparse\PYGZus{}spmv}\PYG{p}{(}\PYG{n}{handle}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rocsparse\PYGZus{}operation\PYGZus{}none}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{matA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{vecX}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}beta}\PYG{p}{,}
+\PYG{+w}{                        }\PYG{n}{vecY}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rocsparse\PYGZus{}datatype\PYGZus{}f64\PYGZus{}r}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rocsparse\PYGZus{}spmv\PYGZus{}alg\PYGZus{}csr\PYGZus{}adaptive}\PYG{p}{,}
+\PYG{+w}{                        }\PYG{n}{rocsparse\PYGZus{}spmv\PYGZus{}stage\PYGZus{}compute}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}buffer\PYGZus{}size}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{temp\PYGZus{}buffer}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (8) hipSPARSE ROCm/CUDA C API}
+\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{hipsparseDcsrmv}\PYG{p}{(}\PYG{n}{handle}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{HIPSPARSE\PYGZus{}OPERATION\PYGZus{}NON\PYGZus{}TRANSPOSE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{m}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{n}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{,}
+\PYG{+w}{                         }\PYG{n}{p\PYGZus{}alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{descrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{valA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colindA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p\PYGZus{}beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (9) oneMKL SYCL C++ API (Out\PYGZhy{}of\PYGZhy{}order queue, optional hint/optimize stage)}
+\PYG{n}{ev\PYGZus{}gemv}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{oneapi}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mkl}\PYG{o}{:}\PYG{o}{:}\PYG{n}{sparse}\PYG{o}{:}\PYG{o}{:}\PYG{n}{gemv}\PYG{p}{(}\PYG{n}{queue}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{oneapi}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mkl}\PYG{o}{:}\PYG{o}{:}\PYG{n}{transpose}\PYG{o}{:}\PYG{o}{:}\PYG{n}{nontrans}\PYG{p}{,}
+\PYG{+w}{                                    }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{csrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{n}{ev\PYGZus{}opt}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (10) oneMKL SYCL C++ API (In\PYGZhy{}order queue, optional hint/optimize stage)}
+\PYG{n}{ev\PYGZus{}gemv}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{oneapi}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mkl}\PYG{o}{:}\PYG{o}{:}\PYG{n}{sparse}\PYG{o}{:}\PYG{o}{:}\PYG{n}{gemv}\PYG{p}{(}\PYG{n}{queue}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{oneapi}\PYG{o}{:}\PYG{o}{:}\PYG{n}{mkl}\PYG{o}{:}\PYG{o}{:}\PYG{n}{transpose}\PYG{o}{:}\PYG{o}{:}\PYG{n}{nontrans}\PYG{p}{,}
+\PYG{+w}{                                    }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{csrA}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (11) Kokkos\PYGZhy{}Kernels C++ API}
+\PYG{c+c1}{// Algorithm in set in $controls$ argument.}
+\PYG{n}{KokkosSparse}\PYG{o}{:}\PYG{o}{:}\PYG{n}{spmv}\PYG{p}{(}\PYG{n}{controls}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{KokkosSparse}\PYG{o}{:}\PYG{o}{:}\PYG{n}{NoTranspose}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// (12) Ginkgo C++ API}
+\PYG{c+c1}{// Given a cuda/rocm stream or sycl::queue attached to A previously through an $Executor$ object.}
+\PYG{c+cm}{/* matrix::Csr *A */}
+\PYG{c+cm}{/* matrix::Dense *y, *x; // vectors tall and skinny matrices */}
+\PYG{c+cm}{/* matrix::Dense *alpha, *beta; // scalars of dimension 1x1 */}
+\PYG{n}{A}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{apply}\PYG{p}{(}\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{;}
+\end{Verbatim}

@@ -1,0 +1,14 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{X}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{::}\PYG{n}{mdspan}\PYG{p}{(}\PYG{n}{raw\PYGZus{}x}\PYG{p}{.}\PYG{n}{data}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{m}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{k}\PYG{p}{);}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{Y}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{::}\PYG{n}{mdspan}\PYG{p}{(}\PYG{n}{raw\PYGZus{}b}\PYG{p}{.}\PYG{n}{data}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{k}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{n}\PYG{p}{);}
+\PYG{c+c1}{// sample mask is the pattern of CSR matrix output}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{(}\PYG{n}{values}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colind}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{shape}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{);}
+
+\PYG{n}{operation\PYGZus{}state}\PYG{+w}{ }\PYG{n+nf}{state}\PYG{p}{(}\PYG{n}{allocator}\PYG{p}{);}
+\PYG{n}{sampled\PYGZus{}multiply\PYGZus{}inspect}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+
+\PYG{c+c1}{// C = C.*( X * Y ): vendor optimizations in state for reuse}
+\PYG{n}{sampled\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{);}
+
+\end{Verbatim}

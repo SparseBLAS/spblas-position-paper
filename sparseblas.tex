@@ -1,168 +1,566 @@
-\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
-\documentclass{article}
-\usepackage{authblk}
-\usepackage{mathptmx}
-\usepackage[scaled=.89]{helvet}
-\usepackage{graphicx} % Required for inserting images
+%%
+%% This is file `acmmanuscript.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `all,proceedings,manuscript')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from acmmanuscript.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor} % Kept coherence with original document but goes against acm rules (line above)
+\documentclass[manuscript,review]{acmart}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+% \setcopyright{acmlicensed}
+% \copyrightyear{2018}
+% \acmYear{2018}
+% \acmDOI{XXXXXXX.XXXXXXX}
+%% These commands are for a PROCEEDINGS abstract or paper.
+% \acmConference[Conference acronym 'XX]{Make sure to enter the correct
+%   conference title from your rights confirmation email}{June 03--05,
+%   2018}{Woodstock, NY}
+%%
+%%  Uncomment \acmBooktitle if the title of the proceedings is different
+%%  from ``Proceedings of ...''!
+%%
+%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%%  June 03--05, 2018, Woodstock, NY}
+% \acmISBN{978-1-4503-XXXX-X/2018/06}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+% Required utilities
+\usepackage{xspace} % Used for the \cplusplus command
+\usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{soul}
-
-\usepackage{enumitem}
-\usepackage{todonotes}
-%\usepackage[dvipsnames,svgnames,x11names]{xcolor}
-\usepackage[svgnames]{xcolor}
-\usepackage{amsmath}
-\usepackage{comment}
-\usepackage{placeins}
-\usepackage{minted}
-\usepackage{listings}
-\usepackage[colorlinks,linkcolor=MediumSlateBlue,citecolor=MediumSlateBlue,urlcolor=MediumSlateBlue]{hyperref}
-\usepackage{cleveref}
-\usepackage{marginnote}
-\usepackage{xspace}
-\usepackage[T1]{fontenc}
-\usepackage{multicol}
-\usepackage{makecell}
-
-\usepackage{tabularx}   
+\usepackage{tabularx}
 \usepackage{array}
+\usepackage{enumitem}
+\usepackage{makecell}
+\usepackage{tikz}
+\usetikzlibrary{calc,decorations.pathreplacing}
+% minted v3 delegates to the latexminted Python executable. Use its bundled
+% v2 compatibility layer when available; this also works with TeX installs in
+% which latexminted itself is broken or unavailable. Older TeX releases only
+% provide minted.sty, so retain that as a fallback.
+\ifdefined\sbmintedfinalize
+  \def\sbmintedmode{finalizecache}
+\else
+  \def\sbmintedmode{frozencache}
+\fi
+\edef\sbmintedopts{newfloat,\sbmintedmode,cachedir=_minted-cache}
+\IfFileExists{minted2.sty}
+  {\expandafter\usepackage\expandafter[\sbmintedopts]{minted2}}
+  {\expandafter\usepackage\expandafter[\sbmintedopts]{minted}}
+\usemintedstyle{friendly}
+\usepackage{soul}
+\usepackage{amsmath}
+\usepackage{todonotes}
+\usepackage{cleveref}
+
+\makeatletter
+ \AtBeginDocument{%
+   \@ifundefined{hyxmp@parse@acmart}{}{%
+     \let\SB@orig@hyxmp@parse@acmart\hyxmp@parse@acmart
+     \def\hyxmp@parse@acmart{%
+       \let\SB@saved@and\and
+       \let\and\relax
+       \SB@orig@hyxmp@parse@acmart
+       \let\and\SB@saved@and}%
+   }%
+}
+\makeatother
+
+
+% I THINK THAT THESE PACKAGES ARE NOT NEEDED ANYMORE
+% \usepackage{authblk} % REMOVE
+% \usepackage{mathptmx} % REMOVE (font set from acm)
+% \usepackage[scaled=.89]{helvet} % REMOVE (font set from acm)
+% \usepackage[dvipsnames,svgnames,x11names]{xcolor} % REMOVE: Pass options to acmart defiend xcolor
+% \usepackage[svgnames]{xcolor}
+% \usepackage{comment}
+% \usepackage{placeins} % REMOVE? Forcing float placement, maybe not good for ACM template
+% \usepackage[colorlinks,linkcolor=MediumSlateBlue,citecolor=MediumSlateBlue,urlcolor=MediumSlateBlue]{hyperref} % REMOVE (acmart defines it internally)
+% \usepackage{marginnote}
+% \usepackage[T1]{fontenc} % REMOVE (font set from acm)
+% \usepackage{multicol}
+
+
+% Custom column types
 % Auto-wrapping left-aligned column
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
-\setlength{\marginparwidth}{4cm}
+% \setlength{\marginparwidth}{4cm}
 \newcommand{\fb}[1]{\todo[color=green!30]{\footnotesize #1}}
 \newcommand{\fbL}[2][]{{%
  \let\marginpar\marginnote
  \reversemarginpar
  \todo[#1,color=green!30]{\footnotesize #2}}}
+ 
+% Author Annotation Macros
 \newcommand{\Aydin}[1]{{\color{red}(Aydin) #1}}
 \newcommand{\JimD}[1]{{\color{red}(Jim D) #1}}
 \newcommand{\Riley}[1]{{\color{red} [#1 -- Riley]}}
 
-% must shrink size of text plus "+"
+% C++ Formatting Macros
 \newcommand{\cplusplus}{C\texttt{++}\xspace}
 \newcommand{\cppstd}[1]{C\texttt{++}#1\xspace}
-
 \newcommand{\ignore}[1]{}
 
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+% Listing background color
+\definecolor{listing_bck}{HTML}{F2F2F2}
 
+% NOT SURE WHAT THIS WAS FOR?
+% \lstset{%
+% tabsize=2,%
+% columns=fullflexible,%
+% numbers=none,%
+% basicstyle=\sffamily,%
+% commentstyle=\color{DarkCyan},%
+% stringstyle=\color{CadetBlue},%
+% breaklines=true,%
+% comment=[l]{//},%
+% morecomment=[s]{/*}{*/},%
+% classoffset=0,%
+% morekeywords={auto,const,namespace,using,NULL},%
+% keywordstyle=\color{DarkGreen},%
+% classoffset=1,%
+% morekeywords={char,double,float,int,long,void,nullptr,unsigned},%
+% keywordstyle=\color{DarkMagenta},%
+% classoffset=2,%
+% morekeywords={spblas},%
+% keywordstyle=\color{DarkBlue},%
+% classoffset=3,%
+% morekeywords={alpha,beta},%
+% keywordstyle=\color{BurntOrange},%
+% classoffset=4,%
+% morekeywords={desc,descr,info,policy,queue,state,status},%
+% keywordstyle=\color{DarkRed},%
+% otherkeywords={::,:,?,<,>,=},%
+% fontadjust=true%
+% }%language={[11]C++}}
 
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
 
-\lstset{%
-tabsize=2,%
-columns=fullflexible,%
-numbers=none,%
-basicstyle=\sffamily,%
-commentstyle=\color{DarkCyan},%
-stringstyle=\color{CadetBlue},%
-breaklines=true,%
-comment=[l]{//},%
-morecomment=[s]{/*}{*/},%
-classoffset=0,%
-morekeywords={auto,const,namespace,using,NULL},%
-keywordstyle=\color{DarkGreen},%
-classoffset=1,%
-morekeywords={char,double,float,int,long,void,nullptr,unsigned},%
-keywordstyle=\color{DarkMagenta},%
-classoffset=2,%
-morekeywords={spblas},%
-keywordstyle=\color{DarkBlue},%
-classoffset=3,%
-morekeywords={alpha,beta},%
-keywordstyle=\color{BurntOrange},%
-classoffset=4,%
-morekeywords={desc,descr,info,policy,queue,state,status},%
-keywordstyle=\color{DarkRed},%
-otherkeywords={::,:,?,<,>,=},%
-fontadjust=true%
-}%language={[11]C++}}
-
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
 \title{%Toward a
 Interface for Sparse Linear Algebra Operations}
 
-\author[1,2]{Hartwig Anzt\footnote{Coordinator of the SparseBLAS effort.}}
-\author[3]{Willow Ahrens}
-\author[4]{Chris Armstrong}
-\author[2]{Daniel Berry}
-\author[5]{Benjamin Brock}
-\author[7]{Ayd\i n Buluç}
-\author[7]{Federico Busato}
-\author[8]{Terry Cojean}
-\author[9]{Tim Davis}
-\author[6]{Jim Demmel}
-\author[19]{Grace Dinh}
-\author[10]{David Gardener}
-\author[11]{Jan Fiala} 
-\author[2]{Mark Gates}
-\author[7]{Azzam Haider}
-\author[12]{Toshiyuki Imamura}
-\author[6]{Igor Kozachenko}
-\author[13]{Pedro Valero Lara}
-\author[20]{Julien Langou}
-\author[14]{Sherry Li}
-\author[11]{Kim Liegeois}
-\author[,2,3]{Piotr Luszczek\footnote{Research was sponsored by the Department of the Air Force Artificial Intelligence Accelerator and was accomplished under Cooperative Agreement Number FA8750-19-2-1000. The views and conclusions contained in this document are those of the authors and should not be interpreted as representing the official policies, either expressed or implied, of the Department of the Air Force or the U.S.\ Government. The U.S.\ Government is authorized to reproduce and distribute reprints for Government purposes notwithstanding any copyright notation herein.}}
-\author[22]{Vincent Maillou}
-\author[2]{Max Melichenko}
-\author[11]{Yvan Mokwinski}
-\author[15]{Jose Moreira}
-\author[16]{Riley Murray}
-\author[17]{Spencer Patty}
-\author[13]{Slaven Peles}
-\author[1]{Tobias Ribizel}
-\author[21]{Jason Riedy}
-\author[16]{Siva Rajamanickam}
-\author[13]{Piyush Sao}
-\author[11]{Manu Shantharam}
-\author[13]{Keita Teranishi}
-\author[7]{Stan Tomov}
-\author[1]{Yu-Hsiang Tsai}
-\author[18]{Heiko K. Weichelt}
-\affil[1]{TU Munich, Germany}
+
+% ----------------------------------------------------------------------
+% Authors and affiliations
+% ----------------------------------------------------------------------
+
+\author{Hartwig Anzt}
+\authornote{Coordinator of the SparseBLAS effort.}
+\affiliation{%
+  \institution{TU Munich}
+  \city{Munich}
+  \country{Germany}
+}
+\affiliation{%
+  \institution{University of Tennessee}
+  \city{Knoxville}
+  \country{USA}
+}
+
+\author{Willow Ahrens}
+\affiliation{%
+  \institution{Georgia Tech}
+  \city{Atlanta}
+  \country{USA}
+}
+
+\author{Chris Armstrong}
+\affiliation{%
+  \institution{Arm}
+  \city{Cambridge}
+  \country{UK}
+}
+
+\author{Daniel Berry}
+\affiliation{%
+  \institution{University of Tennessee}
+  \city{Knoxville}
+  \country{USA}
+}
+
+\author{Benjamin Brock}
+\affiliation{%
+  \institution{Intel Labs}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Ayd\i n Bulu\c{c}}
+\affiliation{%
+  \institution{NVIDIA}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Federico Busato}
+\affiliation{%
+  \institution{NVIDIA}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Terry Cojean}
+\affiliation{%
+  \institution{EVIDEN}
+  \city{Les Clayes-sous-Bois}
+  \country{France}
+}
+
+\author{Tim Davis}
+\affiliation{%
+  \institution{Texas A\&M University}
+  \city{College Station}
+  \country{USA}
+}
+
+\author{James Demmel}
+\affiliation{%
+  \institution{University of California, Berkeley}
+  \city{Berkeley}
+  \country{USA}
+}
+
+\author{Grace Dinh}
+\authornote{Part of this research was conducted at the Simons Institute for the Theory of Computing, supported in part by ADIA Lab, Fall 2025.}
+\affiliation{%
+  \institution{Cornell University}
+  \city{Ithaca}
+  \country{USA}
+}
+
+\author{David Gardener}
+\affiliation{%
+  \institution{Lawrence Livermore National Labs}
+  \city{Livermore}
+  \country{USA}
+}
+
+\author{Jan Fiala}
+\affiliation{%
+  \institution{AMD}
+  \city{Austin}
+  \country{USA}
+}
+
+\author{Mark Gates}
+\affiliation{%
+  \institution{AMD}
+  \city{Austin}
+  \country{USA}
+}
+
+\author{Azzam Haider}
+\affiliation{%
+  \institution{NVIDIA}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Toshiyuki Imamura}
+\affiliation{%
+  \institution{RIKEN Center for Computational Science}
+  \city{Kobe}
+  \country{Japan}
+}
+
+\author{Igor Kozachenko}
+\affiliation{%
+  \institution{University of California, Berkeley}
+  \city{Berkeley}
+  \country{USA}
+}
+
+\author{Pedro Valero Lara}
+\affiliation{%
+  \institution{Oak Ridge National Lab}
+  \city{Oak Ridge}
+  \country{USA}
+}
+
+\author{Julien Langou}
+\affiliation{%
+  \institution{University of Colorado Denver}
+  \city{Denver}
+  \country{USA}
+}
+
+\author{Sherry Li}
+\affiliation{%
+  \institution{Lawrence Berkeley National Labs}
+  \city{Berkeley}
+  \country{USA}
+}
+
+\author{Kim Liegeois}
+\affiliation{%
+  \institution{AMD}
+  \city{Austin}
+  \country{USA}
+}
+
+\author{Piotr Luszczek}
+\authornote{Research was sponsored by the Department of the Air Force Artificial Intelligence Accelerator and was accomplished under Cooperative Agreement Number FA8750-19-2-1000. The views and conclusions contained in this document are those of the authors and should not be interpreted as representing the official policies, either expressed or implied, of the Department of the Air Force or the U.S.\ Government. The U.S.\ Government is authorized to reproduce and distribute reprints for Government purposes notwithstanding any copyright notation herein.}
+\affiliation{%
+  \institution{University of Tennessee}
+  \city{Knoxville}
+  \country{USA}
+}
+\affiliation{%
+  \institution{Massachusetts Institute of Technology (MIT)}
+  \city{Cambridge}
+  \country{USA}
+}
+
+\author{Vincent Maillou}
+\affiliation{%
+  \institution{ETH Zurich}
+  \city{Zurich}
+  \country{Switzerland}
+}
+
+\author{Maksim Y. Melnichenko}
+\affiliation{%
+  \institution{University of California, Berkeley}
+  \city{Berkeley}
+  \country{USA}
+}
+
+\author{Yvan Mokwinski}
+\affiliation{%
+  \institution{AMD}
+  \city{Austin}
+  \country{USA}
+}
+
+\author{Jose Moreira}
+\affiliation{%
+  \institution{IBM}
+  \city{Yorktown Heights}
+  \country{USA}
+}
+
+\author{Riley Murray}
+\affiliation{%
+  \institution{Sandia National Labs}
+  \city{Albuquerque}
+  \country{USA}
+}
+
+\author{Spencer Patty}
+\affiliation{%
+  \institution{Intel Corporation}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Slaven Peles}
+\affiliation{%
+  \institution{Oak Ridge National Lab}
+  \city{Oak Ridge}
+  \country{USA}
+}
+
+\author{Tobias Ribizel}
+\affiliation{%
+  \institution{NVIDIA}
+  \city{Santa Clara}
+  \country{Germany}
+}
+
+\author{Jason Riedy}
+\affiliation{%
+  \institution{Microsoft}
+  \city{Redmond}
+  \country{USA}
+}
+
+\author{Siva Rajamanickam}
+\affiliation{%
+  \institution{Sandia National Labs}
+  \city{Albuquerque}
+  \country{USA}
+}
+
+\author{Piyush Sao}
+\affiliation{%
+  \institution{Oak Ridge National Lab}
+  \city{Oak Ridge}
+  \country{USA}
+}
+
+\author{Manu Shantharam}
+\affiliation{%
+  \institution{AMD}
+  \city{Austin}
+  \country{USA}
+}
+
+\author{Keita Teranishi}
+\affiliation{%
+  \institution{Oak Ridge National Lab}
+  \city{Oak Ridge}
+  \country{USA}
+}
+
+\author{Stan Tomov}
+\affiliation{%
+  \institution{NVIDIA}
+  \city{Santa Clara}
+  \country{USA}
+}
+
+\author{Yu-Hsiang Tsai}
+\affiliation{%
+  \institution{TU Munich}
+  \city{Munich}
+  \country{Germany}
+}
+
+\author{Heiko K. Weichelt}
+\affiliation{%
+  \institution{The MathWorks Inc.}
+  \city{Natick}
+  \country{USA}
+}
+
+\author{A.~N. Yzelman}
+\affiliation{%
+  \institution{Independent Researcher}
+  \city{Zurich}
+  \country{Switzerland}
+}
 
 
-\affil[2]{University of Tennessee, USA}
-\affil[3]{Massachusetts Institute of Technology (MIT), USA}
-\affil[4]{arm, UK}
-\affil[5]{Intel Labs, USA}
-\affil[6]{University of California, Berkeley, USA}
-\affil[7]{NVIDIA, USA}
-\affil[8]{EVIDEN, France}
-\affil[9]{Texas A\&M University, USA}
-\affil[10]{Lawrence Livermore National Labs, USA}
-\affil[11]{AMD, USA}
-\affil[12]{RIKEN Center for Computational Science, Japan}
-\affil[13]{Oak Ridge National Lab, USA}
-\affil[14]{Lawrence Berkeley National Labs, USA}
-\affil[15]{IBM, USA}
-\affil[16]{Sandia National Labs, USA}
-\affil[17]{Intel Corporation, USA}
-\affil[18]{The MathWorks Inc., USA}
-\affil[19]{Cornell University, USA}
-\affil[20]{University of Colorado Denver, USA}
-\affil[21]{Microsoft, USA}
-\affil[22]{ETH Zurich, Switzerland}
-\date{\today}
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{Anzt et al.}
 
-\begin{document}
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+    The formalization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
+    Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that as opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own SparseBLAS interface.
+    At the same time, there exists a demand for standardization that would improve interoperability and sustainability, and allow for easier integration of building blocks.
+    In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent three years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
+\end{abstract}
 
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+\begin{CCSXML}
+<ccs2012>
+ <concept>
+  <concept_id>00000000.0000000.0000000</concept_id>
+  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
+  <concept_significance>500</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>00000000.00000000.00000000</concept_id>
+  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
+  <concept_significance>300</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>00000000.00000000.00000000</concept_id>
+  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
+  <concept_significance>100</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>00000000.00000000.00000000</concept_id>
+  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
+  <concept_significance>100</concept_significance>
+ </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
+\ccsdesc[300]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
+\ccsdesc{Do Not Use This Code~Generate the Correct Terms for Your Paper}
+\ccsdesc[100]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{Do, Not, Use, This, Code, Put, the, Correct, Terms, for,
+  Your, Paper}
+
+\received{20 February 2007}
+\received[revised]{12 March 2009}
+\received[accepted]{5 June 2009}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
 \maketitle
 
 
-\section*{Abstract}
-The formalization of an interface for dense linear algebra operations in the BLAS standard has enabled interoperability between different linear algebra libraries, thereby boosting the success of scientific computing, in particular in scientific HPC. In particular, from this point on, applications could interface highly optimized implementations through a standardized API. 
-Despite numerous efforts in the past, the community has not yet agreed on a standardization for sparse linear algebra operations due to numerous reasons. One is the fact that sparse linear algebra objects allow for many different storage formats, and different hardware may favor different storage formats. This makes the definition of a FORTRAN-style all-circumventing interface extremely challenging. Another reason is that as opposed to dense linear algebra functionality, in sparse linear algebra, the size of the sparse data structure for the operation result is not always known prior to the computation. Furthermore, as opposed to the standardization effort for dense linear algebra, we are late in the technology readiness cycle, and many production-ready software libraries using sparse linear algebra routines have implemented and committed to their own SparseBLAS interface.
-At the same time, there exists a demand for standardization that would improve interoperability and sustainability, and allow for easier integration of building blocks.
-In an inclusive, cross-institutional effort involving numerous academic institutions, US National Labs, and industry, we spent three years designing a hardware-portable interface for basic sparse linear algebra functionality that serves the user needs and is compatible with the different interfaces currently used by different vendors. In this paper, we present a C++ API for sparse linear algebra functionality, discuss the design choices, and detail how software developers preserve a lot of freedom in terms of how to implement functionality behind this API.
-\newpage
-\tableofcontents
+% \tableofcontents
 
 \section{Introduction and Motivation}
 
-Despite the fact that sparse matrix computations are at the heart of many science and engineering applications the Sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures, and anticipated neither the rise of GPU architectures, nor heavy performance optimization.
+Despite the fact that sparse matrix computations are at the heart of many science and engineering applications, the Sparse BLAS standard~\cite{10.1145/567806.567810} proposed decades ago has not gained enough traction in the community to become a standard allowing for portability across different hardware architectures. A reason for this may be that it was focused on CPU architectures and anticipated neither the rise of GPU architectures nor heavy performance optimization.
 
 In the meantime, many vendors already provide support for sparse matrix computations in proprietary or open-source libraries, but due to diverging architectural constraints and new functionality required, these libraries have different execution models, APIs, and formats supported. At the same time, the well-recognized and successful BLAS standard for dense linear algebra has been modernized by the \cplusplus committee during the integration of the functionality into \texttt{std::linalg} as part of the \cppstd{26} standard library.
 
@@ -235,7 +633,9 @@ along with some support for GPU
 execution~\cite{davis2019algorithm,davis2023algorithm}. There are also
 several GraphBLAS-like libraries in other programming
 languages~\cite{erik_welch_2024_10631255, yzelman2020c++,
-yang2022graphblast}.  The GraphBLAS \cplusplus Specification provides
+yang2022graphblast},
+targeting nonblocking execution, distributed systems, and/or GPU accelerators.
+The GraphBLAS \cplusplus Specification provides
 a native \cplusplus interface, providing better support for
 user-defined types through templates as well as taking advantage of
 \cplusplus concepts and views to simplify the
@@ -253,6 +653,7 @@ copied in and out of GraphBLAS via its import/export API.  For users who only
 want to use a library to execute a few operations, this presents considerable
 overhead.  This issue can be resolved with the load/unload methods in
 SuiteSparse:GraphBLAS, which takes $O(1)$ time and does not allocate memory. 
+ALP/GraphBLAS provides similar wrappers and avoids unload through standard C++ features.
 These methods require the library and GraphBLAS to share the same memory space
 and are extensions to GraphBLAS that are not in the GraphBLAS C API
 Specification, however.
@@ -289,7 +690,7 @@ for numerical linear algebra on sparse matrices.
 
 \subsection{Existing Sparse BLAS standards}
 \label{sec:existingsparseblas}
-The first mention of a Sparse BLAS standard was in 1985, with Dodson et
+The first mention of a sparse BLAS standard was in 1985, with Dodson et
 al.~\cite{10.1145/1057935.1057938} calling for Sparse extensions to the BLAS standard, recognizing the growing importance of sparse
 solvers and preconditioners in research and industry. At the time, the proposed
 extensions primarily focused on level-1 operations (i.e., vector-vector
@@ -299,7 +700,7 @@ products are proposed with interfaces in
 this short paper. The original SIGNUM newsletter paper was extended in
 1991~\cite{10.1145/108556.108577} but the focus on vector operations was kept.
 
-Recognizing the lack of a matrix-focused Sparse BLAS proposal, in 1997, Duff et
+Recognizing the lack of a matrix-focused sparse BLAS proposal, in 1997, Duff et
 al.~\cite{10.1145/275323.275327} proposed a level-3 BLAS interface design (i.e.,
 matrix-matrix operations). In this paper, they propose 1) a sparse-matrix
 dense-matrix product, 2) upper and lower triangular solves, 3) utility functions
@@ -320,10 +721,10 @@ entries of the sparse matrix, making it difficult to design software applicable 
 all areas~\cite{10.1145/567806.567810}. In response, the proposed interface takes
 as input not the matrix entries themselves, but rather a pointer, or a handle to
 a generic representation of a previously created sparse matrix object. This
-allows algorithms to be coded using Sparse BLAS primitives without disclosing
+allows algorithms to be coded using sparse BLAS primitives without disclosing
 the underlying matrix storage format. The authors do suggest a Fortran-style
-interface for accessing Sparse BLAS functionality from C and Fortran.  The
-proposed 2002 Sparse BLAS standard does not support operations between two sparse
+interface for accessing sparse BLAS functionality from C and Fortran.  The
+proposed 2002 sparse BLAS standard does not support operations between two sparse
 objects (matrices or vectors) due to perceived complexity, which we 
 address in this iteration.
 
@@ -335,8 +736,9 @@ supported and careful attention is given to interface design. They also
 reuse the work of Duff et al.~\cite{10.1145/275323.275327}, e.g. use the same
 matrix storage type and rely on the serial SparseBLAS of the previous
 proposals. Their focus is on proposing a parallel (node-distributed)
-Implementation of the algorithms and implementation of the library using
-multiple layers, with base functionality implemented in Fortran 77 and
+implementation of the algorithms,
+and on implementation of the library using
+multiple layers. Base functionality is implemented in Fortran 77 and
 higher-level interfaces in Fortran 90. In 2012, Filippone et
 al.~\cite{10.1145/2331130.2331131} proposed an Object-Oriented, Fortran 2003,
 interface thanks to recent programming language innovation that greatly
@@ -363,96 +765,39 @@ Furthermore, we acknowledge in this proposal that for repeated application of a 
 \subsection{Review of existing API designs for the SpMV operation}
 \label{sec:spmvReview}
 While none of the SparseBLAS standards discussed in~\Cref{sec:existingsparseblas} has been adopted as a universal standard, several groups from academia and industry have developed and deployed sparse linear algebra operations along with a user-facing interface. They are all designed to accommodate functionality- and hardware-specific needs of the library developers. Most of the currently supported APIs follow the transparent, non-data-owning design. 
-Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality.
-Thus, we consider it beneficial to the reader to list existing C and
-\cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector.
-Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
+% Existing APIs are different but share certain design patterns, and we consider them as blueprints guiding the design of the new API standard for sparse linear algebra functionality. Thus, we consider it beneficial to the reader to list existing C and \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation multiplying a sparse matrix with a dense vector. Some APIs are synchronous and blocking, while others extend to asynchronous non-blocking execution models.
+Existing APIs differ in their design, but share several common patterns that provide useful blueprints for the design of a new standard API for sparse linear algebra functionality. To illustrate these patterns, we review existing C and \cplusplus library APIs for the sparse matrix-vector (\texttt{SpMV}) operation, which computes the product of a sparse matrix and a dense vector. These APIs support different execution models: some are synchronous and blocking, whereas others additionally support asynchronous, non-blocking execution.
+\Cref{tab:spmv_api_comparison} summarizes the primary differences across vendor and domain-specific APIs for double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}), while \Cref{lst:spmv_comparison} in the Appendix provides code-level specifications.
 
-\newpage
-\noindent\textbf{\texttt{SpMV} API comparisons between existing libraries:}\\ IEEE754 Double Precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}) \begin{equation*}y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y\end{equation*}
-\begin{enumerate}[label=(\arabic*)]
-\item Arm Performance Libraries C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-// comm
-/* comm */
-info = armpl_spmv_exec_d(ARMPL_SPARSE_OPERATION_NOTRANS, alpha, armpl_mat, x, beta, y);
-\end{lstlisting}
-\item oneMKL C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-status = mkl_sparse_d_mv(SPARSE_OPERATION_NON_TRANSPOSE,
-            alpha, csrA, descrA, x, beta, y);
-\end{lstlisting}
-\item AOCL-sparse C API (has an optional hint/optimize stage)
-\begin{lstlisting}
-status = aoclsparse_dmv(aoclsparse_operation_none,
-            p_alpha, A, descr_a, x, p_beta, y);
-\end{lstlisting}
-\item Graph BLAS Suite Sparse C API (implements $y\left<\text{mask}\right> = \text{accum}\left(y, A\cdot x\right)$ in some semiring)
-\begin{lstlisting}
-// y = alpha*y
-GrB_apply(y, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, alpha, y, GrB_NULL);
-//y += beta*A*x
-GrB_mxm (y, GrB_NULL, GrB_PLUS_FP64, GrB_PLUS_TIMES_SEMIRING_FP64, A, x, GrB_NULL);
-\end{lstlisting}
-\item ALP/GraphBLAS \cplusplus (minimum number of containers, optimised by nonblocking execution)
-\begin{lstlisting}
-grb::Semiring< grb::operators::add<double>, grb::operators::mul<double>,
-    grb::identities::zero, grb::identities::one > plusTimes;
-grb::Monoid< grb::operators::mul< double >, grb::identities::one > mul;
-status = grb::foldr( beta / alpha, y, mul );
-status = status ? status : grb::mxv< op >( y, A, x, plusTimes );
-status = status ? status : grb::foldr( alpha, y, mul );
-\end{lstlisting}
-\item cuSPARSE CUDA C, generic API (has multiple required stages)
-\begin{lstlisting}
-status = cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-            p_alpha, matA, vecX, p_beta, vecY,
-            CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT,
-            externalBuffer);
-\end{lstlisting}
-\item rocSPARSE ROCm C, generic API (has multiple required stages)
-\begin{lstlisting}
-status = rocsparse_spmv(handle, rocsparse_operation_none,
-            p_alpha, matA, vecX, p_beta, vecY,
-            rocsparse_datatype_f64_r,
-            rocsparse_spmv_alg_csr_adaptive,
-            rocsparse_spmv_stage_compute,
-            p_buffer_size, temp_buffer);
-\end{lstlisting}
-\item hipSPARSE ROCm/CUDA C API
-\begin{lstlisting}
-status = hipsparseDcsrmv(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE,
-            m, n, nnz, p_alpha, descrA,
-            valA, rowptrA, colindA, x, p_beta, y);
-\end{lstlisting}
-\item oneMKL SYCL \cplusplus API with an out-of-order queue (has an optional optimize stage)
-\begin{lstlisting}
-ev_gemv = oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y, {ev_opt});
-\end{lstlisting}
-\item oneMKL SYCL \cplusplus API with an in-order queue (has an optional optimize stage)
-\begin{lstlisting}
-oneapi::mkl::sparse::gemv(
-            queue, oneapi::mkl::transpose::nontrans,
-            alpha, csrA, x, beta, y);
-\end{lstlisting}
-\item Kokkos-kernel \cplusplus API (can set algorithm in \textit{controls} argument)
-\begin{lstlisting}
-KokkosSparse::spmv(controls, KokkosSparse::NoTranspose,
-            alpha, A, x, beta, y);
-\end{lstlisting}
-\item Ginkgo \cplusplus API
-\begin{lstlisting}
-// cuda/rocm stream or sycl::queue is attached to A previously
-// (through an ''Executor'' object)
-// matrix::Csr *A;              // sparse matrix
-// matrix::Dense *y, *x;        // vectors tall and skinny matrices
-// matrix::Dense *alpha, *beta; // scalars of dimension 1x1
-A->apply(alpha, x, beta, y);
-\end{lstlisting}
 
-\end{enumerate}
+
+
+\begin{table*}[b]
+  \centering
+  \caption{Comparison of execution APIs across vendor and domain libraries for IEEE 754 double-precision Sparse Matrix-Vector Multiplication (\texttt{SpMV}): $y = \alpha\cdot\text{op}\left(A\right)\cdot x + \beta\cdot y $}
+  \label{tab:spmv_api_comparison}
+  \small
+  \begin{tabularx}{\textwidth}{l l X c}
+    \toprule
+    \textbf{Library} & \textbf{Paradigm} & \textbf{Key Function / Entry Point} & \textbf{Stage Model} \\
+    \midrule
+    \textbf{ArmPL} & C & \texttt{armpl\_spmv\_exec\_d(...)} & Hint / Opt \\
+    \textbf{oneMKL (C)} & C & \texttt{mkl\_sparse\_d\_mv(...)} & Hint / Opt \\
+    \textbf{AOCL-Sparse} & C & \texttt{aoclsparse\_dmv(...)} & Hint / Opt \\
+    \textbf{GraphBLAS Suite Sparse} & C & \texttt{GrB\_mxm(...)} & Direct \\
+    \textbf{ALP/GraphBLAS} & C++ & \texttt{grb::mxv<op>(y, A, x, semiring)} & Non-blocking \\
+    \textbf{cuSPARSE} & CUDA C & \texttt{cusparseSpMV(handle, ...)} & Multi-stage \\
+    \textbf{rocSPARSE} & ROCm C & \texttt{rocsparse\_spmv(handle, ...)} & Multi-stage \\
+    \textbf{hipSPARSE} & C++ & \texttt{hipsparseDcsrmv(handle, ...)} & Legacy direct \\
+    \textbf{oneMKL (SYCL)} & SYCL & \texttt{oneapi::mkl::sparse::gemv(queue, ..., \{ev\_opt\})} & Out-of-order + Opt \\
+    \textbf{oneMKL (SYCL)} & SYCL & \texttt{oneapi::mkl::sparse::gemv(queue, ...)} & In-order + Opt \\
+    \textbf{Kokkos-Kernels} & C++ & \texttt{KokkosSparse::spmv(controls, ...)} & Direct \\
+    \textbf{Ginkgo} & C++ & \texttt{A->apply(alpha, x, beta, y)} & Executor-bound \\
+    \bottomrule
+  \end{tabularx}
+\end{table*}
+
+
 
 Note that the \textit{handle} in rocSPARSE, cuSPARSE, and hipSPARSE APIs is an object that should be created with a call to \verb|XYZsparseCreate(p_handle)| before any other API is invoked, at which time it globally initializes their SparseBLAS library and creates the \textit{handle} on their device \textit{context}. It also houses the appropriate \verb|cudaStream_t|, \verb|rocStream_t| or \verb|hipStream_t| \textit{stream} to be used in subsequent calls.  The CPU APIs have no such wrapper, and the SYCL APIs take a \textit{sycl::queue}.
 
@@ -491,38 +836,39 @@ the standard, and each of these formats will be supported through a lightweight,
 Some applications require the structure of sparse matrices only (i.e.,~the pattern of non-zero elements) and not the values themselves. Other applications may use the same value in all nonzero locations; we may call these iso-valued matrices. We do not provide a specific type for structure-only matrices but instead define iso-valued matrices.  We anticipate iso-valued matrix views being created via CSR, CSC, or COO matrix views whose value arrays are replaced by a symbolic ``iso array'' whose values are all the same.
 
 % A note on types used in the tables...
-Table \ref{tab:csr_param} outlines the input parameters required to construct a CSR matrix. These input parameters are defined by three important types: \texttt{scalar\_type}, which is the type of the scalar elements stored in the sparse matrix, \texttt{index\_type}, which is the type used to store explicit indices, and \texttt{offset\_type}, which is the type used to store offsets into other arrays.  The \texttt{index\_type} limits the maximum dimensions of a matrix that can be stored, while \texttt{offset\_type} limits the maximum number of nonzeros that can be stored.  This is useful, for example when large matrices may require \texttt{int64\_t} for CSR \texttt{rowptr} elements in order to avoid integer overflow during calculations involving \texttt{rowptr}.
+\Cref{tab:csr_param} outlines the input parameters required to construct a CSR matrix. These input parameters are defined by three important types: \texttt{scalar\_type}, which is the type of the scalar elements stored in the sparse matrix, \texttt{index\_type}, which is the type used to store explicit indices, and \texttt{offset\_type}, which is the type used to store offsets into other arrays.  The \texttt{index\_type} limits the maximum dimensions of a matrix that can be stored, while \texttt{offset\_type} limits the maximum number of nonzeros that can be stored.  This is useful, for example when large matrices may require \texttt{int64\_t} for CSR \texttt{rowptr} elements in order to avoid integer overflow during calculations involving \texttt{rowptr}.
 However, using \texttt{int64\_t} for the large \texttt{colindx} would be unnecessary unless the matrix dimensions are larger than $2^{32}$ and could result in lower performance than using a smaller integer type.
 %\todo[inline]{Does everyone agree with that? I can see the usefulness of int64\_t for column indices if the restriction is that column indices must be greater or equal to the base and lower than $ncols + base$. Which also makes me say that index\_base should be of index\_type, not base\_type. (Yvan M.)}
 %HA: I agree
+
 % CSR
 \begin{table}[htbp]
-\scriptsize
-\begin{center}
-     \begin{tabular}{l l l}
-         \toprule
-         \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-         \midrule
-         \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-         \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-         \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-         \texttt{offset\_type} array & \texttt{rowptr} & Row pointer array (length: \texttt{nrows+1}) \\
-         \texttt{index\_type} array & \texttt{colindx} & Column indices array (length: \texttt{nnz}) \\
-         \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-         \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
-         \bottomrule
-     \end{tabular}
-\end{center}
-     \caption{CSR input parameters}
-    \label{tab:csr_param}
+  \centering
+  \caption{CSR input parameters.}
+  \label{tab:csr_param}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Type} & \textbf{Name} & \textbf{Description} \\
+    \midrule
+    \texttt{index\_type}        & \texttt{nrows}      & Number of rows of the matrix \\
+    \texttt{index\_type}        & \texttt{ncols}      & Number of columns of the matrix \\
+    \texttt{offset\_type}       & \texttt{nnz}        & Structural number of non-zeros \\
+    \texttt{offset\_type} array & \texttt{rowptr}     & Row pointer array (length: \texttt{nrows+1}) \\
+    \texttt{index\_type} array  & \texttt{colindx}    & Column indices array (length: \texttt{nnz}) \\
+    \texttt{scalar\_type} array & \texttt{values}     & Structural values (length: \texttt{nnz}) \\
+    \texttt{base\_type}         & \texttt{index\_base}& Base indexing \\
+    \bottomrule
+  \end{tabularx}
 \end{table}
+
+
 
 The parameter \texttt{nnz} might easily be deduced from the input arrays,
 \[\textrm{nnz} = \textrm{rowptr}[\textrm{nrows}] - \textrm{rowptr}[0],\] 
 but it can be convenient to store it explicitly in specific scenarios. Therefore, the parameter \texttt{nnz} is part of the sparse data structures.
 
 %but we agree that it is useful for developers to have this information provided explicitly. These values should be easily obtained by users and harmonize the input lists for CSR/CSC with those required for COO (where \texttt{nnz} and \texttt{index\_base} must be explicitly provided). 
-Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:coo_param}, respectively.
+Parameters for CSC and COO are given in \Cref{tab:csc_param} and \Cref{tab:coo_param}, respectively.
 
 
 %\todo[inline]{I disagree for \texttt{index\_base} being easily deduced; I think this information must be 
@@ -535,54 +881,50 @@ Parameters for CSC and COO are given in Tables \ref{tab:csc_param} and \ref{tab:
 
 % CSC
 \begin{table}[htbp]
-\scriptsize
-\begin{center}
-     \begin{tabular}{l l l}
-         \toprule
-         \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-         \midrule
-         \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-         \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-         \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-         \texttt{offset\_type} array & \texttt{colptr} & Column pointer array (length: \texttt{ncols+1}) \\
-         \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
-         \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-         \texttt{base\_type} & \texttt{index\_base} & Base indexing \\
-         \bottomrule
-     \end{tabular}
-\end{center}
-     \caption{CSC input parameters}
-    \label{tab:csc_param}
+  \centering
+  \caption{CSC input parameters.}
+  \label{tab:csc_param}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Type} & \textbf{Name} & \textbf{Description} \\
+    \midrule
+    \texttt{index\_type}        & \texttt{nrows}      & Number of rows of the matrix \\
+    \texttt{index\_type}        & \texttt{ncols}      & Number of columns of the matrix \\
+    \texttt{offset\_type}       & \texttt{nnz}        & Structural number of non-zeros \\
+    \texttt{offset\_type} array & \texttt{colptr}     & Column pointer array (length: \texttt{ncols+1}) \\
+    \texttt{index\_type} array  & \texttt{rowindx}    & Row indices array (length: \texttt{nnz}) \\
+    \texttt{scalar\_type} array & \texttt{values}     & Structural values (length: \texttt{nnz}) \\
+    \texttt{base\_type}         & \texttt{index\_base}& Base indexing \\
+    \bottomrule
+  \end{tabularx}
 \end{table}
 
 
 % COO
-
 \begin{table}[htbp]
-\scriptsize
-\begin{center}
-     \begin{tabular}{l l l}
-         \toprule
-         \textbf{Type}      & \textbf{Name} & \textbf{Description} \\
-         \midrule
-         \texttt{index\_type} & \texttt{nrows} & Number of rows of the matrix \\
-         \texttt{index\_type} & \texttt{ncols} & Number of columns of the matrix \\
-         \texttt{offset\_type} & \texttt{nnz} & Structural number of non-zeros \\
-         \texttt{index\_type} array & \texttt{rowindx} & Row indices array (length: \texttt{nnz}) \\
-         \texttt{index\_type} array & \texttt{colindx} & Column indices array (length: \texttt{nnz}) \\
-         \texttt{scalar\_type} array & \texttt{values} & Structural values (length: \texttt{nnz}) \\
-         \texttt{base\_type} & \texttt{index\_base} & Base indexing\\
-         \bottomrule
-     \end{tabular}
-\end{center}
-     \caption{COO input parameters}
-    \label{tab:coo_param}
+  \centering
+  \caption{COO input parameters.}
+  \label{tab:coo_param}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Type} & \textbf{Name} & \textbf{Description} \\
+    \midrule
+    \texttt{index\_type}        & \texttt{nrows}      & Number of rows of the matrix \\
+    \texttt{index\_type}        & \texttt{ncols}      & Number of columns of the matrix \\
+    \texttt{offset\_type}       & \texttt{nnz}        & Structural number of non-zeros \\
+    \texttt{index\_type} array  & \texttt{rowindx}    & Row indices array (length: \texttt{nnz}) \\
+    \texttt{index\_type} array  & \texttt{colindx}    & Column indices array (length: \texttt{nnz}) \\
+    \texttt{scalar\_type} array & \texttt{values}     & Structural values (length: \texttt{nnz}) \\
+    \texttt{base\_type}         & \texttt{index\_base}& Base indexing \\
+    \bottomrule
+  \end{tabularx}
 \end{table}
 
 
 
+
 Several additional storage formats have been proposed in the literature throughout the years~\cite{langr2015evaluation}, outlining trade-offs between performance, memory footprint, and the format conversion overhead. These formats can be considered as optimization targets, rather than input/exchange formats. 
-Possible future extension formats include CSR(4), CSC(4), BSR / BSC, variable BSR / BSC, Ellpack (including variants ESB/SELL-P/SELL-C-$\sigma$), and diagonal/tridiagonal/pentadiagonal formats. 
+Possible future extension formats include CSR(4), CSC(4), BSR~/~BSC, variable BSR~/~BSC, Ellpack (including variants ESB/SELL-P/SELL-C-$\sigma$), and diagonal/tridiagonal/pentadiagonal formats. 
 
 
 % BSR
@@ -627,23 +969,22 @@ We anticipate using \texttt{std::mdspan}, introduced in \cppstd{23}, to support 
 \end{comment}
 
 \begin{table}[htbp]
-\scriptsize
-     \begin{tabular}{l l L{7cm}}
-         \toprule
-         \textbf{Type}    & \textbf{Name} & \textbf{Description} \\
-         \midrule
-         \texttt{}
-         - & \texttt{T} & Type of values stored in \texttt{mdspan}, equivalent to \texttt{scalar\_type}. \\
-         - & \texttt{Extents} & Type specifying the number of dimensions, their types, and whether they are known at compile time or runtime.\\
-         - & LayoutPolicy & A type defining how matrix elements are laid out. (e.g. \texttt{std::layout\_left}, \texttt{std::layout\_right})\\
-         - & AccessorPolicy & A type defining how matrix elements should be accessed.\\
-         \\
-         \texttt{data\_handle\_type} & p & Handle to dense matrix values. \\
-         \texttt{std::integral} type & \texttt{exts...} & The matrix's extents, or dimensions.\\
-         \bottomrule
-     \end{tabular}
-     \caption{Key template parameters and constructor arguments for building an \texttt{std::mdspan}.  Template parameters, which provide types that customize the \texttt{mdspan}, are shown with ``type'' field empty, while runtime types have their type listed.}
-    \label{tab:dense_param}
+  \centering
+  \caption{Key template parameters and constructor arguments for building an \texttt{std::mdspan}. Template parameters, which provide types that customize the \texttt{mdspan}, are shown with ``type'' field empty, while runtime types have their type listed.}
+  \label{tab:dense_param}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Type} & \textbf{Name} & \textbf{Description} \\
+    \midrule
+    --- & \texttt{T} & Type of values stored in \texttt{mdspan}, equivalent to \texttt{scalar\_type}. \\
+    --- & \texttt{Extents} & Type specifying the number of dimensions, their types, and whether they are known at compile time or runtime. \\
+    --- & \texttt{LayoutPolicy} & A type defining how matrix elements are laid out (e.g., \texttt{std::layout\_left}, \texttt{std::layout\_right}). \\
+    --- & \texttt{AccessorPolicy} & A type defining how matrix elements should be accessed. \\
+    \addlinespace
+    \texttt{data\_handle\_type} & \texttt{p} & Handle to dense matrix values. \\
+    \texttt{std::integral} type & \texttt{exts...} & The matrix's extents, or dimensions. \\
+    \bottomrule
+  \end{tabularx}
 \end{table}
 
 
@@ -674,7 +1015,7 @@ For the SpGEMM routine, different parallelization strategies can be realized, ra
 \item Transposition:  sparse matrix -> sparse matrix.
 \end{itemize}
 
-The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern-- otherwise, it must execute sequentially as each element of the output vector may depend on all previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in Section~\Cref{sec:views}).
+The third archetype, the \textbf{Sparse Triangular Solve} (SpTRSV), solves a linear system $Ax=b$ with sparse triangular matrix $A$. The sparse triangular matrix $A$ may be stored as a triangular matrix, or as a full matrix where the SpTRSV has to extract the triangular part on-the-fly during kernel execution.   For enabling parallelism, this archetype, as opposed to the other archetypes, requires the SpTRSV to heavily rely on auxiliary information extracted from an analysis of the sparsity pattern. As the operation is inherently sequential: each element of the output vector may depend on previously computed values.  To extract parallelism, the implementations typically construct a dependency graph or utilize level-scheduling to identify which components can be computed simultaneously, making performance highly sensitive to the specific sparsity pattern of the matrix.  This analysis can often benefit from user hints provided in the property tags of the sparse matrix (detailed in~\Cref{sec:views}).
 In~\Cref{sec:sparseblasimpl}, we discuss the addition of an ``inspect'' routine that accompanies all SparseBLAS routines and can carry the load of determining a dependency graph for a sparse triangular solve.
 
 The following sections discuss ownership of the input and output data structures as well as optimization in more detail,
@@ -689,23 +1030,35 @@ but already here we mention that the sparse input matrices could be enhanced wit
 \label{sec:ownership}
 
 There exist different strategies for handling the ownership of data in sparse linear algebra operations. 
-\begin{itemize}
-\item A \textbf{fully owning, less transparent} API based on opaque objects where the library allocates and owns the data.
-\item A \textbf{non-owning, fully transparent} API based on the \cplusplus views concept where the user allocates and owns the data, and the library accesses the data via views.
-\end{itemize}
+%\begin{itemize}
+%\item 
+With \textbf{fully owning} APIs, the library allocates and owns the data; while
+%\item 
+\textbf{non-owning} APIs assume the user allocates and owns the data.
+%\end{itemize}
+A separate axis separates APIs that expose \textbf{fully transparent} data structures frome those with \textbf{opaque} data structures.
 
-There are multiple reasons for having these two types of API. 1) transparent, non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), but on the other hand, owning matrix objects come with an initial usage cost and require copies; 2) non-owning types require multiple phases for their instantiation and allocation which must be explicitly exposed to the user, which can be especially complex and require several steps for more complex operations (e.g., Sparse-Matrix times Sparse-Matrix product -- SpGEMM); 3) with transparent, non-owning objects, the internal data can always be inspected and accessed at little cost, whereas accessors are required for opaque objects and can come with an extra cost.
+The GraphBLAS C Specification exposes a fully owning, opaque API which some implementations extended to handle a mixture of fully owned and non-owned data.
+In contrast,
+BLAS and LAPACK expose non-owning APIs with transparent data types.
+For sparse BLAS,
+multiple reasons for either type of API exist:
+1) non-owning matrix objects can prevent some vendor optimizations (e.g., using a better-suited matrix format), while owning matrix objects come with an initial usage cost and may require copies;
+2) non-owning matrix objects may require multiple phases for their instantiation and allocation that must be explicitly exposed to the user and interleaved with library calls, while owning matrix objects can prevent the user-code complexity this entails;
+3) opaque objects require accessors that can come with an extra cost while transparent objects enable users to inspect and access data at little cost.
 
-Because each of these aspects can be important in different situations and to different users, we believe that the two options are both needed and complementary, and providing these two types of API will satisfy most needs. Generally, designing a non-owning API for functionality is significantly harder. For this reason, in this first version of an interface design, 
-we focus on the second option, the non-owning API for functionality. However, as we will detail next, we extend this approach to allow for a moderate level of optimization. 
-In this non-owning API, the user owns the data, and a light-weight construct is used to expose the data structures to the library operations, very similar to C++ views~\cite{cpplinalg:p1673r13}, as we will discuss next.
+Because each of these aspects can be important in different situations and to different users, we believe that mixtures of these choices are both needed as well as complementary, satisfying most needs. Generally, designing a non-owning, transparent API for functionality is significantly harder. For this reason, this first version of an interface design focuses on this option first:
+%As we will detail next, we extend this choice to allow for a moderate level of optimization
+%by mixing both (non-)owning and transparent/opaque APIs:
+%AJ, note: I disabled the above as it comes back more clearly later. Adding it here would expose that the current proposed API is a mixture of (non-)owning and opaque/transparent, while it serves the position paper better if it communicates a clear overarching choice first
+the user always owns the data while a light-weight construct exposes the data structures to the library operations, which the \cplusplus views concept standardises~\cite{cpplinalg:p1673r13}-- as we will discuss next.
 
 
 \subsection{Matrix Wrappers, Matrix Objects and Property tags}
 
 The matrix wrapper -- we use the notation \texttt{xyz\_wrapper} where \texttt{xyz} encodes the sparse format, e.g., \texttt{csr\_wrapper} or \texttt{coo\_wrapper} -- wraps the user data and stores additional information about the matrix, including the matrix size and nonzero count, data types, index types, offsets, and property tags. \textbf{Property tags} can provide information about the structure, numerical symmetry, and sortedness of the entries in the respective format as is represented by the data structures provided in the wrapper itself. As the property tags reflect the user provided data arrays, we attach them to the wrapper.  There should be ways provided for a user or library to query and/or update the properties in an \texttt{xyz\_wrapper}.
 
-We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not perfectly fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view''. For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by sparse BLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which blurs the C++ view concept.
+We note that the sortedness property has different meanings for different matrix formats. We also note that although the \texttt{xyz\_wrapper} is motivated by the concept of a C++ view~\cite{cpplinalg:p1673r13}, it does not perfectly fulfill the property of the data being immutable, and we therefore refrain from using the term ``matrix view''. For example, when creating a sparse matrix as the output of a function, the user allocates and owns the data structure, but the library fills the data structure, therewith changes the content. Another example is functionality sorting the matrix values or reordering a matrix, thereby explicitly changing the user-owned data. Similarly, property tags can be added and changed by SparseBLAS functionality. For example, a sorting function changes the matrix tag, or an inspection function might identify a fill pattern as lower triangular. Users can also manually change matrix tags via member functions, which blurs the C++ view concept.
 
 This non-owning approach limits the optimization potential for the libraries.
 To nevertheless allow for optimization while,
@@ -714,11 +1067,14 @@ preserving the concept of light-weight views, we encapsulate the \texttt{xyz\_wr
 
 Some users want to keep control of all available memory, in particular, control where data structures are allocated by the library. For this reason, we propose the user passes an \texttt{allocator} to the library that the library uses to allocate additional data in the \texttt{matrix\_opt}. If no allocator is provided, the library is permitted to use whichever allocator they deem to be appropriate.
 
+
 Listing~\ref{fig:csrmatrixhandle} demonstrates how to wrap a user-owned CSR matrix structure, then encapsulate the ``format wrapper'' into a \texttt{matrix\_opt}. 
 
 
-\begin{listing}[H]
-\begin{minted}{c++}
+\begin{listing}[h]
+\caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
+\label{fig:csrmatrixhandle}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<int, int, float> A(values, rowptr, colind, shape, nnz, property_tags);
 
@@ -726,17 +1082,15 @@ csr_wrapper<int, int, float> A(values, rowptr, colind, shape, nnz, property_tags
 // vendor optimization details
 auto A_opt = matrix_opt(A, allocator);
 \end{minted}
-\label{fig:csrmatrixhandle}
-\caption{Wrapping a CSR matrix structure composing of \texttt{values, rowptr, colind, shape, nnz} into a \texttt{matrix\_opt} with user-specified \texttt{allocator}.}
 \end{listing}
 
 As sparse matrix data is owned by users and "loaned" or provided to the library in different structures, we must come to an agreement about when data can be modified and how it should be done so.  The following conditions constitute an implicit library-user agreement about how to encapsulate and share the data:
 
 \begin{enumerate}
     \item Changes to raw data wrapped in the \texttt{xyz\_wrapper} object class by users are immediately reflected in the \texttt{xyz\_wrapper} object class data and it is generally acceptable for data in an \texttt{xyz\_wrapper} to be modified by users at any time.  An \texttt{xyz\_wrapper} may also be only partially initialized and then further initialized or completed over time, as would be the case when creating a new sparse matrix as a product of others.
-    \item A completed matrix in an \texttt{xyz\_wrapper} may additionally be wrapped with a \texttt{matrix\_opt} object to allow the library to create, store and use additional optimization data relevant to the matrix in sparse BLAS routines.  Therefore, modifying underlying data in a \texttt{matrix\_opt} is more restricted than for an \texttt{xyz\_wrapper} only, as the library may have other optimized data stored which is based on the original user provided data and which would not automatically be updated.  To effect any changes to the user-owned data in a \texttt{matrix\_opt} object, a library function, \texttt{spblas::update\_matrix}, must be invoked on the \texttt{matrix\_opt} object with the changes which allows to keep all data in the \texttt{matrix\_opt} synchronized and consistent.
-    \item Generally speaking, all sparse BLAS functionality will take \texttt{matrix\_opt} objects as the matrix input arguments and if a sparse BLAS routine creates a sparse matrix as an output, the output argument shall be an \texttt{xyz\_wrapper}, as it is created and filled over time through the distinct stages of the functionality.
-    \item A sparse BLAS function shall only modify user-owned data, in a \texttt{matrix\_opt} or an \texttt{xyz\_wrapper}, if it is explicitly detailed in the functionality description that it will do so, like to sort the matrix or update provided data for the matrix, or to fill in resulting matrix data from a copy or transpose or other operation creating a new matrix.
+    \item A completed matrix in an \texttt{xyz\_wrapper} may additionally be wrapped with a \texttt{matrix\_opt} object to allow the library to create, store and use additional optimization data relevant to the matrix in SparseBLAS routines.  Therefore, modifying underlying data in a \texttt{matrix\_opt} is more restricted than for an \texttt{xyz\_wrapper} only, as the library may have other optimized data stored which is based on the original user provided data and which would not automatically be updated.  To effect any changes to the user-owned data in a \texttt{matrix\_opt} object, a library function, \texttt{spblas::update\_matrix}, must be invoked on the \texttt{matrix\_opt} object with the changes which allows to keep all data in the \texttt{matrix\_opt} synchronized and consistent.
+    \item Generally speaking, all SparseBLAS functionality will take \texttt{matrix\_opt} objects as the matrix input arguments and if a SparseBLAS routine creates a sparse matrix as an output, the output argument shall be an \texttt{xyz\_wrapper}, as it is created and filled over time through the distinct stages of the functionality.
+    \item A SparseBLAS function shall only modify user-owned data, in a \texttt{matrix\_opt} or an \texttt{xyz\_wrapper}, if it is explicitly detailed in the functionality description that it will do so, like to sort the matrix or update provided data for the matrix, or to fill in resulting matrix data from a copy or transpose or other operation creating a new matrix.
     \item Libraries or users are allowed to modify the properties (sorted, symmetric pattern, etc) in an \texttt{xyz\_wrapper} at any time as said property is discovered to be true or known to be true based on a particular algorithm whether the \texttt{xyz\_wrapper} is on its own or in a \texttt{matrix\_opt}.
 \end{enumerate}
 
@@ -758,7 +1112,7 @@ While there exist strong arguments for unifying the interface for the different 
 
 Functionality operating on sparse objects differs also in another aspect from functionality operating on dense objects: depending on the distribution of the nonzero entries, different parameter choices may be optimal for fast execution -- up to the level where different algorithms may be chosen depending on the nonzero distribution. To account for this, we consider an additional \textit{inspect phase} that is optional to all functionality (single-stage or multi-stage) and allows for additional optimization with regard to the selection of the algorithm and parameters for processing the operation and for storing some additional information in the matrix object. The optimization may, in particular, pay off in case of repeated function invocation, e.g., the repeated invocation of a sparse matrix vector product inside an iterative solver loop. 
 If the optional inspect phase is not invoked prior to the operation, a default algorithm and parameter selection are used. 
-This concept of an optional inspect phase is in line with the current design of vendor interfaces, see Section \ref{sec:spmvReview}.
+This concept of an optional inspect phase is in line with the current design of vendor interfaces, see~\Cref{sec:spmvReview}.
 
 
 
@@ -769,14 +1123,13 @@ Note that all operations take \texttt{policy} and \texttt{state} objects as inpu
 \subsubsection{Single-Stage API for Operations with known Output}
 \label{sec:single-stage-api}
 
-Operations with a known output size can be realized using a single routine. Functionality listed in Table~\ref{tab:scope} falling into this category includes: scaling, transpose, and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general, and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We present here the interface for the two archetypes producing known output size: the sparse matrix vector multiplication (\Cref{listing:spmv}) and the sparse triangular solve (\Cref{listing:sptrsv}). We list the interfaces to the other SparseBLAS functionality producing output of known size in the appendix.
+Operations with a known output size can be realized using a single routine. Functionality listed in~\Cref{tab:scope} falling into this category includes: scaling, transpose, and conjugate transpose, norms, sparse matrix vector multiplication, sparse matrix dense matrix multiplication, triangular solve, general, and sampled dense matrix multiplication. As previously mentioned, we allow for an optional \textit{inspect} phase for inspecting the sparse objects and passing information to the routines executing the operation. We present here the interface for the two archetypes producing known output size: the sparse matrix vector multiplication (\Cref{listing:spmv}) and the sparse triangular solve (\Cref{listing:sptrsv}). We list the interfaces to the other SparseBLAS functionality producing output of known size in the appendix.
 
 
-
-
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
+\begin{listing}[h]
+\caption{Sparse matrix vector product $y = \alpha \cdot A \cdot x\ [ + \beta \cdot z]$. The arguments $\beta$ and $z$ are optional.}
+\label{listing:spmv}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 csr_wrapper<float> A(values, rowptr, colind, shape, nnz);
 
@@ -797,16 +1150,14 @@ multiply_inspect(policy, state, alpha, A_opt, x, [ beta, z, ] y);
 
 // actual multiplication y = A * x
 multiply(policy, state, alpha, A_opt, x, [ beta, z, ] y); 
-
 \end{minted}
-\label{listing:spmv}
-\caption{Sparse matrix vector product $y = \alpha \cdot A \cdot x\  [ + \beta \cdot z]$. The arguments $\beta$ and $z$ are optional.}
 \end{listing}
 
 
-%\linesep
-\begin{listing}[H]
-\begin{minted}{c++}
+\begin{listing}[h]
+\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is $1.0$.}
+\label{listing:sptrsv}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
 
 spblas::property_list props(spblas::property::sorted);
@@ -826,14 +1177,8 @@ triangular_solve_inspect(policy, state, triangle( A_opt, uplo::upper), [ alpha, 
 
 // actual triangular solver x = alpha A^-1 * b
 triangular_solve(policy, state, triangle( A_opt, uplo::upper), [ alpha, ] b, x);
-
 \end{minted}
-\label{listing:sptrsv}
-\caption{Triangular solve: solve $x=\alpha A^{-1} b$. The argument $\alpha$ is optional, the default value for $\alpha$ is $1.0$.}
 \end{listing}
-
-
-
 
 
 
@@ -846,7 +1191,8 @@ As mentioned above, a fundamental difference to dense BLAS functionality is that
     \item \texttt{inspect phase} -- (optional) prepare any potential optimizations for subsequent phases (e.g.  internal transpose copies as applicable), or may do nothing
     \item \texttt{compute symbolic} -- computing the size of the sparse output structure, which typically requires significant work\\
     \textit{Post-Condition: The size of the sparse output structure is known.}
-    \item \texttt{allocation phase} -- allocating the memory for the sparse output data structure and placing it in the output matrix object to be filled\\
+    \item \texttt{allocation phase} -- allocating the memory for the sparse output data structure and placing it in the output matrix object to be filled.
+    \\
     \textit{Pre-Condition: The size of the sparse output structure is known.}\\
     \textit{Post-Condition: Sparse output structure is allocated.}
     \item \texttt{fill symbolic} -- filling the sparsity pattern into the output data structure
@@ -867,31 +1213,39 @@ Acknowledging the previously motivated \textit{inspect} phase, the multiplicatio
 C = \alpha \cdot \text{op}(A) \cdot \text{op}(B) [ + \beta \cdot D]
 \end{equation}
 
-with the addition of the sparse matrix $\alpha \cdot D$ being optional, can be realized using the following sequence of steps:
+with the addition of the sparse matrix $\alpha \cdot D$ being optional, %can be realized using the following sequence of steps:
+can be realized using the three-stage API sequence shown in~\Cref{lst:spgemm_threestage}.
 %\todo[inline]{C is not an obj, but the CSR view}
-\begin{minted}{c++}
+\begin{listing}[htbp]
+\caption{Three-stage API sequence for explicit symbolic/numeric separation in \texttt{SpGEMM}.}
+\label{lst:spgemm_threestage}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhere
-// csr_wrapper<float> C(c_nrows, c_ncols);
+// csr_wrapper A, B, D initialized elsewhere
+// csr_wrapper C(c_nrows, c_ncols);
 // auto A_obj = matrix_opt(A, allocator);
 // auto B_obj = matrix_opt(B, allocator);
 // auto D_obj = matrix_opt(D, allocator);
 
 operation_state state(allocator);
-multiply_inspect(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C); // optional
-multiply_compute_symbolic(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C);
+
+// Optional optimization / hint step
+multiply_inspect(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+
+// Computes output sparsity pattern and memory requirements
+multiply_compute_symbolic(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+
 index_t nnz = state.get_result_nnz();
-//T the user allocates the arrays for C
-multiply_fill_symbolic(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C);
-multiply_numeric(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C);
-// csr_wrapper C is now ready to be used
+// User allocates the required storage arrays for C here
+
+// Populates the structural non-zero sparsity pattern into C
+multiply_fill_symbolic(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+
+// Computes and stores the numerical values into C
+multiply_numeric(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+// csr_wrapper C is now fully constructed
 \end{minted}
-% \fb{\texttt{A, B, C, D} are repeated in all functions}
-% \fb{\texttt{allocator} is not mentioned in the text}
+\end{listing}
 
 A standard way is to place the structural analysis in the \texttt{multiply\_compute\_symbolic} stage, then allocate the output data structure and fill it in the \texttt{multiply\_fill} stage. Internal buffers needed in the structural analysis can be allocated and de-allocated by the library in the \texttt{multiply\_compute} routine. 
 
@@ -899,32 +1253,38 @@ The only step that has to happen critically in the \texttt{multiply\_compute} ro
 
 A critical question is how the library allocates these internal buffers, via a library-preferred allocator or an allocator passed to the library from the user. This boils down to whether the user has buffer management on the application level, i.e., manages all the device memory in the application. At the same time, requiring the user to always provide an allocator to the library can become cumbersome. In the current design proposal, we allow the user to pass in a memory allocator (for the memory space where the computations are executed, i.e. the ``compute device'') that is then used by the library for the allocation of buffers. If no allocator is passed, the library is free to use its own allocator.\\
 
-Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one kernel. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, an alternative API for realizing \eqref{eq:SpGEMM} is:
+Inspecting the pre-conditions and post-conditions listed above, we note that the phases \texttt{fill symbolic} and \texttt{compute numeric} can be merged into one kernel. While this may be attractive for performance reasons, it removes the possibility of reusing an output sparsity pattern in scenarios where the same functionality is repeated with different numerical values -- i.e., in the consecutive multiplication of sparse matrices with a constant sparsity pattern but changing numeric values. If the explicit separation between \texttt{fill symbolic} and \texttt{compute numeric} is not required, %an alternative API for realizing \eqref{eq:SpGEMM} is:
+the simplified two-stage SpGEMM interface shown in~\Cref{lst:spgemm_twostage} can be used for Equation~\eqref{eq:SpGEMM}.
 
-
-\begin{minted}{c++}
+\begin{listing}[htbp]
+  \caption{Alternative two-stage API for \texttt{SpGEMM} combining symbolic and numeric resolution.}
+  \label{lst:spgemm_twostage}
+  \begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 using namespace spblas;
-// csr_wrapper<float> A,B,D filled elsewhwere
+// csr_wrapper<float> A, B, D initialized elsewhere
 // csr_wrapper<float> C(c_nrows, c_ncols);
 // auto A_obj = matrix_opt(A, allocator);
 // auto B_obj = matrix_opt(B, allocator);
 // auto D_obj = matrix_opt(D, allocator);
 
 operation_state state(allocator);
-multiply_inspect(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C); // optional
-multiply_compute(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C);
-index_t nnz = state.get_result_nnz();
-//T the user allocates the arrays for C
-multiply_fill(policy, state, 
-    alpha, A_obj, B_obj, beta, D_obj, C);
-// csr_wrapper C is now ready to be used
-\end{minted}
-% \fb{\texttt{A, B, C, D} are repeated in all functions}
-% \fb{\texttt{allocator} is not mentioned in the text}
 
-Also this interface gives some freedom on how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in \Cref{fig:SpGEMM_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
+// Optional optimization / hint step
+multiply_inspect(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+
+// Computes output sparsity structure and required memory size
+multiply_compute(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+
+index_t nnz = state.get_result_nnz();
+// User allocates the required storage arrays for C here
+
+// Populates structural indices and numerical values into C
+multiply_fill(policy, state, alpha, A_obj, B_obj, beta, D_obj, C);
+// csr_wrapper C is now fully constructed
+  \end{minted}
+\end{listing}
+
+Also this interface gives some freedom on how implementations arrange the different computational steps in the distinct stages. Instead of discussing the different possibilities, we visualize in~\Cref{fig:SpGEMM_workflows} different implementation possibilities for both the three-stage SpGEMM API and the two-stage SpGEMM API.
 
 
 
@@ -933,14 +1293,9 @@ Also this interface gives some freedom on how implementations arrange the differ
 
 
 
-\newpage
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{graphics/different_SpGEMM.png}
-    \caption{Different realizations of the CSR-SpGEMM routine. Top: Splitting into three routines: symbolic analysis, (memory allocation by user), symbolic fill, numeric computation. Bottom: Splitting into two routines: symbolic analysis, (memory allocation by user), computations and filling of output structure.}
-    \label{fig:SpGEMM_workflows}
-\end{figure}
-\newpage
+% \newpage
+\input{graphics/fig_spgemm_workflows}
+% \newpage
 
 
 
@@ -1016,7 +1371,7 @@ multiply(A_opt, x, y);
 \end{minted}
 
 
-The API for both single-stage functions and multi-stage functions will also need to allow vendors to be able to apply scaling and transpose operations within a single \textit{compute}  vendor library function call. The SpMV examples in \ref{sec:spmvReview} all implement something like \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*} in a single \textit{compute} call. To allow this, the \texttt{scaled()} function in the standard API will return \texttt{scaled\_view} types, which contain the scalar and matrix/vector view. This type can be unpacked during the \textit{compute} call, passing the scalar into the vendor library function call. A similar strategy can be followed for the \texttt{transposed()} function.
+The API for both single-stage functions and multi-stage functions will also need to allow vendors to be able to apply scaling and transpose operations within a single \textit{compute}  vendor library function call. The SpMV examples in~\Cref{sec:spmvReview} all implement something like \begin{equation*}y = \alpha\cdot\text{op}\left(A\right) x + \beta\cdot y\end{equation*} in a single \textit{compute} call. To allow this, the \texttt{scaled()} function in the standard API will return \texttt{scaled\_view} types, which contain the scalar and matrix/vector view. This type can be unpacked during the \textit{compute} call, passing the scalar into the vendor library function call. A similar strategy can be followed for the \texttt{transposed()} function.
 
 For example, here \texttt{scaled()} will return a \texttt{scaled\_view}, and applying \texttt{alpha} to \texttt{b} may happen within a vendor kernel:
 \begin{minted}{c++}
@@ -1041,98 +1396,124 @@ multiply(A, scaled(alpha, x), y);
 
 \subsection{Views on Matrix Data}
 \label{sec:views}
-In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in Table~\ref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
+In some situations, a sparse matrix object is not used in its original form, but in a modified form or through a filter, e.g., only a submatrix (lower triangular) is accessed, or the matrix in accessed in transposed form. In these scenarios, creating an explicit copy would introduce a significant overhead. We resolve the situation by introducing a set of \texttt{view} instances shown in~\Cref{tab:views}. Note that \verb|uplo| is one of \texttt{view::uplo::\{lower, upper\}}, and \texttt{diag} is one of \texttt{view::diag::\{explicit, implicit\_unit, implicit\_zero\}}.  As the resulting object is itself a matrix view, they should provide ability to query size and shape.  This is not always an
 $\mathcal{O}(1)$ operation, but through the use of internal caching, can
 be fast after the first time it is computed.
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{|l|l|}
-    %\toprule
-    \hline
-    \makecell[c]{\textbf{\texttt{view}}} & \makecell[c]{\textbf{Description}}\\
-    %\midrule
-    \hline
-       \verb|spblas::view::transpose(M)| & \makecell[l]{Expose transposed data of argument \texttt{M}.} \\
-       \hline
-       \verb|spblas::view::conjugate(M)| & \makecell[l]{Expose conjugated data of argument \texttt{M}.} \\
-       \hline
-       \verb|spblas::view::triangle(M, uplo, diag)| & \makecell[l]{Expose \texttt{uplo} triangular data of argument \texttt{M}.} \\
-       \hline
-       \verb|spblas::view::diagonal(M, diag)| & \makecell[l]{Expose diagonal data (not strictly lower \\ or upper triangle) of argument \texttt{M}.} \\
-       \hline
-       \verb|spblas::view::symmetric(M, uplo, diag)| & \makecell[l]{Expose symmetric matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
-       \hline
-       \verb|spblas::view::hermitian(M, uplo, diag)| & \makecell[l]{Expose Hermitian matrix using the \texttt{uplo} \\ triangular data of argument \texttt{M}.} \\
-       \hline
-    %\bottomrule
-    \end{tabular}
-    \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} 
-    \label{tab:views}
+\begin{table}[htbp]
+  \centering
+  \caption{Instances of the \texttt{view} wrapper in SparseBLAS.} 
+  \label{tab:views}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{\texttt{view}} & \textbf{Description} \\
+    \midrule
+    \texttt{spblas::view::transpose(M)}           & Expose transposed data of argument \texttt{M}. \\
+    \texttt{spblas::view::conjugate(M)}           & Expose conjugated data of argument \texttt{M}. \\
+    \texttt{spblas::view::triangle(M, uplo, diag)}  & Expose \texttt{uplo} triangular data of argument \texttt{M}. \\
+    \texttt{spblas::view::diagonal(M, diag)}      & Expose diagonal data (not strictly lower or upper triangle) of argument \texttt{M}. \\
+    \texttt{spblas::view::symmetric(M, uplo, diag)} & Expose symmetric matrix using the \texttt{uplo} triangular data of argument \texttt{M}. \\
+    \texttt{spblas::view::hermitian(M, uplo, diag)} & Expose Hermitian matrix using the \texttt{uplo} triangular data of argument \texttt{M}. \\
+    \bottomrule
+  \end{tabularx}
 \end{table}
 
 Libraries are free to implement views however they see fit. For instance, a simple masked access works well for lower triangular matrices in matrix-vector products. However, for transposed operations, it may be better to store an explicit copy in the \texttt{matrix\_opt} to optimize performance.
 
 
 
-\subsection{Functionality Scope of the Sparse BLAS}
+\subsection{Functionality Scope of the SparseBLAS}
 \label{sec:functionality}
 
 
-In the preceding sections, we have introduced a number of new types. Table \ref{tab:newtypes} provides a summary.
+In the preceding sections, we have introduced a number of new types. \Cref{tab:newtypes} provides a summary.
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{ l p{4.5cm} p{4.5cm} }%{Functionality|Matlab description}
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of types introduced by the standard.} 
+  \label{tab:newtypes}
+  \begin{tabularx}{\linewidth}{l X X}
     \toprule
-    \textbf{Type} & \textbf{Definition} & \textbf{Notes}\\ 
+    \textbf{Type} & \textbf{Definition} & \textbf{Notes} \\
     \midrule
-        \texttt{csr\_wrapper<T>} & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}}. Operations take either views or matrix handles. \\
-    \midrule        
-        \texttt{matrix\_opt} & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments.\\
-    \midrule        
-        \texttt{operation\_state} & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\    
-    \midrule        
-        \texttt{allocator} & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
-    \midrule    
-        \texttt{policy} & C++ \texttt{std::execution} policy extended with vendor specific policies. & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
+    \texttt{csr\_wrapper<T>} 
+      & Non-owning view class for CSR sparse matrices. Similar types will exist for other formats in the standard. 
+      & Transparent type. Must behave like a C++ view: lazy evaluation, constant copy time, etc.\footnote{\url{https://en.cppreference.com/w/cpp/ranges/view}} Operations take either views or matrix handles. \\
+    \addlinespace
+    \texttt{matrix\_opt} 
+      & A type which encapsulates a matrix view as well as opaque library data specific to the matrix. 
+      & The opaque part should be relevant to the matrix itself, rather than any particular operation. Typically, the opaque part contains stored optimization information. Operations typically take \texttt{matrix\_opt} as input arguments and \texttt{format\_wrapper} as output arguments. \\
+    \addlinespace
+    \texttt{operation\_state} 
+      & Object storing state associated with a SparseBLAS algorithm. Has one member function, \texttt{get\_result\_nnz()}, which returns the number of nonzeros in the output of the operation. 
+      & Opaque type: implementation defined. Typically contains stored optimization information. Optional first (if no \texttt{policy} is provided) or second argument to all operation API calls. \\
+    \addlinespace
+    \texttt{allocator} 
+      & User-provided allocator function to be used for memory allocations by \texttt{operation\_state\_t} and \texttt{matrix\_opt} objects. 
+      & \texttt{operation\_state\_t} and \texttt{matrix\_opt} will provide a constructor which takes an allocator, as well as a default (in which case the allocator is implementation-defined). \\
+    \addlinespace
+    \texttt{policy} 
+      & C++ \texttt{std::execution} policy extended with vendor specific policies. 
+      & Opaque type. Implementations are free to interpret policies as they wish and extend the set of policies supported. Optional first argument to all operation API calls. \\
     \bottomrule
-    \end{tabular}
-    \caption{Summary of types introduced by the standard.} 
-    \label{tab:newtypes}
+  \end{tabularx}
 \end{table}
 
-While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in \Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in \Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
+While the most fundamental part of the standardization effort is to design an interface for the three archetypes, we anticipate a comprehensive SparseBLAS implementation to include additional routines. Particularly, we understand the SparseBLAS effort to entail \textit{conversion between sparse formats} listed in~\Cref{sec:sparse-formats}, the \textit{multiplication and addition of matrices} (including operations involving both sparse and dense matrices), \textit{transposition and conjugation} of sparse matrices, \textit{a solver for sparse triangular linear systems}, \textit{scaling} of sparse matrices, \textit{norm} calculations on sparse matrices, \textit{element-wise addition and multiplication}, and \textit{masking operations} that extract a subset of the nonzero entries of a sparse matrix as in the sampled dense times dense matrix multiplication (SDDMM) kernel common in machine learning frameworks. A list of functionality falling into this scope is given in~\Cref{tab:scope}. For convenience, we also summarize the API type for each functionality as detailed in~\Cref{sec:api-design}. Multi-stage APIs produce a sparse matrix as an output with a sparsity pattern unknown prior to the computation, whereas single-stage APIs produce a dense output or a sparse output with a sparsity pattern beforehand.
 
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{llll}%{Functionality|Matlab description}
+% \begin{table}[h]
+%     \centering
+%     \footnotesize
+%     \caption{List of the SparseBLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
+%     \label{tab:scope}
+%     \begin{tabular}{llll}%{Functionality|Matlab description}
+%     \toprule
+%     \textbf{Operation} & \textbf{Notation} & \textbf{Archetype} & \textbf{API Type}\\ 
+%     \midrule
+%        Scaling                                            & $A := \alpha A$ & SpMV-type & Single-stage \\
+%        Transpose and Conjugate Transpose                  & $A := A^T$, $A := A^H$ & SpGEMM-type & Multi-stage\\
+%        Infinity Matrix Norm                               & $\alpha := \|A\|_\text{inf}$ & SpMV-type & Single-stage \\
+%        Frobenius Matrix Norm                              & $\alpha := \|A\|_F$  & SpMV-type & Single-stage \\
+%        Element-wise Multiplication                        & $C := A~.*B$  & SpMM-type & Multi-stage\\
+%        Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & SpMM-type & Multi-stage\\
+%        Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & SpMM-type & Multi-stage\\
+%        Sparse Matrix -- Dense Matrix Multiplication       & $Y := \alpha A \cdot X + \beta Z$  & SpMV-type & Single-stage \\
+%        Sparse Matrix -- Dense Vector Multiplication       & $y := \alpha A \cdot x + \beta z$  & SpMV-type & Single-stage \\
+%        Vector Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & SpTRSV-type & Single-stage \\
+%        Matrix Triangular Solve                                   & Solve $A \cdot Y = X$ for $YA$  & SpTRSM-type & Single-stage \\
+% %       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
+% %       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
+%        Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & SpMM-type & Multi-stage\\
+%        Predicate Selection                                &  $B = A( \text{predicate} )$ & SpMM-type & Multi-stage \\
+%        Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & SpMV-type & Single-stage\\
+%     \bottomrule
+%     \end{tabular}
+% \end{table}
+\begin{table}[htbp]
+  \centering
+  \caption{List of the SparseBLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.}
+  \label{tab:scope}
+  \begin{tabularx}{\linewidth}{X >{\centering\arraybackslash}p{3.8cm} c c}
     \toprule
-    \textbf{Operation} & \textbf{Notation} & \textbf{Archetype} & \textbf{API Type}\\ 
+    \textbf{Operation} & \textbf{Notation} & \textbf{Archetype} & \textbf{API Type} \\
     \midrule
-       Scaling                                            & $A := \alpha A$ & SpMV-type & Single-stage \\
-       Transpose and Conjugate Transpose                  & $A := A^T$, $A := A^H$ & SpGEMM-type & Multi-stage\\
-       Infinity Matrix Norm                               & $\alpha := \|A\|_\text{inf}$ & SpMV-type & Single-stage \\
-       Frobenius Matrix Norm                              & $\alpha := \|A\|_F$  & SpMV-type & Single-stage \\
-       Element-wise Multiplication                        & $C := A~.*B$  & SpMM-type & Multi-stage\\
-       Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & SpMM-type & Multi-stage\\
-       Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & SpMM-type & Multi-stage\\
-       Sparse Matrix -- Dense Matrix Multiplication       & $Y := \alpha A \cdot X + \beta Z$  & SpMV-type & Single-stage \\
-       Sparse Matrix -- Dense Vector Multiplication       & $y := \alpha A \cdot x + \beta z$  & SpMV-type & Single-stage \\
-       Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & SpTRSV-type & Single-stage \\
-%       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
-%       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
-       Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & SpMM-type & Multi-stage\\
-       Predicate Selection                                &  $B = A( \text{predicate} )$ & SpMM-type & Multi-stage \\
-       Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & SpMV-type & Single-stage\\
+    Scaling & $A := \alpha A$ & SpMV-type & Single-stage \\
+    Transpose and Conjugate Transpose & $A := A^T$, $A := A^H$ & SpGEMM-type & Multi-stage \\
+    Infinity Matrix Norm & $\alpha := \|A\|_\text{inf}$ & SpMV-type & Single-stage \\
+    Frobenius Matrix Norm & $\alpha := \|A\|_F$ & SpMV-type & Single-stage \\
+    Element-wise Multiplication & $C := A \cdot* B$ & SpMM-type & Multi-stage \\
+    Sparse Matrix -- Sparse Matrix Addition & $C := A + B$ & SpMM-type & Multi-stage \\
+    Sparse Matrix -- Sparse Matrix Multiplication & $C := A \cdot B + D$ & SpMM-type & Multi-stage \\
+    Sparse Matrix -- Dense Matrix Multiplication & $Y := \alpha A \cdot X + \beta Z$ & SpMV-type & Single-stage \\
+    Sparse Matrix -- Dense Vector Multiplication & $y := \alpha A \cdot x + \beta z$ & SpMV-type & Single-stage \\
+    Vector Triangular Solve & Solve $A \cdot y = x$ for $y$ & SpTRSV-type & Single-stage \\
+    Matrix Triangular Solve & Solve $A \cdot Y = X$ for $Y$ & SpTRSM-type & Single-stage \\
+    Sparse Matrix Format Conversion & $B = \text{sparse}(A)$ & SpMM-type & Multi-stage \\
+    Predicate Selection & $B = A(\text{predicate})$ & SpMM-type & Multi-stage \\
+    Sampled Dense -- Dense Matrix Multiplication & $C\langle\text{mask}\rangle = A \cdot B$ & SpMV-type & Single-stage \\
     \bottomrule
-    \end{tabular}
-    \caption{List of the SparseBLAS functionalities. Uppercase letters represent matrices; lowercase letters represent vectors. Letters from the start of the alphabet are used for sparse matrices/vectors; letters from the end are used for dense matrices/vectors. $\alpha$ is a scalar value. Note that scaling may be applied to any input matrix/vector, and the transpose/conjugate transpose operation may be applied to any input matrix.} 
-    \label{tab:scope}
+  \end{tabularx}
 \end{table}
 
 
@@ -1425,7 +1806,7 @@ below are independent of one another.
 %"Permissive" will be the default version, but we request feedback from readers as to which other design points should be recommended or required as options.
 %We note that these design points are ordered in the sense that each one includes the requirements of the previous ones in the list, and is likely to be slower.
 \begin{enumerate}
-    \item Permissive. We only require that error bounds described earlier in subsection~\ref{Error_Bounds} be satisfied in the absence of floating point exceptions, or exceptional inputs like \texttt{Inf} and \texttt{NaN}. For \texttt{SpMV}, $y = \alpha \cdot A \cdot x + \beta \cdot y$, this applies independently to every output component $y(i)$.
+    \item Permissive. We only require that error bounds described earlier in~\Cref{Error_Bounds} be satisfied in the absence of floating point exceptions, or exceptional inputs like \texttt{Inf} and \texttt{NaN}. For \texttt{SpMV}, $y = \alpha \cdot A \cdot x + \beta \cdot y$, this applies independently to every output component $y(i)$.
     \item Consistent exception propagation from input to output. For simplicity, again consider SpMV. If $A(i,j)$ is a \texttt{NaN}  or Inf, then $y(i)$ should be a \texttt{NaN} or \texttt{Inf}
     (unless $\alpha = 0$, see below). We do not specify which to return, i.e. either \texttt{NaN}  or \texttt{Inf} is acceptable, since depending on how many Infs occur (perhaps from overflow), an intermediate \texttt{Inf} could result in an \texttt{Inf} or \texttt{NaN}  output. The interesting case, which is different from the dense BLAS, occurs when $x(j)$ is an \texttt{Inf} or \texttt{NaN} , and $A(i,j)$ is an implicit zero, i.e. not stored in the sparse matrix data structure provided as input. The user expectation is that $A(i,j) \cdot x(j)$ should not be performed, so we require that the \texttt{Inf} or \texttt{NaN}  in $x(j)$ not propagate to $y(i)$. This requirement might not be satisfied by a permissive implementation that changes $A(i,j)$ to an explicit zero, e.g. in order to perform a SIMD optimization, unless we also check that $x(j)$ is neither an \texttt{Inf} nor a \texttt{NaN} . It would also not be permitted to convert an explicitly stored $A(i,j)=0$ to an implicit zero, again unless we checked $x(j)$. We note that for \texttt{SpMV} to be consistent with the dense BLAS GEMV, if $\alpha = 0$ then $\alpha \cdot A \cdot x$ is assumed to be zero, no matter what data $A$ and $x$ contain (similarly if $\beta=0$).
     See \cite{Proposed_BLAS_LAPACK_exception_handling} for a discussion of the
@@ -1434,7 +1815,7 @@ below are independent of one another.
     %\todo[inline]{[Jim D.] I added a new version of this discussion of consistency below.}
 %    \item Run-to-run bitwise-reproducibility (with a variety of possible meanings). While this would surely be of interest to many users, eg to aid debugging,
 %    we do not recommend it be included in a preliminary SparseBLAS standard.
-    \item Run-to-run bitwise-reproducibility properties in SparseBLAS routines are discussed in Section~\ref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
+    \item Run-to-run bitwise-reproducibility properties in SparseBLAS routines are discussed in~\Cref{sec:BitwiseReproducibility}. Note that the bitwise reproducibility property is orthogonal to consistency in exception propagation, so both may be required or not as applicable to the user.
     \todo[inline]{ [Spencer] should reproducibility still be lumped in with permissive/consistency ?  it seems orthogonal now, so does not quite fit here. Maybe it should just be it's own subsection ?}
 \end{enumerate}
 We anticipate that the "permissive" policy will be the most common use case and developers might limit their scope to support this mode. The other modes come with sometimes significant performance overhead, but are important for various critical applications.
@@ -1562,8 +1943,10 @@ While it is common for some sparse formats and algorithms to be naturally reprod
 
 We propose to introduce a global CNR property for the library that can be set via the following APIs. We also recommend that when algorithms are available for selection in an API, that library implementers denote in documentation the  algorithms which have the different CNR properties themselves.  This would allow a fine grained approach to be applied by users as well without the global switch being set. If the global property and the local algorithm selection do not align, the local algorithm selection will be preferred.
 
-\begin{listing}[H]
-\begin{minted}{c++}
+\begin{listing}[h]
+\caption{Conditional Numerical Reproducibility properties in SparseBLAS}
+\label{listing:cnr}
+\begin{minted}[fontsize=\small,linenos=false,bgcolor=listing_bck]{c++}
 namespace spblas {
 
     enum class cnrProperty {
@@ -1579,7 +1962,6 @@ namespace spblas {
 
 }
 \end{minted}
-\caption{Conditional Numerical Reproducibility properties in SparseBLAS}
 \end{listing}
 
 \iffalse
@@ -1619,9 +2001,8 @@ and if these tests are not satisfied by an individual test, then the test is dee
 a failure. We note that these tests
 are quite weak, for example only testing
 quite small matrices. Combined with the
-many new algorithms mentioned in
-sections~\ref{sec:ChoicesNumericalFormats},
-and \ref{Error_Bounds},
+many new algorithms mentioned in~\Cref{sec:ChoicesNumericalFormats},
+and~\Cref{Error_Bounds},
 there is an ongoing effort to ``grade the
 BLAS'', i.e. automatically decide which error
 bound a particular implementation might satisfy.
@@ -1654,7 +2035,7 @@ Furthermore, to reduce complexity, in this proposal, we exclusively discussed th
 
 We here focused on the IEEE FP64 and IEEE FP32 precision formats. Support for low precision formats such as IEEE FP16 or BFloat16 may be added by the community as the demand arises, but the overhead of the indexing in sparse data structures will likely render only moderate performance improvements over high precision functionality.
 
-As hinted at in Section~\ref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing SparseBLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the SparseBLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how it will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
+As hinted at in~\Cref{sec:sparse-formats}, we also recognize the value of many other sparse formats that are not covered so far in this proposal, like the CSR-4 array format, the Block CSR formats, the Ellpack format, and its several variants and many others found in literature and existing SparseBLAS libraries.  Subsequent extensions of this proposal should address the addition of more sparse matrix formats to the SparseBLAS support.  We do recommend that format conversions between these additional formats should likely always go back through one of the original core CSR/CSC/COO sparse matrix formats to limit the scope and potential need for conversion routines.  Likewise, as the formats expand, each implementation will need to define how it will handle matrix products or matrix additions between disparate input sparse formats, and denote which format pairs for inputs are actually supported.
 
 
 Functionality-wise, we plan to expand the sparse triangular solves to also accept dense matrices and sparse vectors, and extend the scope to more complex algorithms like solvers and graph algorithms.
@@ -1666,6 +2047,10 @@ Our current design is not optimal for representing and computing on tensors, eve
 Closely related, batched SparseBLAS handles the data-parallel processing of SparseBLAS functionality on many independent sparse objects. We anticipate the extension of SparseBLAS in the direction of batched functionality accounting for both homogeneous batches and inhomogeneous batches of sparse objects.
 
 More complex functionality, such as sparse matrix factorizations or algebraic multigrid methods, are outside the scope of the SparseBLAS standard, but we plan to address the standardization of these similar to the standardization of complex dense linear algebra functionality in LAPACK.
+
+\begin{acks}
+UT-Battelle LLC has authored this manuscript under contract no. DE-AC05-00OR22725 with the US Department of Energy. By accepting the article for publication, the publisher acknowledges that the US government retains a non-exclusive, paid-up, irrevocable, worldwide license to publish or reproduce the published form of the manuscript or allow others to do so, for US government purposes. The DOE will provide public access to these results in accordance with the DOE Public Access Plan.
+\end{acks}
 
 \bibliographystyle{plain}
 \bibliography{sparseblas}

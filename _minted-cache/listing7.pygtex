@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{k}{namespace}\PYG{+w}{ }\PYG{n+nn}{spblas}\PYG{p}{;}
+\PYG{n}{csr\PYGZus{}wrapper}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{float}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{(}\PYG{n}{values}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rowptr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{colind}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{shape}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nnz}\PYG{p}{);}
+\PYG{k+kt}{float}\PYG{+w}{ }\PYG{n}{alpha}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{...,}\PYG{+w}{ }\PYG{n}{beta}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{...;}
+
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{X}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{::}\PYG{n}{mdspan}\PYG{p}{(}\PYG{n}{raw\PYGZus{}x}\PYG{p}{.}\PYG{n}{data}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{);}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{Y}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{::}\PYG{n}{mdspan}\PYG{p}{(}\PYG{n}{raw\PYGZus{}y}\PYG{p}{.}\PYG{n}{data}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{);}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{Z}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{::}\PYG{n}{mdspan}\PYG{p}{(}\PYG{n}{raw\PYGZus{}y}\PYG{p}{.}\PYG{n}{data}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{p}{);}
+
+\PYG{c+c1}{// matrix\PYGZus{}opt is opaque and may contain}
+\PYG{c+c1}{// vendor optimization details}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{A\PYGZus{}opt}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{matrix\PYGZus{}opt}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{allocator}\PYG{p}{);}
+
+\PYG{c+c1}{// create a state for the optimization of the routine}
+\PYG{n}{operation\PYGZus{}state}\PYG{+w}{ }\PYG{n+nf}{state}\PYG{p}{(}\PYG{n}{allocator}\PYG{p}{);}
+
+\PYG{c+c1}{// optional inspect phase can add information}
+\PYG{c+c1}{// to the matrix handle}
+\PYG{n}{multiply\PYGZus{}inspect}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A\PYGZus{}opt}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Z}\PYG{+w}{ }\PYG{p}{],}\PYG{+w}{ }\PYG{n}{Y}\PYG{p}{);}
+
+\PYG{c+c1}{// actual multiplication Y = alpha * A * X + beta * Z}
+\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{policy}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{state}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{alpha}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A\PYGZus{}opt}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{+w}{ }\PYG{n}{beta}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Z}\PYG{+w}{ }\PYG{p}{],}\PYG{+w}{ }\PYG{n}{Y}\PYG{p}{);}
+
+\end{Verbatim}
