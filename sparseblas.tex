@@ -1476,17 +1476,17 @@ While the most fundamental part of the standardization effort is to design an in
 %        Transpose and Conjugate Transpose                  & $A := A^T$, $A := A^H$ & SpGEMM-type & Multi-stage\\
 %        Infinity Matrix Norm                               & $\alpha := \|A\|_\text{inf}$ & SpMV-type & Single-stage \\
 %        Frobenius Matrix Norm                              & $\alpha := \|A\|_F$  & SpMV-type & Single-stage \\
-%        Element-wise Multiplication                        & $C := A~.*B$  & SpMM-type & Multi-stage\\
-%        Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & SpMM-type & Multi-stage\\
-%        Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & SpMM-type & Multi-stage\\
+%        Element-wise Multiplication                        & $C := A~.*B$  & SpGEMM-type & Multi-stage\\
+%        Sparse Matrix -- Sparse Matrix Addition            & $C := A+B$ & SpGEMM-type & Multi-stage\\
+%        Sparse Matrix -- Sparse Matrix Multiplication      & $C := A \cdot B + D$ & SpGEMM-type & Multi-stage\\
 %        Sparse Matrix -- Dense Matrix Multiplication       & $Y := \alpha A \cdot X + \beta Z$  & SpMV-type & Single-stage \\
 %        Sparse Matrix -- Dense Vector Multiplication       & $y := \alpha A \cdot x + \beta z$  & SpMV-type & Single-stage \\
 %        Vector Triangular Solve                                   & Solve $A \cdot y = x$ for $y$  & SpTRSV-type & Single-stage \\
 %        Matrix Triangular Solve                                   & Solve $A \cdot Y = X$ for $YA$  & SpTRSM-type & Single-stage \\
 % %       Vector Scatter                                     & $v^\prime = \text{sparse}(v)$\\
 % %       Vector Gather                                      & $\text{sparse}(v^\prime) = v$\\
-%        Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & SpMM-type & Multi-stage\\
-%        Predicate Selection                                &  $B = A( \text{predicate} )$ & SpMM-type & Multi-stage \\
+%        Sparse Matrix Format Conversion                    & $B = \text{sparse}(A)$ & SpGEMM-type & Multi-stage\\
+%        Predicate Selection                                &  $B = A( \text{predicate} )$ & SpGEMM-type & Multi-stage \\
 %        Sampled Dense -- Dense Matrix Multiplication       & $C\langle \text{mask} \rangle = A\cdot B$  & SpMV-type & Single-stage\\
 %     \bottomrule
 %     \end{tabular}
@@ -1503,7 +1503,7 @@ While the most fundamental part of the standardization effort is to design an in
     Transpose and Conjugate Transpose & $A := A^T$, $A := A^H$ & SpGEMM-type & Multi-stage \\
     Infinity Matrix Norm & $\alpha := \|A\|_\text{inf}$ & SpMV-type & Single-stage \\
     Frobenius Matrix Norm & $\alpha := \|A\|_F$ & SpMV-type & Single-stage \\
-    Element-wise Multiplication & $C := A \cdot* B$ & SpMM-type & Multi-stage \\
+    Element-wise Multiplication & $C := A \cdot* B$ & SpGEMM-type & Multi-stage \\
     Sparse Matrix -- Sparse Matrix Addition & $C := A + B$ & SpGEMM-type & Multi-stage \\
     Sparse Matrix -- Sparse Matrix Multiplication & $C := A \cdot B + D$ & SpGEMM-type & Multi-stage \\
     Sparse Matrix -- Dense Matrix Multiplication & $Y := \alpha A \cdot X + \beta Z$ & SpMV-type & Single-stage \\
